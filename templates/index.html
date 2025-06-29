@@ -2911,77 +2911,62 @@
                 return match.replace(/\b([a-zA-Z]+(?:'[a-zA-Z]+)?)\b/g, function(word) {
                     const wordLower = word.toLowerCase();
                     
-                    // 난이도별 클래스 추가
-                    let difficultyClass = '';
-                    if (difficultyHighlightEnabled) {
-                        difficultyClass = getDifficultyClass(wordLower);
-                    }
-                    
-                    return `<span class="interactive-word ${difficultyClass}" 
+                    // 일단 기본 클래스로 span 생성
+                    const spanHtml = `<span class="interactive-word" 
                                   data-word="${wordLower}" 
                                   data-sentence-id="${sentenceId}"
                                   data-context="${originalText}"
                                   onclick="bookmarkWord(this)">
                                 ${word}
                             </span>`;
+                    
+                    // 난이도 클래스를 비동기로 적용
+                    if (difficultyHighlightEnabled) {
+                        setTimeout(async () => {
+                            try {
+                                const difficultyClass = await getDifficultyClass(wordLower);
+                                if (difficultyClass) {
+                                    // 같은 단어의 모든 인스턴스에 클래스 적용
+                                    const elements = document.querySelectorAll(`[data-word="${wordLower}"]`);
+                                    elements.forEach(el => el.classList.add(difficultyClass));
+                                }
+                            } catch (error) {
+                                console.warn('Failed to apply difficulty class:', error);
+                            }
+                        }, 0);
+                    }
+                    
+                    return spanHtml;
                 });
             });
         }
         
         // 단어 난이도에 따른 CSS 클래스 반환
-        function getDifficultyClass(word) {
+        async function getDifficultyClass(word) {
             // 캐시에서 확인
             if (difficultyHighlightCache.has(word)) {
                 return difficultyHighlightCache.get(word);
             }
             
-            // 간단한 난이도 추정 (나중에 API로 개선 가능)
-            const difficultyLevel = estimateWordDifficulty(word);
-            const className = `difficulty-${difficultyLevel}`;
-            
-            // 캐시에 저장
-            difficultyHighlightCache.set(word, className);
-            
-            return className;
-        }
-        
-        // 단어 난이도 간단 추정
-        function estimateWordDifficulty(word) {
-            // 매우 기본적인 단어들 (A1-A2 레벨)
-            const easyWords = new Set([
-                'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
-                'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
-                'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
-                'do', 'does', 'did', 'will', 'would', 'can', 'could', 'should', 'may', 'might',
-                'go', 'come', 'get', 'give', 'take', 'make', 'see', 'know', 'think', 'want',
-                'like', 'love', 'good', 'bad', 'big', 'small', 'new', 'old', 'yes', 'no',
-                'hello', 'hi', 'bye', 'please', 'thank', 'thanks', 'sorry', 'ok', 'okay',
-                'because', 'so', 'if', 'when', 'what', 'where', 'who', 'why', 'how'
-            ]);
-            
-            // 중급 단어들 (B1-B2 레벨)
-            const mediumWords = new Set([
-                'although', 'however', 'therefore', 'moreover', 'furthermore',
-                'important', 'different', 'interesting', 'beautiful', 'difficult', 'easy',
-                'understand', 'explain', 'describe', 'discuss', 'suggest', 'recommend',
-                'experience', 'opportunity', 'situation', 'information', 'knowledge',
-                'remember', 'forget', 'decide', 'choose', 'compare', 'consider'
-            ]);
-            
-            // 단어 길이와 복잡성 기반 추정
-            const length = word.length;
-            const hasComplexSuffix = /(?:tion|sion|ment|ness|ity|able|ible|ous|ious|ful|less|ing|ed)$/.test(word);
-            
-            if (easyWords.has(word) || length <= 3) {
-                return 'easy';
-            } else if (mediumWords.has(word) || (length <= 6 && !hasComplexSuffix)) {
-                return 'medium';
-            } else if (length <= 9 || hasComplexSuffix) {
-                return 'hard';
-            } else {
-                return 'very-hard';
+            try {
+                // API를 통해 실제 CEFR 데이터 확인
+                const response = await fetch(`/api/word/difficulty/${encodeURIComponent(word)}`);
+                const data = await response.json();
+                
+                const className = data.difficulty === 'hard' ? 'difficulty-hard' : '';
+                
+                // 캐시에 저장
+                difficultyHighlightCache.set(word, className);
+                
+                return className;
+            } catch (error) {
+                // API 오류 시 빈 클래스 반환
+                console.warn('Difficulty API error:', error);
+                difficultyHighlightCache.set(word, '');
+                return '';
             }
         }
+        
         
         
         // 단어 북마크 (클릭 시)

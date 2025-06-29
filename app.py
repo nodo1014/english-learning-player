@@ -23,7 +23,7 @@ except (ImportError, OSError):
     nlp = None
 
 # Import our new modules
-from database import media_repo, chapter_repo, scene_repo, sentence_repo, vocab_repo, db_manager
+from database import media_repo, chapter_repo, scene_repo, sentence_repo, db_manager
 from file_manager import file_manager
 from ffmpeg_processor import ffmpeg_processor, media_extractor, subtitle_processor
 
@@ -40,6 +40,31 @@ app.config['MAX_CONTENT_LENGTH'] = None
 # Global variables for background tasks
 processing_status = {}
 translation_status = {}
+
+# Load CEFR-J word difficulty data
+CEFR_WORD_LEVELS = {}
+def load_cefr_data():
+    """Load CEFR-J vocabulary data from octanove C1/C2 dataset"""
+    global CEFR_WORD_LEVELS
+    try:
+        csv_path = '/home/kang/dev/english/data/olp-en-cefrj-master/octanove-vocabulary-profile-c1c2-1.0.csv'
+        import csv
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                word = row['headword'].lower().strip()
+                cefr_level = row['CEFR'].strip()
+                
+                # Only C1/C2 words are marked as difficult
+                if cefr_level in ['C1', 'C2']:
+                    CEFR_WORD_LEVELS[word] = 'hard'
+        
+        logger.info(f"Loaded {len(CEFR_WORD_LEVELS)} C1/C2 words from CEFR-J data")
+    except Exception as e:
+        logger.error(f"Failed to load CEFR data: {e}")
+
+# Load data at startup
+load_cefr_data()
 
 @app.route('/')
 def index():
@@ -245,15 +270,36 @@ def process_with_whisper_background(media_id, template_type):
             'message': 'Whisper로 음성을 텍스트로 변환 중...'
         })
         
-        # Here you would integrate with Whisper
-        # For now, create default structure
+        # Use simple_processor for actual Whisper transcription
+        from simple_processor import process_audio_file_realtime
+        
+        # Get audio file path
+        if template_type == 'video':
+            audio_path = file_manager.upload_folder / audio_filename
+        else:
+            # For audio files, use the original file
+            media = media_repo.get_by_id(media_id)
+            audio_path = file_manager.get_media_path(media['filename'])
+        
+        # Update progress callback
+        def progress_callback(message):
+            processing_status[media_id].update({
+                'stage': 'transcribing',
+                'progress': min(processing_status[media_id]['progress'] + 5, 90),
+                'message': message
+            })
+        
+        # Process with Whisper
+        result = process_audio_file_realtime(str(audio_path), media_id, progress_callback)
+        
+        if not result['success']:
+            raise Exception(f"Whisper processing failed: {result.get('error', 'Unknown error')}")
+        
         processing_status[media_id].update({
             'stage': 'structuring',
-            'progress': 80,
-            'message': '문장 구조를 생성 중...'
+            'progress': 95,
+            'message': '문장 구조 완료 중...'
         })
-        
-        create_default_structure_for_video(media_id, audio_filename, template_type)
         
         # Complete
         processing_status[media_id].update({
@@ -1623,6 +1669,28 @@ def check_word_known():
         
     except Exception as e:
         logger.error(f"Check known error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/word/difficulty/<word>', methods=['GET'])
+def get_word_difficulty(word):
+    """Get word difficulty level based on CEFR data"""
+    try:
+        word_lower = word.lower().strip()
+        
+        # Check if word is in C1/C2 (hard) category
+        if word_lower in CEFR_WORD_LEVELS:
+            difficulty = CEFR_WORD_LEVELS[word_lower]
+        else:
+            difficulty = 'normal'  # Not in C1/C2 list
+        
+        return jsonify({
+            'word': word,
+            'difficulty': difficulty,
+            'level': 'C1/C2' if difficulty == 'hard' else 'A1-B2'
+        })
+        
+    except Exception as e:
+        logger.error(f"Word difficulty error: {e}")
         return jsonify({'error': str(e)}), 500
 
 # =============================================================================
