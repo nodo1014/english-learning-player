@@ -812,12 +812,42 @@
                     <button class="extract-option-btn" onclick="extractAllScenesMP4()" style="width: 100%; margin-bottom: 8px;">
                         🎬 씬별 MP4 추출
                     </button>
-                    <button class="extract-option-btn" onclick="extractBookmarkedOnlyMP4()" style="width: 100%; margin-bottom: 8px;">
-                        ⭐ 북마크만 MP4 추출
-                    </button>
-                    <button class="extract-option-btn" onclick="extractAllSentencesMP4()" style="width: 100%; margin-bottom: 15px;">
-                        📝 전체 문장 분할 MP4
-                    </button>
+                    
+                    <!-- 북마크만 MP4 추출 옵션 -->
+                    <div style="background: #2a2a2a; padding: 10px; border-radius: 5px; margin-bottom: 8px;">
+                        <div style="margin-bottom: 8px; font-weight: bold;">⭐ 북마크만 MP4 추출</div>
+                        <div style="margin-bottom: 8px;">
+                            <label style="display: inline-block; margin-right: 15px;">
+                                <input type="checkbox" id="bookmarkSubtitleEnglish" checked style="margin-right: 5px;">
+                                영어 자막
+                            </label>
+                            <label style="display: inline-block;">
+                                <input type="checkbox" id="bookmarkSubtitleKorean" style="margin-right: 5px;">
+                                한글 자막
+                            </label>
+                        </div>
+                        <button class="extract-option-btn" onclick="extractBookmarkedOnlyMP4()" style="width: 100%;">
+                            ⭐ 북마크만 MP4 생성
+                        </button>
+                    </div>
+                    
+                    <!-- 전체 문장 분할 MP4 옵션 -->
+                    <div style="background: #2a2a2a; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                        <div style="margin-bottom: 8px; font-weight: bold;">📝 전체 문장 분할 MP4</div>
+                        <div style="margin-bottom: 8px;">
+                            <label style="display: inline-block; margin-right: 15px;">
+                                <input type="checkbox" id="subtitleEnglish" checked style="margin-right: 5px;">
+                                영어 자막
+                            </label>
+                            <label style="display: inline-block;">
+                                <input type="checkbox" id="subtitleKorean" style="margin-right: 5px;">
+                                한글 자막
+                            </label>
+                        </div>
+                        <button class="extract-option-btn" onclick="extractAllSentencesMP4()" style="width: 100%;">
+                            📝 전체 문장 분할 MP4 생성
+                        </button>
+                    </div>
                     <div id="extractStatusMP4" class="extract-status" style="margin-bottom: 15px;"></div>
                 </div>
             </div>
@@ -2859,6 +2889,27 @@
         }
         
         // MP4 추출 함수들
+        function extractAllMP4() {
+            if (!currentMedia) return;
+            
+            console.log('Extracting all sentences as MP4');
+            updateExtractStatusMP4('모든 문장 MP4 추출 중...');
+            
+            fetch(`/api/media/${currentMedia}/extract_all_mp4`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateExtractStatusMP4(`✅ ${data.message || '모든 문장 MP4 추출 완료'}`);
+                    } else {
+                        updateExtractStatusMP4(`❌ ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Extract all MP4 error:', error);
+                    updateExtractStatusMP4('❌ MP4 추출 중 오류가 발생했습니다.');
+                });
+        }
+        
         function extractAllChaptersMP4() {
             if (!currentMedia) return;
             
@@ -2905,11 +2956,21 @@
         function extractBookmarkedOnlyMP4() {
             if (!currentMedia) return;
             
-            console.log('Extracting bookmarked sentences as MP4');
+            const englishChecked = document.getElementById('bookmarkSubtitleEnglish').checked;
+            const koreanChecked = document.getElementById('bookmarkSubtitleKorean').checked;
+            
+            console.log('Extracting bookmarked sentences as MP4', {englishChecked, koreanChecked});
             updateExtractStatusMP4('북마크 문장 MP4 추출 중...');
             
             fetch(`/api/media/${currentMedia}/extract-bookmarked-mp4`, {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subtitle_english: englishChecked,
+                    subtitle_korean: koreanChecked
+                })
             })
             .then(response => response.json())
             .then(data => {
@@ -2928,11 +2989,21 @@
         function extractAllSentencesMP4() {
             if (!currentMedia) return;
             
-            console.log('Extracting all sentences as MP4');
+            const englishChecked = document.getElementById('subtitleEnglish').checked;
+            const koreanChecked = document.getElementById('subtitleKorean').checked;
+            
+            console.log('Extracting all sentences as MP4', {englishChecked, koreanChecked});
             updateExtractStatusMP4('전체 문장 분할 MP4 추출 중...');
             
             fetch(`/api/media/${currentMedia}/extract-all-sentences-mp4`, {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subtitle_english: englishChecked,
+                    subtitle_korean: koreanChecked
+                })
             })
             .then(response => response.json())
             .then(data => {

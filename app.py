@@ -265,19 +265,76 @@ def extract_mp3(media_id, sentence_id):
         app.logger.error(f"MP3 extraction error: {str(e)}")
         return jsonify({'error': f'Extraction failed: {str(e)}'}), 500
 
-def wrap_text(text, max_chars_per_line=20):
-    """텍스트를 적절한 길이로 줄바꿈 - 90px 폰트에 최적화"""
+def wrap_text(text, max_chars_per_line=60, for_ass=False):
+    """텍스트를 적절한 길이로 줄바꿈"""
     import textwrap
     
     # textwrap을 사용하여 더 나은 줄바꿈
-    wrapped_lines = textwrap.wrap(text, width=max_chars_per_line)
+    wrapped_lines = textwrap.wrap(text, width=max_chars_per_line, break_long_words=False, break_on_hyphens=False)
     
-    # 최대 4줄로 제한
-    if len(wrapped_lines) > 4:
-        wrapped_lines = wrapped_lines[:4]
+    # 줄 수 제한 제거 - 전체 텍스트 표시
+    # 너무 긴 경우만 제한 (12줄 이상)
+    if len(wrapped_lines) > 12:
+        wrapped_lines = wrapped_lines[:12]
         wrapped_lines[-1] = wrapped_lines[-1][:-3] + '...'
     
-    return '\n'.join(wrapped_lines)
+    # ASS 파일용 줄바꿈과 일반 줄바꿈 구분
+    if for_ass:
+        return '\\N'.join(wrapped_lines)  # ASS는 \N으로 줄바꿈
+    else:
+        return '\n'.join(wrapped_lines)
+
+def create_ass_subtitle_file(english_text, korean_text, duration, output_path):
+    """ASS 형식 자막 파일 생성 (영어와 한글에 다른 스타일 적용, 단일 언어도 지원)"""
+    
+    # ASS 헤더
+    ass_content = """[Script Info]
+Title: Subtitle
+ScriptType: v4.00+
+WrapStyle: 0
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: English,Noto Sans KR,24,&Hffffff,&Hffffff,&H0,&H80000000,1,0,0,0,100,100,0,0,1,2,0,2,3,3,60,1
+Style: Korean,Noto Sans KR,24,&Hffffff,&Hffffff,&H0,&H80000000,0,0,0,0,100,100,0,0,1,2,0,2,10,10,16,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+"""
+    
+    # 시간 형식 변환 (ASS는 h:mm:ss.cc 형식)
+    def seconds_to_ass_time(seconds):
+        hours = int(seconds // 3600)
+        minutes = int((seconds % 3600) // 60)
+        secs = seconds % 60
+        return f"{hours}:{minutes:02d}:{secs:05.2f}"
+    
+    start_time = "0:00:00.00"
+    end_time = seconds_to_ass_time(duration)
+    
+    # 영어와 한글을 한 줄에 표시 (ASS 자동 줄바꿈 사용)
+    if english_text and korean_text:
+        # 영어와 한글을 각각 다른 스타일로 표시
+        ass_content += f"Dialogue: 0,{start_time},{end_time},English,,0,0,0,,{english_text}\n"
+        ass_content += f"Dialogue: 1,{start_time},{end_time},Korean,,0,0,0,,{korean_text}\n"
+    elif english_text:
+        ass_content += f"Dialogue: 0,{start_time},{end_time},English,,0,0,0,,{english_text}\n"
+    elif korean_text:
+        ass_content += f"Dialogue: 0,{start_time},{end_time},Korean,,0,0,0,,{korean_text}\n"
+    
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(ass_content)
+    
+    return output_path
+
+def create_srt_subtitle_file(text, duration, output_path):
+    """SRT 형식 자막 파일 생성 (단일 언어용)"""
+    wrapped_text = wrap_text(text, max_chars_per_line=40)
+    
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(f"1\n00:00:00,000 --> {int(duration//3600):02d}:{int((duration%3600)//60):02d}:{duration%60:06.3f}\n{wrapped_text}\n\n")
+    
+    return output_path
 
 def get_media_name(media_id):
     """미디어 ID로부터 미디어 이름 가져오기"""
@@ -1231,7 +1288,7 @@ if __name__ == '__main__':
             
             duration = chapter_info['end_time'] - chapter_info['start_time']
             
-            # FFmpeg 명령어 구성 (검정 배경 비디오 + SRT 자막 + 오디오)
+            # FFmpeg 명령어 구성 (최적화된 설정)
             cmd = [
                 'ffmpeg',
                 '-ss', str(chapter_info['start_time']),
@@ -1245,18 +1302,19 @@ if __name__ == '__main__':
                 '-map', '0:a',
                 '-af', 'volume=3.0',
                 '-c:v', 'libx264',
-                '-preset', 'fast',
-                '-crf', '23',
+                '-preset', 'ultrafast',  # 인코딩 속도 우선
+                '-crf', '28',  # 품질 낮춤 (용량 감소)
                 '-pix_fmt', 'yuv420p',
                 '-c:a', 'aac',
-                '-b:a', '128k',
+                '-b:a', '96k',  # 오디오 비트레이트 낮춤
+                '-threads', '2',  # CPU 스레드 제한
                 '-shortest',
                 '-y',
                 output_file
             ]
             
-            # FFmpeg 실행
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            # FFmpeg 실행 (타임아웃 증가)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=900)
             
             # 임시 자막 파일 삭제
             try:
@@ -1426,6 +1484,11 @@ if __name__ == '__main__':
     def extract_bookmarked_mp4(media_id):
         """북마크된 문장들 MP4 내보내기"""
         try:
+            # 요청 데이터에서 자막 옵션 가져오기
+            data = request.get_json() if request.is_json else {}
+            subtitle_english = data.get('subtitle_english', True)
+            subtitle_korean = data.get('subtitle_korean', False)
+            
             conn = sqlite3.connect('dev.db')
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
@@ -1455,9 +1518,23 @@ if __name__ == '__main__':
             file_ext = bookmarked_sentences[0]['filename'].rsplit('.', 1)[1].lower() if '.' in bookmarked_sentences[0]['filename'] else ''
             is_video_file = file_ext in video_extensions
             
-            # 미디어별/북마크별 디렉토리 생성
+            # 자막 옵션에 따른 폴더명과 파일명 suffix 결정
+            if subtitle_english and subtitle_korean:
+                folder_suffix = 'bookmarked_engkor'
+                file_suffix = '_engkor'
+            elif subtitle_english:
+                folder_suffix = 'bookmarked_eng'
+                file_suffix = '_eng'
+            elif subtitle_korean:
+                folder_suffix = 'bookmarked_kor'
+                file_suffix = '_kor'
+            else:
+                folder_suffix = 'bookmarked'
+                file_suffix = '_nosub'
+            
+            # 미디어별/자막옵션별 북마크 디렉토리 생성
             media_name = get_media_name(media_id)
-            bookmarked_dir = os.path.join('output', media_name, 'bookmarked')
+            bookmarked_dir = os.path.join('output', media_name, folder_suffix)
             os.makedirs(bookmarked_dir, exist_ok=True)
             
             extracted_files = []
@@ -1470,71 +1547,138 @@ if __name__ == '__main__':
                 if not sentence.get('english'):
                     continue
                     
-                output_filename = f'bookmarked_{i+1:04d}.mp4'
+                # 실제 문장 순서번호 사용 (sentence['order'] 또는 sequence number)
+                sentence_order = sentence.get('order', i+1)
+                output_filename = f'bookmarked_{sentence_order:04d}{file_suffix}.mp4'
                 output_file = os.path.join(bookmarked_dir, output_filename)
-                
-                # 텍스트 줄바꿈 처리
-                wrapped_text = wrap_text(sentence['english'], max_chars_per_line=40)
                 
                 duration = sentence['endTime'] - sentence['startTime']
                 
-                # SRT 자막 파일 생성
-                srt_filename = f'temp_bookmark_{uuid.uuid4().hex}.srt'
-                srt_path = os.path.join(bookmarked_dir, srt_filename)
-                
-                with open(srt_path, 'w', encoding='utf-8') as f:
-                    f.write(f"1\n00:00:00,000 --> {int(duration//3600):02d}:{int((duration%3600)//60):02d}:{duration%60:06.3f}\n{wrapped_text}\n\n")
+                # 자막 파일 생성
+                subtitle_path = None
+                if subtitle_english or subtitle_korean:
+                    import uuid
+                    
+                    if subtitle_english and subtitle_korean:
+                        # 영어 + 한글: ASS 형식 사용 (다른 글꼴 크기)
+                        english_text = sentence['english']
+                        korean_text = sentence.get('korean', '')
+                        if korean_text:
+                            ass_filename = f'temp_bookmark_{uuid.uuid4().hex}.ass'
+                            subtitle_path = os.path.join(bookmarked_dir, ass_filename)
+                            create_ass_subtitle_file(english_text, korean_text, duration, subtitle_path)
+                        else:
+                            # 한글이 없으면 영어만
+                            srt_filename = f'temp_bookmark_{uuid.uuid4().hex}.srt'
+                            subtitle_path = os.path.join(bookmarked_dir, srt_filename)
+                            create_srt_subtitle_file(english_text, duration, subtitle_path)
+                    elif subtitle_english:
+                        # 영어만: ASS 형식 (예쁜 폰트 적용)
+                        ass_filename = f'temp_bookmark_{uuid.uuid4().hex}.ass'
+                        subtitle_path = os.path.join(bookmarked_dir, ass_filename)
+                        create_ass_subtitle_file(sentence['english'], None, duration, subtitle_path)
+                    elif subtitle_korean:
+                        # 한글만: ASS 형식 (예쁜 폰트 적용)
+                        korean_text = sentence.get('korean', '')
+                        if korean_text:
+                            ass_filename = f'temp_bookmark_{uuid.uuid4().hex}.ass'
+                            subtitle_path = os.path.join(bookmarked_dir, ass_filename)
+                            create_ass_subtitle_file(None, korean_text, duration, subtitle_path)
                 
                 if is_video_file:
-                    # 비디오 파일: 원본 영상에 자막만 추가
-                    cmd = [
-                        'ffmpeg',
-                        '-ss', str(sentence['startTime']),
-                        '-i', input_file,
-                        '-t', str(duration),
-                        '-vf', f"subtitles={srt_path}:fontsdir=fonts:force_style='FontName=\"Noto Sans KR\",FontSize=38,PrimaryColour=&Hffffff,Bold=1,Alignment=2,MarginV=50'",
-                        '-af', 'volume=3.0',
-                        '-c:v', 'libx264',
-                        '-preset', 'fast',
-                        '-crf', '23',
-                        '-pix_fmt', 'yuv420p',
-                        '-c:a', 'aac',
-                        '-b:a', '128k',
-                        '-y',
-                        output_file
-                    ]
+                    # 비디오 파일 처리
+                    if subtitle_path:
+                        # 자막 있는 경우: 원본 영상에 자막 추가
+                        cmd = [
+                            'ffmpeg',
+                            '-ss', str(sentence['startTime']),
+                            '-i', input_file,
+                            '-t', str(duration),
+                            '-vf', f"subtitles={subtitle_path}:fontsdir=fonts",
+                            '-af', 'volume=3.0',
+                            '-c:v', 'libx264',
+                            '-preset', 'fast',
+                            '-crf', '23',
+                            '-pix_fmt', 'yuv420p',
+                            '-c:a', 'aac',
+                            '-b:a', '128k',
+                            '-y',
+                            output_file
+                        ]
+                    else:
+                        # 자막 없는 경우: 원본 영상만
+                        cmd = [
+                            'ffmpeg',
+                            '-ss', str(sentence['startTime']),
+                            '-i', input_file,
+                            '-t', str(duration),
+                            '-af', 'volume=3.0',
+                            '-c:v', 'libx264',
+                            '-preset', 'fast',
+                            '-crf', '23',
+                            '-pix_fmt', 'yuv420p',
+                            '-c:a', 'aac',
+                            '-b:a', '128k',
+                            '-y',
+                            output_file
+                        ]
                 else:
-                    # 오디오 파일: 검정 배경 비디오 + SRT 자막 + 오디오
-                    cmd = [
-                        'ffmpeg',
-                        '-f', 'lavfi',
-                        '-i', f'color=black:size=1920x1080:duration={duration}:rate=30',
-                        '-ss', str(sentence['startTime']),
-                        '-i', input_file,
-                        '-t', str(duration),
-                        '-filter_complex',
-                        f"[0:v]subtitles={srt_path}:fontsdir=fonts:force_style='FontName=\"Noto Sans KR\",FontSize=38,PrimaryColour=&Hffffff,Bold=1,Alignment=2,MarginV=50'[v]",
-                        '-map', '[v]',
-                        '-map', '1:a',
-                        '-af', 'volume=3.0',
-                        '-c:v', 'libx264',
-                        '-preset', 'fast',
-                        '-crf', '23',
-                        '-pix_fmt', 'yuv420p',
-                        '-c:a', 'aac',
-                        '-b:a', '128k',
-                        '-shortest',
-                        '-y',
-                        output_file
-                    ]
+                    # 오디오 파일 처리
+                    if subtitle_path:
+                        # 자막 있는 경우: 검정 배경 비디오 + 자막 + 오디오
+                        cmd = [
+                            'ffmpeg',
+                            '-f', 'lavfi',
+                            '-i', f'color=black:size=1920x1080:duration={duration}:rate=30',
+                            '-ss', str(sentence['startTime']),
+                            '-i', input_file,
+                            '-t', str(duration),
+                            '-filter_complex',
+                            f"[0:v]subtitles={subtitle_path}:fontsdir=fonts[v]",
+                            '-map', '[v]',
+                            '-map', '1:a',
+                            '-af', 'volume=3.0',
+                            '-c:v', 'libx264',
+                            '-preset', 'fast',
+                            '-crf', '23',
+                            '-pix_fmt', 'yuv420p',
+                            '-c:a', 'aac',
+                            '-b:a', '128k',
+                            '-shortest',
+                            '-y',
+                            output_file
+                        ]
+                    else:
+                        # 자막 없는 경우: 검정 배경 비디오 + 오디오만
+                        cmd = [
+                            'ffmpeg',
+                            '-f', 'lavfi',
+                            '-i', f'color=black:size=1920x1080:duration={duration}:rate=30',
+                            '-ss', str(sentence['startTime']),
+                            '-i', input_file,
+                            '-t', str(duration),
+                            '-map', '0:v',
+                            '-map', '1:a',
+                            '-af', 'volume=3.0',
+                            '-c:v', 'libx264',
+                            '-preset', 'fast',
+                            '-crf', '23',
+                            '-pix_fmt', 'yuv420p',
+                            '-c:a', 'aac',
+                            '-b:a', '128k',
+                            '-shortest',
+                            '-y',
+                            output_file
+                        ]
                 
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
                 
                 # 임시 자막 파일 삭제
-                try:
-                    os.remove(srt_path)
-                except:
-                    pass
+                if subtitle_path:
+                    try:
+                        os.remove(subtitle_path)
+                    except:
+                        pass
                 
                 if result.returncode == 0:
                     extracted_files.append(output_file)
@@ -1555,11 +1699,16 @@ if __name__ == '__main__':
     def extract_all_sentences_mp4(media_id):
         """전체 문장 분할 MP4 내보내기"""
         try:
+            # 요청 데이터에서 자막 옵션 가져오기
+            data = request.get_json() if request.is_json else {}
+            subtitle_english = data.get('subtitle_english', True)
+            subtitle_korean = data.get('subtitle_korean', False)
+            
             conn = sqlite3.connect('dev.db')
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             
-            # 모든 문장 정보 가져오기
+            # 모든 문장 정보 가져오기 (한글 번역도 포함)
             cursor.execute("""
                 SELECT s.*, m.filename
                 FROM Sentence s
@@ -1583,9 +1732,23 @@ if __name__ == '__main__':
             file_ext = sentences[0]['filename'].rsplit('.', 1)[1].lower() if '.' in sentences[0]['filename'] else ''
             is_video_file = file_ext in video_extensions
             
-            # 미디어별/전체문장 디렉토리 생성
+            # 자막 옵션에 따른 폴더명과 파일명 suffix 결정
+            if subtitle_english and subtitle_korean:
+                folder_suffix = 'all_engkor'
+                file_suffix = '_engkor'
+            elif subtitle_english:
+                folder_suffix = 'all_eng'
+                file_suffix = '_eng'
+            elif subtitle_korean:
+                folder_suffix = 'all_kor'
+                file_suffix = '_kor'
+            else:
+                folder_suffix = 'all'
+                file_suffix = '_nosub'
+            
+            # 미디어별/자막옵션별 디렉토리 생성
             media_name = get_media_name(media_id)
-            all_dir = os.path.join('output', media_name, 'all')
+            all_dir = os.path.join('output', media_name, folder_suffix)
             os.makedirs(all_dir, exist_ok=True)
             
             extracted_files = []
@@ -1597,71 +1760,136 @@ if __name__ == '__main__':
                 if not sentence.get('english'):  # 영어 텍스트가 없으면 건너뛰기
                     continue
                     
-                output_filename = f'{i+1:04d}.mp4'
+                output_filename = f'{i+1:04d}{file_suffix}.mp4'
                 output_file = os.path.join(all_dir, output_filename)
-                
-                # 텍스트 줄바꿈 처리
-                wrapped_text = wrap_text(sentence['english'], max_chars_per_line=40)
                 
                 duration = sentence['endTime'] - sentence['startTime']
                 
-                # SRT 자막 파일 생성
-                srt_filename = f'temp_all_{uuid.uuid4().hex}.srt'
-                srt_path = os.path.join(all_dir, srt_filename)
-                
-                with open(srt_path, 'w', encoding='utf-8') as f:
-                    f.write(f"1\n00:00:00,000 --> {int(duration//3600):02d}:{int((duration%3600)//60):02d}:{duration%60:06.3f}\n{wrapped_text}\n\n")
+                # 자막 파일 생성
+                subtitle_path = None
+                if subtitle_english or subtitle_korean:
+                    import uuid
+                    
+                    if subtitle_english and subtitle_korean:
+                        # 영어 + 한글: ASS 형식 사용 (다른 글꼴 크기)
+                        english_text = sentence['english']
+                        korean_text = sentence.get('korean', '')
+                        if korean_text:
+                            ass_filename = f'temp_all_{uuid.uuid4().hex}.ass'
+                            subtitle_path = os.path.join(all_dir, ass_filename)
+                            create_ass_subtitle_file(english_text, korean_text, duration, subtitle_path)
+                        else:
+                            # 한글이 없으면 영어만
+                            srt_filename = f'temp_all_{uuid.uuid4().hex}.srt'
+                            subtitle_path = os.path.join(all_dir, srt_filename)
+                            create_srt_subtitle_file(english_text, duration, subtitle_path)
+                    elif subtitle_english:
+                        # 영어만: ASS 형식 (예쁜 폰트 적용)
+                        ass_filename = f'temp_all_{uuid.uuid4().hex}.ass'
+                        subtitle_path = os.path.join(all_dir, ass_filename)
+                        create_ass_subtitle_file(sentence['english'], None, duration, subtitle_path)
+                    elif subtitle_korean:
+                        # 한글만: ASS 형식 (예쁜 폰트 적용)
+                        korean_text = sentence.get('korean', '')
+                        if korean_text:
+                            ass_filename = f'temp_all_{uuid.uuid4().hex}.ass'
+                            subtitle_path = os.path.join(all_dir, ass_filename)
+                            create_ass_subtitle_file(None, korean_text, duration, subtitle_path)
                 
                 if is_video_file:
-                    # 비디오 파일: 원본 영상에 자막만 추가
-                    cmd = [
-                        'ffmpeg',
-                        '-ss', str(sentence['startTime']),
-                        '-i', input_file,
-                        '-t', str(duration),
-                        '-vf', f"subtitles={srt_path}:fontsdir=fonts:force_style='FontName=\"Noto Sans KR\",FontSize=38,PrimaryColour=&Hffffff,Bold=1,Alignment=2,MarginV=50'",
-                        '-af', 'volume=3.0',
-                        '-c:v', 'libx264',
-                        '-preset', 'fast',
-                        '-crf', '23',
-                        '-pix_fmt', 'yuv420p',
-                        '-c:a', 'aac',
-                        '-b:a', '128k',
-                        '-y',
-                        output_file
-                    ]
+                    # 비디오 파일 처리
+                    if subtitle_path:
+                        # 자막 있는 경우: 원본 영상에 자막 추가
+                        cmd = [
+                            'ffmpeg',
+                            '-ss', str(sentence['startTime']),
+                            '-i', input_file,
+                            '-t', str(duration),
+                            '-vf', f"subtitles={subtitle_path}:fontsdir=fonts",
+                            '-af', 'volume=3.0',
+                            '-c:v', 'libx264',
+                            '-preset', 'fast',
+                            '-crf', '23',
+                            '-pix_fmt', 'yuv420p',
+                            '-c:a', 'aac',
+                            '-b:a', '128k',
+                            '-y',
+                            output_file
+                        ]
+                    else:
+                        # 자막 없는 경우: 원본 영상만
+                        cmd = [
+                            'ffmpeg',
+                            '-ss', str(sentence['startTime']),
+                            '-i', input_file,
+                            '-t', str(duration),
+                            '-af', 'volume=3.0',
+                            '-c:v', 'libx264',
+                            '-preset', 'fast',
+                            '-crf', '23',
+                            '-pix_fmt', 'yuv420p',
+                            '-c:a', 'aac',
+                            '-b:a', '128k',
+                            '-y',
+                            output_file
+                        ]
                 else:
-                    # 오디오 파일: 검정 배경 비디오 + SRT 자막 + 오디오
-                    cmd = [
-                        'ffmpeg',
-                        '-f', 'lavfi',
-                        '-i', f'color=black:size=1920x1080:duration={duration}:rate=30',
-                        '-ss', str(sentence['startTime']),
-                        '-i', input_file,
-                        '-t', str(duration),
-                        '-filter_complex',
-                        f"[0:v]subtitles={srt_path}:fontsdir=fonts:force_style='FontName=\"Noto Sans KR\",FontSize=38,PrimaryColour=&Hffffff,Bold=1,Alignment=2,MarginV=50'[v]",
-                        '-map', '[v]',
-                        '-map', '1:a',
-                        '-af', 'volume=3.0',
-                        '-c:v', 'libx264',
-                        '-preset', 'fast',
-                        '-crf', '23',
-                        '-pix_fmt', 'yuv420p',
-                        '-c:a', 'aac',
-                        '-b:a', '128k',
-                        '-shortest',
-                        '-y',
-                        output_file
-                    ]
+                    # 오디오 파일 처리
+                    if subtitle_path:
+                        # 자막 있는 경우: 검정 배경 비디오 + 자막 + 오디오
+                        cmd = [
+                            'ffmpeg',
+                            '-f', 'lavfi',
+                            '-i', f'color=black:size=1920x1080:duration={duration}:rate=30',
+                            '-ss', str(sentence['startTime']),
+                            '-i', input_file,
+                            '-t', str(duration),
+                            '-filter_complex',
+                            f"[0:v]subtitles={subtitle_path}:fontsdir=fonts[v]",
+                            '-map', '[v]',
+                            '-map', '1:a',
+                            '-af', 'volume=3.0',
+                            '-c:v', 'libx264',
+                            '-preset', 'fast', 
+                            '-crf', '23',
+                            '-pix_fmt', 'yuv420p',
+                            '-c:a', 'aac',
+                            '-b:a', '128k',
+                            '-shortest',
+                            '-y',
+                            output_file
+                        ]
+                    else:
+                        # 자막 없는 경우: 검정 배경 비디오 + 오디오만
+                        cmd = [
+                            'ffmpeg',
+                            '-f', 'lavfi',
+                            '-i', f'color=black:size=1920x1080:duration={duration}:rate=30',
+                            '-ss', str(sentence['startTime']),
+                            '-i', input_file,
+                            '-t', str(duration),
+                            '-map', '0:v',
+                            '-map', '1:a',
+                            '-af', 'volume=3.0',
+                            '-c:v', 'libx264',
+                            '-preset', 'fast',
+                            '-crf', '23',
+                            '-pix_fmt', 'yuv420p',
+                            '-c:a', 'aac',
+                            '-b:a', '128k',
+                            '-shortest',
+                            '-y',
+                            output_file
+                        ]
                 
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
                 
                 # 임시 자막 파일 삭제
-                try:
-                    os.remove(srt_path)
-                except:
-                    pass
+                if subtitle_path:
+                    try:
+                        os.remove(subtitle_path)
+                    except:
+                        pass
                 
                 if result.returncode == 0:
                     extracted_files.append(output_file)
@@ -1675,6 +1903,126 @@ if __name__ == '__main__':
                 'file_count': len(extracted_files)
             })
             
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+    @app.route('/api/media/<media_id>/extract_all_mp4', methods=['POST'])
+    def extract_all_mp4(media_id):
+        """전체 미디어를 하나의 MP4로 내보내기"""
+        try:
+            conn = sqlite3.connect('dev.db')
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            
+            # 미디어 정보와 모든 문장 가져오기
+            cursor.execute("""
+                SELECT m.filename,
+                       MIN(s.startTime) as start_time,
+                       MAX(s.endTime) as end_time
+                FROM Media m
+                JOIN Chapter c ON c.mediaId = m.id
+                JOIN Scene sc ON sc.chapterId = c.id
+                JOIN Sentence s ON s.sceneId = sc.id
+                WHERE m.id = ? AND s.english IS NOT NULL AND s.english != ''
+                GROUP BY m.id
+            """, (media_id,))
+            
+            media_info = cursor.fetchone()
+            
+            # 모든 문장들 가져오기 (자막용)
+            cursor.execute("""
+                SELECT s.*, ROW_NUMBER() OVER (ORDER BY s.startTime) as seq
+                FROM Sentence s
+                JOIN Scene sc ON s.sceneId = sc.id
+                JOIN Chapter c ON sc.chapterId = c.id
+                WHERE c.mediaId = ? AND s.english IS NOT NULL AND s.english != ''
+                ORDER BY s.startTime
+            """, (media_id,))
+            
+            sentences = [dict(row) for row in cursor.fetchall()]
+            conn.close()
+            
+            if not media_info or not sentences:
+                return jsonify({'success': False, 'error': 'No media or sentences found'}), 404
+            
+            media_info = dict(media_info)
+            input_file = os.path.join(app.config['UPLOAD_FOLDER'], media_info['filename'])
+            
+            import subprocess
+            import uuid
+            
+            # 미디어별 디렉토리 생성
+            media_name = get_media_name(media_id)
+            full_dir = os.path.join('output', media_name, 'full')
+            os.makedirs(full_dir, exist_ok=True)
+            
+            # 전체 MP4 파일명
+            output_filename = f'full_{media_name}.mp4'
+            output_file = os.path.join(full_dir, output_filename)
+            
+            # SRT 자막 파일 생성 (전체 문장들)
+            srt_filename = f'temp_full_{uuid.uuid4().hex}.srt'
+            srt_path = os.path.join(full_dir, srt_filename)
+            
+            with open(srt_path, 'w', encoding='utf-8') as f:
+                for i, sentence in enumerate(sentences):
+                    wrapped_text = wrap_text(sentence['english'], max_chars_per_line=40)
+                    start_offset = sentence['startTime'] - media_info['start_time']
+                    end_offset = sentence['endTime'] - media_info['start_time']
+                    
+                    f.write(f"{i+1}\n")
+                    f.write(f"{int(start_offset//3600):02d}:{int((start_offset%3600)//60):02d}:{start_offset%60:06.3f} --> ")
+                    f.write(f"{int(end_offset//3600):02d}:{int((end_offset%3600)//60):02d}:{end_offset%60:06.3f}\n")
+                    f.write(f"{wrapped_text}\n\n")
+            
+            duration = media_info['end_time'] - media_info['start_time']
+            
+            # FFmpeg 명령어 구성 (최적화된 설정)
+            cmd = [
+                'ffmpeg',
+                '-ss', str(media_info['start_time']),
+                '-i', input_file,
+                '-t', str(duration),
+                '-f', 'lavfi',
+                '-i', f'color=black:size=1920x1080:duration={duration}:rate=30',
+                '-filter_complex',
+                f"[1:v]subtitles={srt_path}:fontsdir=fonts:force_style='FontName=\"Noto Sans KR\",FontSize=38,PrimaryColour=&Hffffff,Bold=1,Alignment=2,MarginV=50'[v]",
+                '-map', '[v]',
+                '-map', '0:a',
+                '-af', 'volume=3.0',
+                '-c:v', 'libx264',
+                '-preset', 'ultrafast',
+                '-crf', '28',
+                '-pix_fmt', 'yuv420p',
+                '-c:a', 'aac',
+                '-b:a', '96k',
+                '-threads', '2',
+                '-shortest',
+                '-y',
+                output_file
+            ]
+            
+            # FFmpeg 실행 (타임아웃 증가)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)
+            
+            # 임시 자막 파일 삭제
+            try:
+                os.remove(srt_path)
+            except:
+                pass
+            
+            if result.returncode == 0:
+                return jsonify({
+                    'success': True,
+                    'message': f'Full MP4 created successfully',
+                    'filename': output_filename,
+                    'output_path': output_file,
+                    'duration': duration
+                })
+            else:
+                app.logger.error(f"FFmpeg error: {result.stderr}")
+                return jsonify({'error': 'MP4 creation failed'}), 500
+                
         except Exception as e:
             return jsonify({'success': False, 'error': str(e)}), 500
 
