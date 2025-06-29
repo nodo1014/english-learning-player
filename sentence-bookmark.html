@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문장 북마크 & MP3 추출</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .input-section {
+            margin-bottom: 30px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            resize: vertical;
+        }
+        .sentence {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sentence:hover {
+            background: #f0f0f0;
+            border-color: #4CAF50;
+        }
+        .sentence.bookmarked {
+            background: #fff9c4;
+            border-color: #f9a825;
+        }
+        .sentence-number {
+            font-weight: bold;
+            color: #666;
+            margin-right: 10px;
+        }
+        .bookmark-icon {
+            position: absolute;
+            right: 60px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: #ccc;
+        }
+        .sentence.bookmarked .bookmark-icon {
+            color: #f9a825;
+        }
+        .mp3-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 5px 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .mp3-btn:hover {
+            background: #45a049;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .process-btn {
+            background: #2196F3;
+            color: white;
+        }
+        .process-btn:hover {
+            background: #1976D2;
+        }
+        .export-btn {
+            background: #FF9800;
+            color: white;
+        }
+        .export-btn:hover {
+            background: #F57C00;
+        }
+        .bookmarked-list {
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff9c4;
+            border-radius: 5px;
+            display: none;
+        }
+        .bookmarked-list h3 {
+            margin-top: 0;
+        }
+        .mp3-upload {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #e3f2fd;
+            border-radius: 5px;
+        }
+        .mp3-upload input[type="file"] {
+            margin-bottom: 10px;
+        }
+        .audio-player {
+            width: 100%;
+            margin: 10px 0;
+        }
+        .time-input {
+            width: 60px;
+            padding: 3px;
+            margin: 0 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>문장 북마크 & MP3 추출</h1>
+        
+        <div class="mp3-upload">
+            <h3>MP3 파일 업로드</h3>
+            <input type="file" id="mp3Input" accept="audio/mp3,audio/mpeg" onchange="handleMP3Upload()">
+            <audio id="audioPlayer" class="audio-player" controls style="display:none;"></audio>
+        </div>
+        
+        <div class="input-section">
+            <h3>텍스트 입력</h3>
+            <textarea id="textInput" placeholder="여기에 텍스트를 입력하세요. 문장은 마침표, 물음표, 느낌표로 구분됩니다."></textarea>
+            <button class="process-btn" onclick="processSentences()">문장 분리</button>
+        </div>
+
+        <div id="sentenceList"></div>
+
+        <div class="bookmarked-list" id="bookmarkedList">
+            <h3>북마크된 문장</h3>
+            <button class="export-btn" onclick="exportBookmarks()">북마크 내보내기</button>
+            <div id="bookmarkedContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let sentences = [];
+        let bookmarkedSentences = new Set();
+
+        function processSentences() {
+            const text = document.getElementById('textInput').value;
+            if (!text.trim()) {
+                alert('텍스트를 입력해주세요.');
+                return;
+            }
+
+            // 문장 분리 (마침표, 물음표, 느낌표 기준)
+            sentences = text.match(/[^.!?]+[.!?]+/g) || [];
+            sentences = sentences.map(s => s.trim());
+            
+            displaySentences();
+        }
+
+        function displaySentences() {
+            const listEl = document.getElementById('sentenceList');
+            listEl.innerHTML = '';
+
+            sentences.forEach((sentence, index) => {
+                const sentenceEl = document.createElement('div');
+                sentenceEl.className = 'sentence';
+                sentenceEl.dataset.index = index;
+                
+                if (bookmarkedSentences.has(index)) {
+                    sentenceEl.classList.add('bookmarked');
+                }
+
+                sentenceEl.innerHTML = `
+                    <span class="sentence-number">${index + 1}.</span>
+                    <span class="sentence-text">${sentence}</span>
+                    <span class="bookmark-icon">★</span>
+                    <input type="number" class="time-input" id="start-${index}" placeholder="시작" step="0.1" min="0">
+                    <input type="number" class="time-input" id="end-${index}" placeholder="종료" step="0.1" min="0">
+                    <button class="mp3-btn" onclick="extractMP3(${index}, event)">MP3</button>
+                `;
+
+                sentenceEl.onclick = function(e) {
+                    if (!e.target.classList.contains('mp3-btn')) {
+                        toggleBookmark(index);
+                    }
+                };
+
+                listEl.appendChild(sentenceEl);
+            });
+
+            updateBookmarkedList();
+        }
+
+        function toggleBookmark(index) {
+            const sentenceEl = document.querySelector(`[data-index="${index}"]`);
+            
+            if (bookmarkedSentences.has(index)) {
+                bookmarkedSentences.delete(index);
+                sentenceEl.classList.remove('bookmarked');
+            } else {
+                bookmarkedSentences.add(index);
+                sentenceEl.classList.add('bookmarked');
+            }
+
+            updateBookmarkedList();
+        }
+
+        function updateBookmarkedList() {
+            const bookmarkedListEl = document.getElementById('bookmarkedList');
+            const bookmarkedContentEl = document.getElementById('bookmarkedContent');
+            
+            if (bookmarkedSentences.size > 0) {
+                bookmarkedListEl.style.display = 'block';
+                
+                const bookmarkedArray = Array.from(bookmarkedSentences).sort((a, b) => a - b);
+                bookmarkedContentEl.innerHTML = bookmarkedArray
+                    .map(index => `<p>${index + 1}. ${sentences[index]}</p>`)
+                    .join('');
+            } else {
+                bookmarkedListEl.style.display = 'none';
+            }
+        }
+
+        function extractMP3(index, event) {
+            event.stopPropagation();
+            const sentence = sentences[index];
+            
+            // 실제 MP3 추출 대신 시뮬레이션
+            const filename = `sentence_${index + 1}.mp3`;
+            console.log(`MP3 추출: "${sentence}" → ${filename}`);
+            
+            // 파일 다운로드 시뮬레이션
+            const blob = new Blob([sentence], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename.replace('.mp3', '.txt'); // 실제로는 .mp3
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert(`문장 ${index + 1}의 MP3가 다운로드되었습니다.`);
+        }
+
+        function exportBookmarks() {
+            if (bookmarkedSentences.size === 0) {
+                alert('북마크된 문장이 없습니다.');
+                return;
+            }
+
+            const bookmarkedArray = Array.from(bookmarkedSentences).sort((a, b) => a - b);
+            const exportText = bookmarkedArray
+                .map(index => `${index + 1}. ${sentences[index]}`)
+                .join('\n\n');
+
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bookmarked_sentences.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

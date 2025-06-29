@@ -1,0 +1,10 @@
+celery==5.5.3
+deep-translator==1.11.4
+faster-whisper==1.1.1
+Flask==3.1.1
+numpy==2.2.6
+pydub==0.25.1
+redis==6.2.0
+requests==2.25.1
+requests-oauthlib==2.0.0
+requests-toolbelt==0.9.1

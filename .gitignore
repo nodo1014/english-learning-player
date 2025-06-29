@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Flask
+instance/
+.webassets-cache
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Media files
+upload/
+output/
+subtitles/
+fonts/
+
+# Temporary files
+*.srt
+*.vtt
+temp_*
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment variables
+.env
+
+# Test files
+test_*.mp4
+test_*.mp3
+test_*.srt
+
+# Celery
+celerybeat-schedule
+celerybeat.pid

@@ -1,0 +1,2936 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영어 학습 플레이어</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1e1e1e;
+            color: #cccccc;
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* VSCode style layout */
+        .sidebar {
+            width: 48px;
+            background: #333333;
+            border-right: 1px solid #444444;
+        }
+        
+        .media-list {
+            width: 250px;
+            background: #252526;
+            border-right: 1px solid #444444;
+            padding: 10px;
+        }
+        
+        .main-content {
+            flex: 1;
+            background: #1e1e1e;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .right-bar {
+            width: 300px;
+            background: #252526;
+            border-left: 1px solid #444444;
+            padding: 20px;
+        }
+        
+        /* Media player */
+        .media-player {
+            background: #2d2d30;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        /* Sentences */
+        .chapter-section {
+            margin: 20px 0;
+            border: 1px solid #444444;
+            border-radius: 5px;
+            background: #252526;
+        }
+        
+        .chapter-header {
+            background: #333333;
+            padding: 15px;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .chapter-header:hover {
+            background: #404040;
+        }
+        
+        .chapter-title {
+            font-weight: bold;
+            color: #cccccc;
+        }
+        
+        .chapter-info {
+            font-size: 0.9em;
+            color: #858585;
+        }
+        
+        .chapter-content {
+            padding: 10px;
+        }
+        
+        .scene-section {
+            margin: 15px 0;
+            border: 1px solid #555555;
+            border-radius: 3px;
+            background: #2d2d30;
+        }
+        
+        .scene-header {
+            background: #404040;
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        
+        .scene-header:hover {
+            background: #4a4a4a;
+        }
+        
+        .scene-title {
+            font-weight: bold;
+            color: #cccccc;
+            font-size: 0.9em;
+        }
+        
+        .scene-info {
+            font-size: 0.8em;
+            color: #858585;
+        }
+        
+        .scene-content {
+            padding: 10px;
+        }
+        
+        .sentence-item {
+            background: #1e1e1e;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s;
+        }
+        
+        .sentence-item:hover {
+            background: #2d2d30;
+        }
+        
+        .sentence-item.bookmarked {
+            background: #4e4e2a;
+            border-left: 3px solid #ffd700;
+        }
+        
+        .sentence-item.playing {
+            background: #2d4a2d;
+            border-left: 3px solid #4CAF50;
+        }
+        
+        .collapse-icon {
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+        
+        .collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .sentence-number {
+            color: #858585;
+            margin-right: 10px;
+        }
+        
+        .sentence-text {
+            color: #cccccc;
+            line-height: 1.5;
+            display: inline;
+        }
+        
+        .sentence-korean {
+            color: #858585;
+            font-size: 0.9em;
+            margin-left: 10px;
+            display: inline;
+        }
+        
+        .bookmark-btn {
+            position: absolute;
+            right: 60px;
+            top: 15px;
+            background: none;
+            border: none;
+            color: #858585;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .sentence-item.bookmarked .bookmark-btn {
+            color: #ffd700;
+        }
+        
+        .extract-btn {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .extract-btn:hover {
+            background: #1177bb;
+        }
+        
+        /* Scene navigation highlight */
+        .sentence-item.highlighted {
+            background: rgba(14, 99, 156, 0.3);
+            border: 2px solid #0e639c;
+            animation: pulse 0.5s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        .scene-header {
+            cursor: pointer;
+        }
+        
+        .scene-title:hover {
+            color: #0e639c;
+        }
+        
+        /* Right sidebar panels */
+        .extract-panel, .filter-panel, .bookmarked-panel {
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #2d2d30;
+            border-radius: 5px;
+            border: 1px solid #444444;
+        }
+        
+        .extract-panel h3, .filter-panel h3, .bookmarked-panel h3 {
+            margin-bottom: 15px;
+            color: #cccccc;
+            font-size: 1em;
+            border-bottom: 1px solid #444444;
+            padding-bottom: 8px;
+        }
+        
+        .extract-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .extract-option-btn {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+            text-align: left;
+        }
+        
+        .extract-option-btn:hover {
+            background: #1177bb;
+        }
+        
+        .extract-option-btn:disabled {
+            background: #555555;
+            cursor: not-allowed;
+        }
+        
+        .extract-status {
+            margin-top: 10px;
+            padding: 8px;
+            background: #1e1e1e;
+            border-radius: 3px;
+            font-size: 0.8em;
+            color: #858585;
+            min-height: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #333333;
+            border-radius: 2px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0e639c, #1177bb);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .vad-info {
+            font-size: 0.7em !important;
+            margin-top: 2px;
+            padding: 2px 4px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+        
+        .filter-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #cccccc;
+            cursor: pointer;
+        }
+        
+        .filter-details {
+            margin-top: 8px;
+            padding: 8px;
+            background: #1e1e1e;
+            border-radius: 3px;
+            color: #858585;
+        }
+        
+        /* Chapter and Scene header extract buttons */
+        .chapter-extract-btn, .scene-extract-btn {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+        
+        .chapter-extract-btn:hover, .scene-extract-btn:hover {
+            background: #1177bb;
+        }
+        
+        /* Controls */
+        .controls {
+            margin: 20px 0;
+        }
+        
+        .btn {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        .btn:hover {
+            background: #1177bb;
+        }
+        
+        .btn-export {
+            background: #d79921;
+        }
+        
+        .btn-export:hover {
+            background: #fabd2f;
+        }
+        
+        /* Upload area */
+        .upload-area {
+            border: 2px dashed #444444;
+            border-radius: 5px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+        
+        .upload-area.drag-over {
+            border-color: #0e639c;
+            background: rgba(14, 99, 156, 0.1);
+        }
+        
+        .upload-area input[type="file"] {
+            margin-top: 10px;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444444;
+            background: #2d2d30;
+            color: #cccccc;
+            border-radius: 3px;
+        }
+        
+        .media-item {
+            padding: 8px 30px 8px 8px; /* 오른쪽에 삭제 버튼 공간 확보 */
+            margin: 5px 0;
+            background: #2d2d30;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+            word-wrap: break-word;
+            word-break: break-word;
+        }
+        
+        .media-item:hover {
+            background: #37373d;
+        }
+        
+        .media-item.active {
+            background: #0e639c;
+        }
+        
+        .chapter-item {
+            margin: 5px 0;
+            padding: 5px;
+            background: #37373d;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        .scene-item {
+            margin: 2px 0 2px 15px;
+            padding: 3px;
+            background: #2d2d30;
+            border-radius: 2px;
+            font-size: 0.8em;
+            color: #858585;
+        }
+        
+        /* Bookmarked list */
+        .bookmarked-panel {
+            background: #2d2d30;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        
+        .bookmarked-panel h3 {
+            margin-bottom: 15px;
+            color: #cccccc;
+        }
+        
+        .bookmarked-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: #1e1e1e;
+            border-radius: 3px;
+        }
+        
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+        }
+        
+        .modal-content {
+            background-color: #2d2d30;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #444444;
+            border-radius: 5px;
+            width: 400px;
+            max-width: 90%;
+            color: #cccccc;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #444444;
+            padding-bottom: 10px;
+        }
+        
+        .modal-close {
+            color: #858585;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        
+        .modal-close:hover {
+            color: #cccccc;
+        }
+        
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .modal-form label {
+            color: #cccccc;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .modal-form select, .modal-form input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #444444;
+            background: #1e1e1e;
+            color: #cccccc;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        .modal-form button {
+            width: 100%;
+            padding: 12px;
+            background: #0e639c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+        
+        .modal-form button:hover {
+            background: #1177bb;
+        }
+        
+        .modal-form button.srt-btn {
+            background: #4caf50;
+        }
+        
+        .modal-form button.srt-btn:hover {
+            background: #66bb6a;
+        }
+        
+        .extract-option-btn.delete-btn {
+            background: #d32f2f;
+        }
+        
+        .extract-option-btn.delete-btn:hover {
+            background: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar"></div>
+    
+    <div class="media-list">
+        <h3>미디어 목록</h3>
+        <button onclick="showUploadSection()" style="width: 100%; padding: 8px; margin-bottom: 10px; background: #0e639c; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em;">
+            ➕ 새 파일 업로드
+        </button>
+        <div id="mediaList"></div>
+        
+        <div id="chapterList" style="margin-top: 20px; display: none;">
+            <h4>챕터/씬 구조</h4>
+            <div id="chapterContent"></div>
+        </div>
+    </div>
+    
+    <main class="main-content">
+        <div id="uploadSection" class="upload-area">
+            <h3>📁 미디어 파일 업로드</h3>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <div style="font-size: 1.2em; color: #cccccc; margin-bottom: 10px;">
+                        📁 파일을 여기로 드래그하거나 클릭하여 선택하세요
+                    </div>
+                    <input type="file" id="fileInput" accept="audio/mp3,audio/mpeg,audio/wav,audio/mp4,audio/m4a,audio/ogg,video/mp4,video/avi,video/mov,video/mkv,video/webm,video/x-flv">
+                </div>
+                <div style="font-size: 0.8em; color: #858585; text-align: center;">
+                    <div><strong>🎵 오디오:</strong> MP3, WAV, M4A, OGG</div>
+                    <div><strong>🎬 영상:</strong> MP4, AVI, MOV, MKV, WebM, FLV</div>
+                    <div style="margin-top: 5px; color: #606060;">※ 영상 파일은 자동으로 오디오가 추출됩니다</div>
+                    <div style="margin-top: 5px; color: #606060;">※ 파일 크기 제한 없음</div>
+                </div>
+            </div>
+            
+            <div id="uploadStatus" style="margin-top: 10px; color: #858585;"></div>
+            
+            <!-- 처리 옵션 (업로드 후 표시) -->
+            <div id="processingOptions" style="display: none; margin-top: 20px; padding: 15px; background: #2d2d30; border-radius: 5px;">
+                <h4 style="color: #cccccc; margin-bottom: 15px;">📝 문장 생성 방법 선택</h4>
+                
+                <!-- Whisper 옵션 -->
+                <div class="processing-option" style="margin-bottom: 15px; padding: 10px; background: #1e1e1e; border-radius: 5px;">
+                    <h5 style="color: #cccccc; margin-bottom: 10px;">🎤 Whisper AI로 문장 생성</h5>
+                    
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; margin-bottom: 5px; color: #cccccc; font-size: 0.9em;">모델 선택:</label>
+                        <select id="modelSelect" style="width: 100%; padding: 6px; border: 1px solid #444444; background: #2d2d30; color: #cccccc; border-radius: 3px; font-size: 0.9em;">
+                            <option value="tiny">⚡ Tiny (빠름, 낮은 정확도)</option>
+                            <option value="small">🔹 Small (보통 속도, 보통 정확도)</option>
+                            <option value="medium" selected>🔸 Medium (느림, 높은 정확도)</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; margin-bottom: 5px; color: #cccccc; font-size: 0.9em;">구조 템플릿:</label>
+                        <select id="templateSelect" style="width: 100%; padding: 6px; border: 1px solid #444444; background: #2d2d30; color: #cccccc; border-radius: 3px; font-size: 0.9em;">
+                            <option value="auto">🤖 자동 감지</option>
+                            <option value="toeic_lc" selected>📚 TOEIC LC (Part 1-4)</option>
+                            <option value="toeic_rc">📖 TOEIC RC (Part 5-7)</option>
+                            <option value="general">📝 일반 강의</option>
+                            <option value="conversation">💬 대화/인터뷰</option>
+                            <option value="audiobook">📚 오디오북</option>
+                            <option value="manual">⚙️ 수동 설정</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="processWithWhisper()" style="width: 100%; padding: 10px; background: #0e639c; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        🎤 Whisper로 문장 생성 시작
+                    </button>
+                </div>
+                
+                <!-- 문장 업로드 옵션 -->
+                <div class="processing-option" style="margin-bottom: 15px; padding: 10px; background: #1e1e1e; border-radius: 5px;">
+                    <h5 style="color: #cccccc; margin-bottom: 10px;">📄 문장 데이터 직접 업로드</h5>
+                    
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; margin-bottom: 5px; color: #cccccc; font-size: 0.9em;">SRT 파일 업로드:</label>
+                        <input type="file" id="srtFileInput" accept=".srt" style="width: 100%; padding: 6px; border: 1px solid #444444; background: #2d2d30; color: #cccccc; border-radius: 3px; font-size: 0.9em;">
+                        <div style="font-size: 0.8em; color: #858585; margin-top: 3px;">
+                            자막 파일 (.srt) 형식으로 시간 정보와 텍스트를 포함해야 합니다
+                        </div>
+                    </div>
+                    
+                    <button onclick="uploadSentences()" style="width: 100%; padding: 10px; background: #4caf50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        📄 SRT 파일로 문장 생성
+                    </button>
+                </div>
+                
+                <div id="processingStatus" style="margin-top: 15px; padding: 10px; background: #1e1e1e; border-radius: 5px; display: none;"></div>
+            </div>
+        </div>
+        
+
+        <div class="media-player" style="display:none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 id="mediaTitle" style="margin: 0;">미디어 제목</h3>
+            </div>
+            <audio id="audioPlayer" controls preload="auto" style="display:none;">
+                브라우저가 오디오 태그를 지원하지 않습니다.
+            </audio>
+            <video id="videoPlayer" controls preload="auto" style="display:none; width:100%; max-height:400px;">
+                브라우저가 비디오 태그를 지원하지 않습니다.
+            </video>
+            
+            <!-- 비디오 자막 표시 영역 -->
+            <div id="videoSubtitles" style="display:none; margin-top: 15px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div id="currentSubtitle" style="flex: 1; font-size: 1.2em; color: #ffffff; line-height: 1.5; padding: 10px 15px; background: #2d2d30; border-radius: 5px; border: 1px solid #444444;">
+                    </div>
+                    <button id="subtitleBookmarkBtn" onclick="toggleSubtitleBookmark()" style="padding: 8px 12px; background: #333333; color: #cccccc; border: 1px solid #444444; border-radius: 5px; cursor: pointer; font-size: 0.9em; white-space: nowrap;" title="북마크 추가/제거">
+                        ☆
+                    </button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 10px; font-size: 0.9em; color: #858585;">
+                문장을 클릭하면 해당 구간이 재생됩니다.
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="repeatCurrent()">구간 반복</button>
+            <button class="btn" onclick="playBookmarked()">북마크 재생</button>
+            <button class="btn btn-export" onclick="exportBookmarks()">북마크 내보내기</button>
+        </div>
+        
+        <!-- 검색 섹션 (문장 목록 위에 위치) -->
+        <div id="searchSection" class="search-area" style="display:none; margin-bottom: 20px;">
+            <h3>문장 검색</h3>
+            <input type="text" id="searchInput" placeholder="3글자 이상 입력하면 자동 검색..." 
+                   style="width: 100%; padding: 10px; border: 1px solid #444444; background: #2d2d30; color: #cccccc; border-radius: 3px;">
+            <div id="searchResults" style="margin-top: 10px; color: #858585;"></div>
+        </div>
+        
+        <div id="sentenceList"></div>
+    </main>
+    
+    <div class="right-bar">
+        <!-- 자막 생성 메뉴 -->
+        <div id="subtitleGenerationMenu" class="extract-panel" style="display:none;">
+            <h3>📝 자막 생성</h3>
+            <div class="extract-options">
+                <button class="extract-option-btn" onclick="showWhisperOptions()">
+                    🎤 Whisper 생성
+                </button>
+                <button class="extract-option-btn" onclick="showSrtUpload()">
+                    📄 SRT 업로드
+                </button>
+                <button class="extract-option-btn delete-btn" onclick="deleteSubtitles()">
+                    🗑️ 자막 삭제
+                </button>
+            </div>
+            <div id="generationStatus" class="extract-status" style="display: none;"></div>
+        </div>
+
+        <!-- MP3 추출 메뉴 -->
+        <div class="extract-panel">
+            <h3>🎵 MP3 추출</h3>
+            <div class="extract-options">
+                <button class="extract-option-btn" onclick="extractAllChapters()">
+                    📚 챕터별 추출
+                </button>
+                <button class="extract-option-btn" onclick="extractAllScenes()">
+                    🎬 씬별 추출
+                </button>
+                <button class="extract-option-btn" onclick="extractBookmarkedOnly()">
+                    ⭐ 북마크만 추출
+                </button>
+            </div>
+            <div id="extractStatus" class="extract-status"></div>
+        </div>
+
+        <!-- MP4 추출 메뉴 -->
+        <div class="extract-panel">
+            <h3>🎬 MP4 추출</h3>
+            <div class="extract-options">
+                <button class="extract-option-btn" onclick="extractAllChaptersMP4()">
+                    📚 챕터별 MP4 추출
+                </button>
+                <button class="extract-option-btn" onclick="extractAllScenesMP4()">
+                    🎬 씬별 MP4 추출
+                </button>
+                <button class="extract-option-btn" onclick="extractBookmarkedOnlyMP4()">
+                    ⭐ 북마크만 MP4 추출
+                </button>
+                <button class="extract-option-btn" onclick="extractAllSentencesMP4()">
+                    📝 전체 문장 분할 MP4
+                </button>
+            </div>
+            <div id="extractStatusMP4" class="extract-status"></div>
+        </div>
+
+        <!-- 자동 번역 메뉴 -->
+        <div class="translate-panel">
+            <h3>🌐 자동 번역</h3>
+            <div class="translate-options">
+                <div id="translationInfo" style="margin-bottom: 10px; font-size: 0.9em; color: #cccccc;">
+                    <!-- 번역 상태 정보가 여기 표시됨 -->
+                </div>
+                <button class="extract-option-btn" onclick="startTranslation()" id="translateBtn">
+                    🔄 자동 번역 시작
+                </button>
+                <div id="translationStatus" class="extract-status" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- VAD 필터 메뉴 -->
+        <div class="filter-panel">
+            <h3>🎙️ 오디오 필터</h3>
+            <div class="filter-options">
+                <label>
+                    <input type="checkbox" id="vadFilter" onchange="toggleVADFilter()">
+                    음성 활동 감지 (VAD) 필터
+                </label>
+                <div class="filter-details" id="vadDetails" style="display: none;">
+                    <div style="margin: 10px 0;">
+                        <label>민감도:</label>
+                        <input type="range" id="vadThreshold" min="0.1" max="0.9" step="0.1" value="0.3" onchange="updateVADThreshold()">
+                        <span id="vadThresholdValue">0.3</span>
+                    </div>
+                    <button class="extract-option-btn" onclick="applyVADFilter()" style="margin: 5px 0;">
+                        🎯 VAD 필터 적용
+                    </button>
+                    <button class="extract-option-btn" onclick="createVADAudio()" style="margin: 5px 0;">
+                        🎵 무음 제거 오디오 생성
+                    </button>
+                    <div id="vadStatus" style="font-size: 0.8em; color: #858585; margin-top: 5px;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 북마크된 문장 -->
+        <div class="bookmarked-panel">
+            <h3>⭐ 북마크된 문장</h3>
+            <div id="bookmarkedList"></div>
+        </div>
+    </div>
+    
+    <!-- Whisper 모달 -->
+    <div id="whisperModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🎤 Whisper 자막 생성</h3>
+                <button class="modal-close" onclick="closeModal('whisperModal')">&times;</button>
+            </div>
+            <div class="modal-form">
+                <div>
+                    <label>모델 선택:</label>
+                    <select id="modalModelSelect">
+                        <option value="tiny">⚡ Tiny (빠름, 낮은 정확도)</option>
+                        <option value="small">🔹 Small (보통 속도, 보통 정확도)</option>
+                        <option value="medium" selected>🔸 Medium (느림, 높은 정확도)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>구조 템플릿:</label>
+                    <select id="modalTemplateSelect">
+                        <option value="auto">🤖 자동 감지</option>
+                        <option value="toeic_lc" selected>📚 TOEIC LC (Part 1-4)</option>
+                        <option value="toeic_rc">📖 TOEIC RC (Part 5-7)</option>
+                        <option value="general">📝 일반 강의</option>
+                        <option value="conversation">💬 대화/인터뷰</option>
+                        <option value="audiobook">📚 오디오북</option>
+                        <option value="manual">⚙️ 수동 설정</option>
+                    </select>
+                </div>
+                <button onclick="startModalWhisper()">🎤 Whisper 생성 시작</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SRT 업로드 모달 -->
+    <div id="srtModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📄 SRT 자막 업로드</h3>
+                <button class="modal-close" onclick="closeModal('srtModal')">&times;</button>
+            </div>
+            <div class="modal-form">
+                <div>
+                    <label>SRT 파일 선택:</label>
+                    <input type="file" id="modalSrtFileInput" accept=".srt">
+                    <div style="font-size: 0.8em; color: #858585; margin-top: 5px;">
+                        자막 파일 (.srt) 형식으로 시간 정보와 텍스트를 포함해야 합니다
+                    </div>
+                </div>
+                <button class="srt-btn" onclick="startModalSrtUpload()">📄 SRT 업로드 시작</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentMedia = null;
+        let sentences = [];
+        let audioPlayer = null;
+        let videoPlayer = null;
+        let currentPlayer = null; // 현재 사용 중인 플레이어
+        let currentSentenceIndex = -1;
+        let currentSubtitleSentence = null; // 현재 표시 중인 자막의 문장 정보
+        let translationInterval = null;
+        let uploadedMediaId = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            audioPlayer = document.getElementById('audioPlayer');
+            videoPlayer = document.getElementById('videoPlayer');
+            
+            // 비디오 플레이어 시간 업데이트 이벤트
+            videoPlayer.addEventListener('timeupdate', updateVideoSubtitles);
+            
+            // 파일 업로드 처리
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+            
+            // 드래그 앤 드롭 설정
+            setupDragAndDrop();
+            
+            // 검색 입력 처리
+            document.getElementById('searchInput').addEventListener('input', handleSearchInput);
+            
+            // 미디어 목록 로드
+            loadMediaList();
+            
+            // 초기 상태: 업로드 섹션 표시, 다른 섹션들 숨김
+            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('processingOptions').style.display = 'none';
+            document.getElementById('searchSection').style.display = 'none';
+            document.getElementById('subtitleGenerationMenu').style.display = 'none';
+            
+            // 시뮬레이션 데이터 로드 (개발용)
+            // loadSimulationData();
+        });
+        
+        function setupDragAndDrop() {
+            const uploadArea = document.querySelector('.upload-area');
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight(e) {
+                uploadArea.classList.add('drag-over');
+            }
+            
+            function unhighlight(e) {
+                uploadArea.classList.remove('drag-over');
+            }
+            
+            uploadArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files.length > 0) {
+                    // 첫 번째 파일만 처리
+                    const file = files[0];
+                    const supportedFormats = /\.(mp3|wav|m4a|ogg|mp4|avi|mov|mkv|webm|flv)$/i;
+                    
+                    if (supportedFormats.test(file.name)) {
+                        handleFileUpload({ target: { files: [file] } });
+                    } else {
+                        const statusEl = document.getElementById('uploadStatus');
+                        statusEl.innerHTML = `❌ 지원하지 않는 파일 형식: ${file.name}`;
+                    }
+                }
+            }
+        }
+        
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            if (files.length === 0) return;
+            
+            const statusEl = document.getElementById('uploadStatus');
+            const file = files[0];
+            
+            // 파일 타입 확인
+            const isVideo = /\.(mp4|avi|mov|mkv|webm|flv)$/i.test(file.name);
+            const isAudio = /\.(mp3|wav|m4a|ogg)$/i.test(file.name);
+            
+            if (isVideo) {
+                statusEl.innerHTML = `🎬 영상 파일 업로드 중... (${file.name})`;
+            } else if (isAudio) {
+                statusEl.innerHTML = `🎵 오디오 파일 업로드 중... (${file.name})`;
+            } else {
+                statusEl.innerHTML = `📁 파일 업로드 중... (${file.name})`;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // 파일 크기 표시만 (제한 없음)
+            // if (file.size > 500 * 1024 * 1024) {
+            //     statusEl.innerHTML = `❌ 파일이 너무 큽니다 (${Math.round(file.size / 1024 / 1024)}MB). 최대 500MB까지 지원됩니다.`;
+            //     return;
+            // }
+            
+            statusEl.innerHTML += ` (${Math.round(file.size / 1024 / 1024)}MB)`;
+            
+            // AbortController로 타임아웃 제어
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+                controller.abort();
+                statusEl.innerHTML = `❌ 업로드 타임아웃 (10분 제한): ${file.name}`;
+            }, 10 * 60 * 1000); // 10분 타임아웃
+            
+            fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+                signal: controller.signal
+            })
+            .then(response => {
+                clearTimeout(timeoutId);
+                console.log('Upload response status:', response.status, response.statusText);
+                
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        console.error('Upload server error response:', errorData);
+                        throw new Error(`Server error: ${errorData.error || response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    if (isVideo) {
+                        statusEl.innerHTML = `✅ 영상 업로드 완료 (오디오 추출됨): ${file.name}`;
+                    } else {
+                        statusEl.innerHTML = `✅ 업로드 완료: ${file.name}`;
+                    }
+                    
+                    // 업로드된 미디어 ID 저장
+                    uploadedMediaId = data.media_id;
+                    
+                    // 플레이어에 파일 로드 (영상/오디오 구분)
+                    const mediaTitle = document.getElementById('mediaTitle');
+                    const mediaPlayerDiv = document.querySelector('.media-player');
+                    
+                    // 영상 파일 확인
+                    const videoExtensions = ['mp4', 'avi', 'mov', 'mkv', 'webm', 'flv'];
+                    const fileExt = data.filename.toLowerCase().split('.').pop();
+                    const isVideo = videoExtensions.includes(fileExt);
+                    
+                    if (isVideo) {
+                        // 비디오 플레이어 사용
+                        videoPlayer.src = `/api/audio/${data.filename}`;
+                        videoPlayer.style.display = 'block';
+                        audioPlayer.style.display = 'none';
+                        currentPlayer = videoPlayer;
+                    } else {
+                        // 오디오 플레이어 사용
+                        audioPlayer.src = `/api/audio/${data.filename}`;
+                        audioPlayer.style.display = 'block';
+                        videoPlayer.style.display = 'none';
+                        currentPlayer = audioPlayer;
+                    }
+                    
+                    mediaTitle.textContent = data.original_filename;
+                    mediaPlayerDiv.style.display = 'block';
+                    
+                    console.log(`Media loaded: ${data.original_filename}`);
+                    
+                    // 처리 옵션 표시
+                    document.getElementById('processingOptions').style.display = 'block';
+                    
+                    // 미디어 목록 새로고침
+                    loadMediaList();
+                } else {
+                    if (isVideo && data.error.includes('extract audio')) {
+                        statusEl.innerHTML = `❌ 영상에서 오디오 추출 실패: ${file.name}`;
+                    } else {
+                        statusEl.innerHTML = `❌ 업로드 실패: ${file.name} - ${data.error}`;
+                    }
+                    console.error('Upload error:', data.error);
+                }
+            })
+            .catch(error => {
+                clearTimeout(timeoutId);
+                console.error('Upload error:', error);
+                
+                if (error.name === 'AbortError') {
+                    statusEl.innerHTML = `❌ 업로드 타임아웃: ${file.name}`;
+                } else if (error.message.includes('Failed to fetch')) {
+                    statusEl.innerHTML = `❌ 네트워크 오류 (연결 중단): ${file.name}. 파일이 너무 크거나 서버 문제일 수 있습니다.`;
+                } else {
+                    statusEl.innerHTML = `❌ 업로드 중 오류 발생: ${error.message}`;
+                }
+            });
+        }
+        
+        // 새로운 처리 함수들
+        function processWithWhisper() {
+            if (!uploadedMediaId) {
+                alert('먼저 오디오 파일을 업로드하세요.');
+                return;
+            }
+            
+            const model = document.getElementById('modelSelect').value;
+            const template = document.getElementById('templateSelect').value;
+            const statusEl = document.getElementById('processingStatus');
+            
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = `🎤 Whisper 처리 시작 중... (모델: ${model}, 템플릿: ${template})`;
+            
+            fetch(`/api/media/${uploadedMediaId}/process-whisper`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    model: model,
+                    template: template
+                })
+            })
+            .then(response => {
+                console.log('Response status:', response.status, response.statusText);
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        console.error('Server error response:', errorData);
+                        
+                        // 처리 중인 미디어인 경우 강제 재시작 옵션 제공
+                        if (errorData.can_force_restart) {
+                            if (confirm('미디어가 현재 처리 중입니다. 강제로 재시작하시겠습니까?')) {
+                                // 강제 재시작으로 다시 요청
+                                return fetch(`/api/media/${uploadedMediaId}/process-whisper`, {
+                                    method: 'POST',
+                                    headers: {'Content-Type': 'application/json'},
+                                    body: JSON.stringify({
+                                        model: model,
+                                        template: template,
+                                        force_restart: true
+                                    })
+                                }).then(response => response.json());
+                            } else {
+                                throw new Error('처리가 취소되었습니다.');
+                            }
+                        }
+                        
+                        throw new Error(`Server error: ${errorData.error || response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    statusEl.innerHTML = `✅ ${data.message}`;
+                    currentMedia = uploadedMediaId;
+                    
+                    // 자막 생성 상태 업데이트
+                    const generationStatusEl = document.getElementById('generationStatus');
+                    if (generationStatusEl) {
+                        generationStatusEl.innerHTML = `🎤 Whisper 처리 중... 상태를 모니터링합니다.`;
+                    }
+                    
+                    // 처리 상태 모니터링 시작
+                    monitorProcessingStatus();
+                } else {
+                    statusEl.innerHTML = `❌ 처리 실패: ${data.error}`;
+                    
+                    // 자막 생성 상태 오류 표시
+                    const generationStatusEl = document.getElementById('generationStatus');
+                    if (generationStatusEl) {
+                        generationStatusEl.innerHTML = `❌ 자막 생성 실패: ${data.error}`;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Whisper processing error:', error);
+                statusEl.innerHTML = `❌ 처리 중 오류 발생: ${error.message}`;
+                
+                // 자막 생성 상태 오류 표시
+                const generationStatusEl = document.getElementById('generationStatus');
+                if (generationStatusEl) {
+                    generationStatusEl.innerHTML = `❌ 처리 중 오류 발생: ${error.message}`;
+                }
+            });
+        }
+        
+        function uploadSentences() {
+            if (!uploadedMediaId) {
+                alert('먼저 오디오 파일을 업로드하세요.');
+                return;
+            }
+            
+            const srtFile = document.getElementById('srtFileInput').files[0];
+            if (!srtFile) {
+                alert('SRT 파일을 선택하세요.');
+                return;
+            }
+            
+            const statusEl = document.getElementById('processingStatus');
+            const formData = new FormData();
+            formData.append('file', srtFile);
+            formData.append('template', 'manual');
+            
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = `📄 SRT 파일 처리 중...`;
+            
+            fetch(`/api/media/${uploadedMediaId}/upload-sentences`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('SRT Upload Response status:', response.status, response.statusText);
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        console.error('SRT Upload Server error response:', errorData);
+                        throw new Error(`Server error: ${errorData.error || response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    statusEl.innerHTML = `✅ ${data.message}`;
+                    currentMedia = uploadedMediaId;
+                    
+                    // 자막 생성 상태 업데이트
+                    const generationStatusEl = document.getElementById('generationStatus');
+                    if (generationStatusEl) {
+                        generationStatusEl.innerHTML = `📄 SRT 파일 처리 완료`;
+                    }
+                    
+                    // 처리 상태 모니터링 시작
+                    monitorProcessingStatus();
+                } else {
+                    statusEl.innerHTML = `❌ 처리 실패: ${data.error}`;
+                    
+                    // 자막 생성 상태 오류 표시
+                    const generationStatusEl = document.getElementById('generationStatus');
+                    if (generationStatusEl) {
+                        generationStatusEl.innerHTML = `❌ SRT 업로드 실패: ${data.error}`;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Sentence upload error:', error);
+                statusEl.innerHTML = `❌ 처리 중 오류 발생: ${error.message}`;
+                
+                // 자막 생성 상태 오류 표시
+                const generationStatusEl = document.getElementById('generationStatus');
+                if (generationStatusEl) {
+                    generationStatusEl.innerHTML = `❌ SRT 업로드 오류: ${error.message}`;
+                }
+            });
+        }
+        
+        function monitorProcessingStatus() {
+            const statusEl = document.getElementById('processingStatus');
+            
+            const interval = setInterval(() => {
+                fetch(`/api/media/${uploadedMediaId}/status`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.processed && data.sentence_count > 0) {
+                            clearInterval(interval);
+                            statusEl.innerHTML = `✅ 처리 완료! ${data.sentence_count}개 문장 생성됨`;
+                            
+                            // 문장 로드 및 표시
+                            loadGroupedSentences(uploadedMediaId);
+                            checkTranslationStatus();
+                            
+                            // 처리 옵션 숨기기
+                            document.getElementById('processingOptions').style.display = 'none';
+                        } else if (data.status === 'processing' && data.current_sentence) {
+                            statusEl.innerHTML = `🔄 ${data.current_sentence}`;
+                        } else if (data.status === 'error') {
+                            clearInterval(interval);
+                            statusEl.innerHTML = `❌ 처리 오류: ${data.current_sentence}`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Status check error:', error);
+                    });
+            }, 2000);
+        }
+        
+        function checkProcessingStatus(mediaId, filename) {
+            const statusEl = document.getElementById('uploadStatus');
+            let checkCount = 0;
+            let lastSentenceCount = 0;
+            
+            const interval = setInterval(() => {
+                checkCount++;
+                
+                fetch(`/api/media/${mediaId}/status`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.processed && data.sentence_count > 0) {
+                            clearInterval(interval);
+                            
+                            // 최종 문장 로드
+                            if (mediaId === currentMedia) {
+                                loadMediaSentences(mediaId);
+                            }
+                            
+                            console.log(`${filename}: 처리 완료! ${data.sentence_count}개 문장 추출`);
+                            
+                            if (statusEl) {
+                                statusEl.innerHTML = `${filename}: 처리 완료! ${data.sentence_count}개 문장`;
+                            }
+                        } else {
+                            // 실시간 문장 업데이트
+                            if (data.sentence_count > lastSentenceCount) {
+                                lastSentenceCount = data.sentence_count;
+                                
+                                // 새로운 문장이 추가되면 즉시 화면 업데이트
+                                if (mediaId === currentMedia) {
+                                    loadMediaSentences(mediaId);
+                                }
+                            }
+                            
+                            // 처리 중 상태 표시 (현재 문장 포함)
+                            if (statusEl) {
+                                const dots = '.'.repeat((checkCount % 3) + 1);
+                                
+                                // 현재 처리 중인 문장 표시
+                                if (data.current_sentence && data.current_sentence.trim()) {
+                                    statusEl.innerHTML = `
+                                        <div>${filename} (${data.status || '처리 중'})${dots}</div>
+                                        <div style="font-size: 0.85em; color: #aaa; margin-top: 3px;">${data.current_sentence}</div>
+                                        <div style="font-size: 0.8em; color: #888;">${data.sentence_count}개 문장 완료</div>
+                                    `;
+                                } else if (data.sentence_count > 0) {
+                                    statusEl.innerHTML = `${filename}: ${data.sentence_count}개 문장 추출됨${dots}`;
+                                } else {
+                                    statusEl.innerHTML = `${filename} 처리 중${dots}`;
+                                }
+                            }
+                            
+                            // 30분 후 타임아웃 (대용량 파일 고려)
+                            if (checkCount > 1800) {  // 30분
+                                clearInterval(interval);
+                                if (statusEl) {
+                                    statusEl.innerHTML = `${filename}: 처리 시간 초과 (30분)`;
+                                }
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Status check error:', error);
+                        if (statusEl) {
+                            statusEl.innerHTML = `${filename}: 상태 확인 오류`;
+                        }
+                        clearInterval(interval);
+                    });
+            }, 1000); // 1초마다 확인 (더 빠른 업데이트)
+        }
+        
+        function loadMediaList() {
+            console.log('Loading media list...');
+            fetch('/api/media')
+                .then(response => {
+                    console.log('Media API response:', response.status);
+                    return response.json();
+                })
+                .then(media => {
+                    console.log('Media data:', media);
+                    const listEl = document.getElementById('mediaList');
+                    if (!listEl) {
+                        console.error('mediaList element not found!');
+                        return;
+                    }
+                    
+                    if (media.length === 0) {
+                        listEl.innerHTML = '<div style="color: #858585; padding: 10px;">업로드된 미디어가 없습니다.</div>';
+                    } else {
+                        listEl.innerHTML = media.map(m => {
+                            // UUID 제거: UUID는 36자리 (8-4-4-4-12) 형태이므로 첫 37자(UUID + _)를 제거
+                            const displayName = m.filename.includes('_') ? 
+                                m.filename.substring(m.filename.indexOf('_') + 1) : 
+                                m.filename;
+                            
+                            return `
+                            <div class="media-item" onclick="loadMediaSentences(${m.id})" data-media-id="${m.id}">
+                                <div style="font-weight: bold;" title="${displayName}">${displayName}</div>
+                                <div style="font-size: 0.8em; color: #858585;">
+                                    ${m.createdAt ? new Date(m.createdAt).toLocaleDateString() : ''}
+                                </div>
+                                <button class="delete-btn" onclick="deleteMedia(${m.id}, event)" 
+                                        style="position: absolute; right: 5px; top: 5px; background: #d32f2f; color: white; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">
+                                    ✕
+                                </button>
+                            </div>
+                            `;
+                        }).join('');
+                    }
+                    console.log(`Media list updated: ${media.length} items`);
+                })
+                .catch(error => {
+                    console.error('Failed to load media list:', error);
+                    const listEl = document.getElementById('mediaList');
+                    if (listEl) {
+                        listEl.innerHTML = '<div style="color: #ff6b6b;">미디어 목록 로딩 실패</div>';
+                    }
+                });
+        }
+        
+        function showUploadSection() {
+            // 업로드 섹션 표시
+            document.getElementById('uploadSection').style.display = 'block';
+            
+            // 처리 옵션, 검색 섹션, 자막 생성 메뉴 숨기기
+            document.getElementById('processingOptions').style.display = 'none';
+            document.getElementById('searchSection').style.display = 'none';
+            document.getElementById('subtitleGenerationMenu').style.display = 'none';
+            
+            // 미디어 플레이어 숨기기
+            document.querySelector('.media-player').style.display = 'none';
+            
+            // 문장 목록 숨기기
+            document.getElementById('sentenceList').innerHTML = '';
+            document.getElementById('bookmarkedList').innerHTML = '<p style="color: #858585;">북마크된 문장이 없습니다.</p>';
+            
+            // 미디어 선택 해제
+            document.querySelectorAll('.media-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            currentMedia = null;
+            console.log('Upload section shown');
+        }
+        
+        function showWhisperOptions() {
+            // Whisper 모달 띄우기
+            document.getElementById('whisperModal').style.display = 'block';
+        }
+        
+        function showSrtUpload() {
+            // SRT 업로드 모달 띄우기
+            document.getElementById('srtModal').style.display = 'block';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function startModalWhisper() {
+            // 현재 선택된 미디어가 있는지 확인
+            if (!currentMedia) {
+                alert('미디어가 선택되지 않았습니다.');
+                return;
+            }
+            
+            // 모달에서 선택된 값들 가져오기
+            const model = document.getElementById('modalModelSelect').value;
+            const template = document.getElementById('modalTemplateSelect').value;
+            
+            // uploadedMediaId 설정
+            uploadedMediaId = currentMedia;
+            
+            // 기존 프로세싱 옵션의 select 값들 설정
+            document.getElementById('modelSelect').value = model;
+            document.getElementById('templateSelect').value = template;
+            
+            // 모달 닫기
+            closeModal('whisperModal');
+            
+            // 자막 생성 상태 표시
+            const statusEl = document.getElementById('generationStatus');
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = `🎤 Whisper 자막 생성 중... (모델: ${model})`;
+            
+            // 기존 Whisper 처리 함수 호출
+            processWithWhisper();
+        }
+        
+        function startModalSrtUpload() {
+            // 현재 선택된 미디어가 있는지 확인
+            if (!currentMedia) {
+                alert('미디어가 선택되지 않았습니다.');
+                return;
+            }
+            
+            // 모달에서 선택된 파일 가져오기
+            const fileInput = document.getElementById('modalSrtFileInput');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('SRT 파일을 선택해주세요.');
+                return;
+            }
+            
+            // uploadedMediaId 설정
+            uploadedMediaId = currentMedia;
+            
+            // 기존 SRT 파일 input에 파일 설정
+            const originalFileInput = document.getElementById('srtFileInput');
+            originalFileInput.files = fileInput.files;
+            
+            // 모달 닫기
+            closeModal('srtModal');
+            
+            // 자막 생성 상태 표시
+            const statusEl = document.getElementById('generationStatus');
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = `📄 SRT 파일 업로드 중...`;
+            
+            // 기존 SRT 업로드 함수 호출
+            uploadSentences();
+        }
+        
+        // 비디오 자막 업데이트 함수
+        function updateVideoSubtitles() {
+            const videoSubtitlesDiv = document.getElementById('videoSubtitles');
+            const currentSubtitleDiv = document.getElementById('currentSubtitle');
+            
+            if (videoPlayer.style.display === 'none' || !sentences || sentences.length === 0) {
+                return;
+            }
+            
+            const currentTime = videoPlayer.currentTime;
+            let currentSubtitle = '';
+            
+            // 현재 시간에 해당하는 문장 찾기
+            for (let sentence of sentences) {
+                if (currentTime >= sentence.startTime && currentTime <= sentence.endTime) {
+                    currentSubtitle = sentence.english;
+                    if (sentence.korean) {
+                        currentSubtitle += `\n${sentence.korean}`;
+                    }
+                    currentSubtitleSentence = sentence; // 현재 자막 문장 저장
+                    break;
+                }
+            }
+            
+            // 자막 표시
+            if (currentSubtitle) {
+                videoSubtitlesDiv.style.display = 'block';
+                currentSubtitleDiv.innerHTML = currentSubtitle.replace(/\n/g, '<br>');
+                // 북마크 버튼 업데이트
+                updateSubtitleBookmarkButton();
+            } else {
+                currentSubtitleDiv.innerHTML = '';
+                currentSubtitleSentence = null;
+            }
+        }
+        
+        // 자막 북마크 토글 함수
+        function toggleSubtitleBookmark() {
+            if (!currentSubtitleSentence) return;
+            
+            const sentenceElement = document.querySelector(`[data-sentence-id="${currentSubtitleSentence.id}"]`);
+            if (sentenceElement) {
+                sentenceElement.click(); // 기존 toggleBookmark 함수 활용
+            }
+        }
+        
+        // 북마크 버튼 업데이트
+        function updateSubtitleBookmarkButton() {
+            const btn = document.getElementById('subtitleBookmarkBtn');
+            if (!btn || !currentSubtitleSentence) return;
+            
+            const sentenceElement = document.querySelector(`[data-sentence-id="${currentSubtitleSentence.id}"]`);
+            if (sentenceElement && sentenceElement.classList.contains('bookmarked')) {
+                btn.innerHTML = '★';
+                btn.style.background = '#ff9800';
+                btn.style.color = '#ffffff';
+            } else {
+                btn.innerHTML = '☆';
+                btn.style.background = '#333333';
+                btn.style.color = '#cccccc';
+            }
+        }
+        
+        // 자막 삭제 함수
+        function deleteSubtitles() {
+            if (!currentMedia) {
+                alert('미디어가 선택되지 않았습니다.');
+                return;
+            }
+            
+            if (!confirm('정말로 이 미디어의 모든 자막을 삭제하시겠습니까?\n\n삭제 후 자막을 다시 생성할 수 있습니다.')) {
+                return;
+            }
+            
+            const statusEl = document.getElementById('generationStatus');
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = '🗑️ 자막 삭제 중...';
+            
+            fetch(`/api/media/${currentMedia}/subtitles`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(`Server error: ${errorData.error || response.statusText}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    statusEl.innerHTML = '✅ 자막이 삭제되었습니다. 새로운 자막을 생성할 수 있습니다.';
+                    
+                    // 문장 목록 초기화
+                    document.getElementById('sentenceList').innerHTML = '';
+                    sentences = [];
+                    
+                    // 미디어 목록 새로고침
+                    loadMediaList();
+                    
+                    // 5초 후 상태 메시지 숨기기
+                    setTimeout(() => {
+                        statusEl.style.display = 'none';
+                    }, 5000);
+                } else {
+                    statusEl.innerHTML = `❌ 자막 삭제 실패: ${data.error}`;
+                }
+            })
+            .catch(error => {
+                console.error('Delete subtitles error:', error);
+                statusEl.innerHTML = `❌ 자막 삭제 중 오류 발생: ${error.message}`;
+            });
+        }
+        
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function(event) {
+            const whisperModal = document.getElementById('whisperModal');
+            const srtModal = document.getElementById('srtModal');
+            
+            if (event.target == whisperModal) {
+                whisperModal.style.display = 'none';
+            }
+            if (event.target == srtModal) {
+                srtModal.style.display = 'none';
+            }
+        }
+        
+        function loadMediaSentences(mediaId) {
+            currentMedia = mediaId;
+            
+            // 업로드 섹션 숨기기
+            document.getElementById('uploadSection').style.display = 'none';
+            
+            // 검색 섹션과 자막 생성 메뉴 표시
+            document.getElementById('searchSection').style.display = 'block';
+            document.getElementById('subtitleGenerationMenu').style.display = 'block';
+            
+            // 현재 선택된 미디어 강조
+            document.querySelectorAll('.media-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.mediaId == mediaId) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // 미디어 정보 로드 (파일명 가져오기)
+            fetch('/api/media')
+                .then(response => response.json())
+                .then(mediaList => {
+                    const media = mediaList.find(m => m.id == mediaId);
+                    if (media) {
+                        // 플레이어에 파일 로드 (영상/오디오 구분)
+                        const mediaTitle = document.getElementById('mediaTitle');
+                        const mediaPlayerDiv = document.querySelector('.media-player');
+                        
+                        // 영상 파일 확인
+                        const videoExtensions = ['mp4', 'avi', 'mov', 'mkv', 'webm', 'flv'];
+                        const fileExt = media.filename.toLowerCase().split('.').pop();
+                        const isVideoFile = videoExtensions.includes(fileExt);
+                        
+                        if (isVideoFile) {
+                            // 비디오 플레이어 사용
+                            videoPlayer.src = `/api/audio/${media.filename}`;
+                            videoPlayer.style.display = 'block';
+                            audioPlayer.style.display = 'none';
+                            document.getElementById('videoSubtitles').style.display = 'block';
+                            currentPlayer = videoPlayer;
+                        } else {
+                            // 오디오 플레이어 사용
+                            audioPlayer.src = `/api/audio/${media.filename}`;
+                            audioPlayer.style.display = 'block';
+                            videoPlayer.style.display = 'none';
+                            document.getElementById('videoSubtitles').style.display = 'none';
+                            currentPlayer = audioPlayer;
+                        }
+                        
+                        mediaTitle.textContent = media.filename;
+                        mediaPlayerDiv.style.display = 'block';
+                        
+                        // 미디어 상태에 따라 처리 옵션 표시 여부 결정
+                        const processingOptions = document.getElementById('processingOptions');
+                        
+                        if (media.status === 'uploaded' || media.status === 'error' || (isVideoFile && media.status === 'completed')) {
+                            // 처리되지 않은 미디어 또는 영상 파일은 처리 옵션 표시
+                            processingOptions.style.display = 'block';
+                            uploadedMediaId = media.id; // 전역 변수 설정
+                        } else {
+                            // 이미 처리된 오디오 파일은 처리 옵션 숨김
+                            processingOptions.style.display = 'none';
+                        }
+                        
+                        console.log(`Loaded audio: ${media.filename}, status: ${media.status}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load media info:', error);
+                });
+            
+            // 챕터 구조 로드
+            fetch(`/api/media/${mediaId}/chapters`)
+                .then(response => response.json())
+                .then(chapters => {
+                    displayChapters(chapters);
+                })
+                .catch(error => {
+                    console.error('Failed to load chapters:', error);
+                });
+            
+            // 그룹화된 문장 로드
+            fetch(`/api/media/${mediaId}/sentences-grouped`)
+                .then(response => response.json())
+                .then(chapters => {
+                    displayGroupedSentences(chapters);
+                    console.log(`Loaded ${chapters.length} chapters with scenes and sentences`);
+                })
+                .catch(error => {
+                    console.error('Failed to load grouped sentences:', error);
+                });
+            
+            // 번역 상태 확인
+            checkTranslationStatus();
+        }
+        
+        function loadGroupedSentences(mediaId) {
+            // 그룹화된 문장 로드
+            fetch(`/api/media/${mediaId}/sentences-grouped`)
+                .then(response => response.json())
+                .then(chapters => {
+                    displayGroupedSentences(chapters);
+                    console.log(`Loaded ${chapters.length} chapters with scenes and sentences`);
+                })
+                .catch(error => {
+                    console.error('Failed to load grouped sentences:', error);
+                });
+        }
+        
+        function displayChapters(chapters) {
+            const chapterListEl = document.getElementById('chapterList');
+            const chapterContentEl = document.getElementById('chapterContent');
+            
+            if (chapters.length === 0) {
+                chapterListEl.style.display = 'none';
+                return;
+            }
+            
+            chapterListEl.style.display = 'block';
+            
+            let html = '';
+            chapters.forEach(chapter => {
+                html += `<div class="chapter-item">
+                    <strong>${chapter.title}</strong> (${chapter.startTime.toFixed(1)}s - ${chapter.endTime.toFixed(1)}s)
+                    <div>${chapter.scene_count}개 씬</div>
+                `;
+                
+                chapter.scenes.forEach(scene => {
+                    html += `<div class="scene-item">
+                        ${scene.title} (${scene.sentence_count}개 문장)
+                    </div>`;
+                });
+                
+                html += '</div>';
+            });
+            
+            chapterContentEl.innerHTML = html;
+        }
+        
+        function loadSimulationData() {
+            // 시뮬레이션 데이터
+            sentences = [
+                {
+                    id: 1,
+                    english: "What are you doing?",
+                    korean: "뭐 하고 있어?",
+                    start_time: 0,
+                    end_time: 2,
+                    bookmark: false
+                },
+                {
+                    id: 2,
+                    english: "I'm learning English with this amazing tool.",
+                    korean: "이 멋진 도구로 영어를 공부하고 있어요.",
+                    start_time: 2,
+                    end_time: 5,
+                    bookmark: false
+                },
+                {
+                    id: 3,
+                    english: "Can you help me with my pronunciation?",
+                    korean: "발음 도와줄 수 있어?",
+                    start_time: 5,
+                    end_time: 8,
+                    bookmark: false
+                }
+            ];
+            
+            displaySentences();
+        }
+        
+        function generateSentences() {
+            // 실제로는 Whisper API 호출
+            loadSimulationData();
+        }
+        
+        function displayGroupedSentences(chapters) {
+            const listEl = document.getElementById('sentenceList');
+            listEl.innerHTML = '';
+            
+            // 전역 sentences 배열 초기화
+            sentences = [];
+            let globalIndex = 0;
+            
+            console.log('displayGroupedSentences called with:', chapters);
+
+            chapters.forEach((chapter, chapterIndex) => {
+                // 챕터 섹션 생성
+                const chapterSection = document.createElement('div');
+                chapterSection.className = 'chapter-section';
+                chapterSection.dataset.chapterId = chapter.id;
+                
+                // 챕터 헤더
+                const chapterHeader = document.createElement('div');
+                chapterHeader.className = 'chapter-header';
+                chapterHeader.innerHTML = `
+                    <div>
+                        <div class="chapter-title">📚 ${chapter.title}</div>
+                        <div class="chapter-info">${chapter.startTime?.toFixed(1) || 0}s - ${chapter.endTime?.toFixed(1) || 0}s</div>
+                    </div>
+                    <div class="chapter-info">
+                        ${chapter.scenes?.length || 0}개 씬
+                        <button class="chapter-extract-btn" onclick="extractChapter(${chapter.id}, event)">MP3</button>
+                        <button class="chapter-extract-btn" onclick="extractChapterMP4(${chapter.id}, event)" style="background: #2563eb;">MP4</button>
+                        <span class="collapse-icon">▼</span>
+                    </div>
+                `;
+                
+                // 챕터 접기/펼치기
+                chapterHeader.onclick = function(e) {
+                    // MP3 추출 버튼을 클릭한 경우 무시
+                    if (e.target.classList.contains('chapter-extract-btn')) {
+                        return;
+                    }
+                    
+                    const content = chapterSection.querySelector('.chapter-content');
+                    const icon = chapterHeader.querySelector('.collapse-icon');
+                    if (content.style.display === 'none') {
+                        content.style.display = 'block';
+                        icon.textContent = '▼';
+                        chapterSection.classList.remove('collapsed');
+                    } else {
+                        content.style.display = 'none';
+                        icon.textContent = '▶';
+                        chapterSection.classList.add('collapsed');
+                    }
+                };
+                
+                chapterSection.appendChild(chapterHeader);
+                
+                // 챕터 내용
+                const chapterContent = document.createElement('div');
+                chapterContent.className = 'chapter-content';
+                
+                // 씬들 처리
+                chapter.scenes?.forEach((scene, sceneIndex) => {
+                    const sceneStartIndex = globalIndex; // 이 씬의 시작 인덱스 저장
+                    
+                    const sceneSection = document.createElement('div');
+                    sceneSection.className = 'scene-section';
+                    sceneSection.dataset.sceneId = scene.id;
+                    
+                    // 씬 헤더
+                    const sceneHeader = document.createElement('div');
+                    sceneHeader.className = 'scene-header';
+                    sceneHeader.innerHTML = `
+                        <div>
+                            <div class="scene-title">🎬 ${scene.title}</div>
+                            <div class="scene-info">${scene.startTime?.toFixed(1) || 0}s - ${scene.endTime?.toFixed(1) || 0}s</div>
+                        </div>
+                        <div class="scene-info">
+                            ${scene.sentences?.length || 0}개 문장
+                            <button class="scene-extract-btn" onclick="extractScene(${scene.id}, event)">MP3</button>
+                            <button class="scene-extract-btn" onclick="extractSceneMP4(${scene.id}, event)" style="background: #2563eb;">MP4</button>
+                            <span class="collapse-icon">▼</span>
+                        </div>
+                    `;
+                    
+                    // 씬 접기/펼치기 및 씬으로 이동
+                    sceneHeader.onclick = function(e) {
+                        // MP3 추출 버튼을 클릭한 경우 무시
+                        if (e.target.classList.contains('scene-extract-btn')) {
+                            return;
+                        }
+                        
+                        // 접기/펼치기 아이콘을 클릭한 경우
+                        if (e.target.classList.contains('collapse-icon') || e.target.closest('.collapse-icon')) {
+                            const content = sceneSection.querySelector('.scene-content');
+                            const icon = sceneHeader.querySelector('.collapse-icon');
+                            if (content.style.display === 'none') {
+                                content.style.display = 'block';
+                                icon.textContent = '▼';
+                                sceneSection.classList.remove('collapsed');
+                            } else {
+                                content.style.display = 'none';
+                                icon.textContent = '▶';
+                                sceneSection.classList.add('collapsed');
+                            }
+                        } else {
+                            // 씬 제목을 클릭한 경우 - 해당 씬으로 이동
+                            jumpToScene(scene, sceneStartIndex);
+                        }
+                    };
+                    
+                    sceneSection.appendChild(sceneHeader);
+                    
+                    // 씬 내용 (문장들)
+                    const sceneContent = document.createElement('div');
+                    sceneContent.className = 'scene-content';
+                    
+                    scene.sentences?.forEach((sentence, sentenceIndex) => {
+                        // 문장 데이터 정규화 (startTime/endTime 필드 통일)
+                        const normalizedSentence = {
+                            ...sentence,
+                            startTime: sentence.startTime || sentence.start_time || 0,
+                            endTime: sentence.endTime || sentence.end_time || 0
+                        };
+                        
+                        // 전역 sentences 배열에 추가
+                        sentences.push(normalizedSentence);
+                        
+                        const sentenceEl = document.createElement('div');
+                        sentenceEl.className = 'sentence-item' + (sentence.bookmark ? ' bookmarked' : '');
+                        sentenceEl.dataset.index = globalIndex;
+                        sentenceEl.dataset.sentenceId = sentence.id;
+                        
+                        sentenceEl.innerHTML = `
+                            <span class="sentence-number">${sentence.order}.</span>
+                            <span class="sentence-text">${sentence.english}</span>
+                            <span class="sentence-korean">${sentence.korean || ''}</span>
+                            <div style="font-size: 0.7em; color: #666; margin-top: 3px;">
+                                ${sentence.startTime?.toFixed(1) || 0}s - ${sentence.endTime?.toFixed(1) || 0}s
+                            </div>
+                            <button class="bookmark-btn" onclick="toggleBookmark(${globalIndex}, event)">★</button>
+                            <button class="extract-btn" onclick="extractMP3(${globalIndex}, event)">MP3</button>
+                            <button class="extract-btn" onclick="extractMP4(${globalIndex}, event)" style="background: #2563eb;">MP4</button>
+                        `;
+
+                        sentenceEl.onclick = (function(index, sentenceData) {
+                            return function(e) {
+                                if (!e.target.classList.contains('bookmark-btn') && 
+                                    !e.target.classList.contains('extract-btn')) {
+                                    console.log('Sentence clicked:', index, sentenceData.english);
+                                    playSentence(index);
+                                }
+                            };
+                        })(globalIndex, normalizedSentence);
+                        
+                        // 호버 효과 개선
+                        sentenceEl.addEventListener('mouseenter', function() {
+                            this.style.cursor = 'pointer';
+                        });
+
+                        sceneContent.appendChild(sentenceEl);
+                        globalIndex++;
+                    });
+                    
+                    sceneSection.appendChild(sceneContent);
+                    chapterContent.appendChild(sceneSection);
+                });
+                
+                chapterSection.appendChild(chapterContent);
+                listEl.appendChild(chapterSection);
+            });
+
+            console.log(`Loaded ${sentences.length} sentences`);
+            updateBookmarkedList();
+        }
+        
+        function displaySentences() {
+            const listEl = document.getElementById('sentenceList');
+            listEl.innerHTML = '';
+            
+            sentences.forEach((sentence, index) => {
+                const el = document.createElement('div');
+                el.className = 'sentence-item' + (sentence.bookmark ? ' bookmarked' : '');
+                el.dataset.index = index;
+                
+                el.innerHTML = `
+                    <span class="sentence-number">${sentence.id || sentence.order}.</span>
+                    <span class="sentence-text">${sentence.english}</span>
+                    <span class="sentence-korean">${sentence.korean || ''}</span>
+                    <div style="font-size: 0.7em; color: #666; margin-top: 3px;">
+                        ${sentence.chapter_title || ''} > ${sentence.scene_title || ''} 
+                        (${sentence.startTime?.toFixed(1) || 0}s - ${sentence.endTime?.toFixed(1) || 0}s)
+                    </div>
+                    <button class="bookmark-btn" onclick="toggleBookmark(${index}, event)">★</button>
+                    <button class="extract-btn" onclick="extractMP3(${index}, event)">MP3</button>
+                    <button class="extract-btn" onclick="extractMP4(${index}, event)" style="background: #2563eb;">MP4</button>
+                `;
+                
+                el.onclick = function(e) {
+                    if (!e.target.classList.contains('bookmark-btn') && 
+                        !e.target.classList.contains('extract-btn')) {
+                        playSentence(index);
+                    }
+                };
+                
+                listEl.appendChild(el);
+            });
+            
+            updateBookmarkedList();
+        }
+        
+        function playSentence(index) {
+            const sentence = sentences[index];
+            console.log('playSentence called:', index, sentence);
+            
+            if (currentPlayer && sentence) {
+                const startTime = sentence.startTime || sentence.start_time || 0;
+                const endTime = sentence.endTime || sentence.end_time || startTime + 3;
+                
+                console.log('Playing:', startTime, '-', endTime);
+                
+                currentPlayer.currentTime = startTime;
+                currentPlayer.play().then(() => {
+                    console.log('Media started playing');
+                }).catch(error => {
+                    console.error('Media play error:', error);
+                });
+                
+                // 종료 시간에 일시정지
+                const checkTime = () => {
+                    if (currentPlayer.currentTime >= endTime) {
+                        currentPlayer.pause();
+                        clearInterval(timeCheckInterval);
+                        console.log('Media stopped at:', currentPlayer.currentTime);
+                    }
+                };
+                
+                const timeCheckInterval = setInterval(checkTime, 100);
+                
+                // 최대 재생 시간 제한
+                setTimeout(() => {
+                    clearInterval(timeCheckInterval);
+                }, (endTime - startTime + 2) * 1000);
+                
+                currentSentenceIndex = index;
+                
+                // 현재 재생 중인 문장 강조
+                document.querySelectorAll('.sentence-item').forEach(item => {
+                    item.classList.remove('playing');
+                });
+                document.querySelector(`[data-index="${index}"]`)?.classList.add('playing');
+            } else {
+                console.error('Cannot play:', {currentPlayer, sentence});
+            }
+        }
+        
+        function jumpToScene(scene, startingIndex) {
+            console.log('jumpToScene called:', scene.title, startingIndex);
+            
+            if (!scene.sentences || scene.sentences.length === 0) {
+                console.log('No sentences in scene');
+                return;
+            }
+            
+            // 해당 씬의 첫 번째 문장으로 스크롤
+            const firstSentenceEl = document.querySelector(`[data-index="${startingIndex}"]`);
+            if (firstSentenceEl) {
+                firstSentenceEl.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+                
+                // 잠시 강조 표시
+                firstSentenceEl.classList.add('highlighted');
+                setTimeout(() => {
+                    firstSentenceEl.classList.remove('highlighted');
+                }, 2000);
+            }
+            
+            // 씬의 첫 번째 문장 재생
+            if (currentPlayer && scene.sentences[0]) {
+                const firstSentence = scene.sentences[0];
+                const startTime = firstSentence.startTime || firstSentence.start_time || 0;
+                
+                currentPlayer.currentTime = startTime;
+                console.log(`Jumped to scene "${scene.title}" at ${startTime}s`);
+            }
+        }
+        
+        // MP3 추출 기능들
+        function extractChapter(chapterId, event) {
+            event.stopPropagation();
+            if (!currentMedia) return;
+            
+            console.log('Extracting chapter:', chapterId);
+            updateExtractStatus('챕터 MP3 추출 중...');
+            
+            fetch(`/api/media/${currentMedia}/chapter/${chapterId}/extract-mp3`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateExtractStatus(`챕터 MP3 추출 완료: <a href="${data.download_url}" download>다운로드</a>`);
+                } else {
+                    updateExtractStatus('챕터 MP3 추출 실패: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Extract error:', error);
+                updateExtractStatus('챕터 MP3 추출 중 오류 발생');
+            });
+        }
+        
+        function extractScene(sceneId, event) {
+            event.stopPropagation();
+            if (!currentMedia) return;
+            
+            console.log('Extracting scene:', sceneId);
+            updateExtractStatus('씬 MP3 추출 중...');
+            
+            fetch(`/api/media/${currentMedia}/scene/${sceneId}/extract-mp3`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateExtractStatus(`씬 MP3 추출 완료: <a href="${data.download_url}" download>다운로드</a>`);
+                } else {
+                    updateExtractStatus('씬 MP3 추출 실패: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Extract error:', error);
+                updateExtractStatus('씬 MP3 추출 중 오류 발생');
+            });
+        }
+        
+        function extractChapterMP4(chapterId, event) {
+            event.stopPropagation();
+            if (!currentMedia) return;
+            
+            console.log('Extracting chapter MP4:', chapterId);
+            updateExtractStatus('챕터 MP4 추출 중...');
+            
+            fetch(`/api/media/${currentMedia}/chapter/${chapterId}/extract-mp4`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateExtractStatus(`챕터 MP4 추출 완료: <a href="${data.download_url}" download>다운로드</a>`);
+                } else {
+                    updateExtractStatus('챕터 MP4 추출 실패: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Extract error:', error);
+                updateExtractStatus('챕터 MP4 추출 중 오류 발생');
+            });
+        }
+        
+        function extractSceneMP4(sceneId, event) {
+            event.stopPropagation();
+            if (!currentMedia) return;
+            
+            console.log('Extracting scene MP4:', sceneId);
+            updateExtractStatus('씬 MP4 추출 중...');
+            
+            fetch(`/api/media/${currentMedia}/scene/${sceneId}/extract-mp4`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateExtractStatus(`씬 MP4 추출 완료: <a href="${data.download_url}" download>다운로드</a>`);
+                } else {
+                    updateExtractStatus('씬 MP4 추출 실패: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Extract error:', error);
+                updateExtractStatus('씬 MP4 추출 중 오류 발생');
+            });
+        }
+        
+        function extractAllChapters() {
+            if (!currentMedia) return;
+            
+            console.log('Extracting all chapters');
+            updateExtractStatus('모든 챕터 MP3 추출 중...');
+            
+            fetch(`/api/media/${currentMedia}/extract-all-chapters`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateExtractStatus(`모든 챕터 MP3 추출 완료: <a href="${data.download_url}" download>ZIP 다운로드</a>`);
+                } else {
+                    updateExtractStatus('모든 챕터 MP3 추출 실패: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Extract error:', error);
+                updateExtractStatus('모든 챕터 MP3 추출 중 오류 발생');
+            });
+        }
+        
+        function extractAllScenes() {
+            if (!currentMedia) return;
+            
+            console.log('Extracting all scenes');
+            updateExtractStatus('모든 씬 MP3 추출 중...');
+            
+            fetch(`/api/media/${currentMedia}/extract-all-scenes`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateExtractStatus(`모든 씬 MP3 추출 완료: <a href="${data.download_url}" download>ZIP 다운로드</a>`);
+                } else {
+                    updateExtractStatus('모든 씬 MP3 추출 실패: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Extract error:', error);
+                updateExtractStatus('모든 씬 MP3 추출 중 오류 발생');
+            });
+        }
+        
+        function extractBookmarkedOnly() {
+            if (!currentMedia) return;
+            
+            console.log('Extracting bookmarked sentences');
+            updateExtractStatus('북마크 문장 MP3 추출 중...');
+            
+            fetch(`/api/media/${currentMedia}/extract-bookmarked`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateExtractStatus(`북마크 문장 MP3 추출 완료: <a href="${data.download_url}" download>ZIP 다운로드</a>`);
+                } else {
+                    updateExtractStatus('북마크 문장 MP3 추출 실패: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Extract error:', error);
+                updateExtractStatus('북마크 문장 MP3 추출 중 오류 발생');
+            });
+        }
+        
+        // MP4 추출 함수들
+        function extractAllChaptersMP4() {
+            if (!currentMedia) return;
+            
+            console.log('Extracting all chapters as MP4');
+            updateExtractStatusMP4('모든 챕터 MP4 추출 중...');
+            
+            // 각 챕터별로 순차 처리
+            fetch(`/api/media/${currentMedia}/chapters`)
+            .then(response => response.json())
+            .then(chapters => {
+                if (chapters.length === 0) {
+                    updateExtractStatusMP4('추출할 챕터가 없습니다.');
+                    return;
+                }
+                
+                Promise.all(chapters.map(chapter => 
+                    fetch(`/api/media/${currentMedia}/chapter/${chapter.id}/extract-mp4`, {
+                        method: 'POST'
+                    }).then(response => response.json())
+                )).then(results => {
+                    const successCount = results.filter(r => r.success).length;
+                    updateExtractStatusMP4(`챕터 MP4 추출 완료: ${successCount}/${chapters.length}개`);
+                }).catch(error => {
+                    console.error('Extract error:', error);
+                    updateExtractStatusMP4('챕터 MP4 추출 중 오류 발생');
+                });
+            })
+            .catch(error => {
+                console.error('Extract error:', error);
+                updateExtractStatusMP4('챕터 MP4 추출 중 오류 발생');
+            });
+        }
+        
+        function extractAllScenesMP4() {
+            if (!currentMedia) return;
+            
+            console.log('Extracting all scenes as MP4');
+            updateExtractStatusMP4('모든 씬 MP4 추출 중...');
+            
+            // 각 씬별로 순차 처리 - 구현 필요시 추가
+            updateExtractStatusMP4('씬 MP4 추출 기능 준비 중...');
+        }
+        
+        function extractBookmarkedOnlyMP4() {
+            if (!currentMedia) return;
+            
+            console.log('Extracting bookmarked sentences as MP4');
+            updateExtractStatusMP4('북마크 문장 MP4 추출 중...');
+            
+            fetch(`/api/media/${currentMedia}/extract-bookmarked-mp4`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateExtractStatusMP4(`북마크 문장 MP4 추출 완료: ${data.output_path}`);
+                } else {
+                    updateExtractStatusMP4('북마크 문장 MP4 추출 실패: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Extract error:', error);
+                updateExtractStatusMP4('북마크 문장 MP4 추출 중 오류 발생');
+            });
+        }
+        
+        function extractAllSentencesMP4() {
+            if (!currentMedia) return;
+            
+            console.log('Extracting all sentences as MP4');
+            updateExtractStatusMP4('전체 문장 분할 MP4 추출 중...');
+            
+            fetch(`/api/media/${currentMedia}/extract-all-sentences-mp4`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateExtractStatusMP4(`전체 문장 분할 MP4 추출 완료: ${data.output_path}`);
+                } else {
+                    updateExtractStatusMP4('전체 문장 분할 MP4 추출 실패: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Extract error:', error);
+                updateExtractStatusMP4('전체 문장 분할 MP4 추출 중 오류 발생');
+            });
+        }
+        
+        function updateExtractStatusMP4(message, progress = null) {
+            const statusEl = document.getElementById('extractStatusMP4');
+            if (statusEl) {
+                statusEl.innerHTML = message;
+                
+                // 진행률 바 표시
+                if (progress !== null) {
+                    const progressBar = `
+                        <div style="width: 100%; background-color: #333; border-radius: 5px; margin-top: 5px;">
+                            <div style="width: ${progress}%; background-color: #007acc; height: 5px; border-radius: 5px;"></div>
+                        </div>
+                    `;
+                    statusEl.innerHTML += progressBar;
+                }
+            }
+        }
+        
+        function updateExtractStatus(message, progress = null) {
+            const statusEl = document.getElementById('extractStatus');
+            if (statusEl) {
+                statusEl.innerHTML = message;
+                
+                // 진행률 바 표시
+                if (progress !== null) {
+                    let progressBar = statusEl.querySelector('.progress-bar');
+                    if (!progressBar && progress >= 0) {
+                        progressBar = document.createElement('div');
+                        progressBar.className = 'progress-bar';
+                        const progressFill = document.createElement('div');
+                        progressFill.className = 'progress-fill';
+                        progressBar.appendChild(progressFill);
+                        statusEl.appendChild(progressBar);
+                    }
+                    
+                    if (progressBar) {
+                        const progressFill = progressBar.querySelector('.progress-fill');
+                        if (progressFill) {
+                            progressFill.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+                        }
+                        
+                        // 완료시 진행률 바 제거
+                        if (progress >= 100) {
+                            setTimeout(() => {
+                                if (progressBar) progressBar.remove();
+                            }, 1000);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function simulateProgress(statusMessage, duration = 3000) {
+            let progress = 0;
+            const interval = 100;
+            const increment = (100 / duration) * interval;
+            
+            const progressInterval = setInterval(() => {
+                progress += increment;
+                updateExtractStatus(statusMessage, progress);
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                }
+            }, interval);
+            
+            return progressInterval;
+        }
+        
+        // VAD 필터 기능
+        let vadFilterData = null;
+        
+        function toggleVADFilter() {
+            const vadFilter = document.getElementById('vadFilter');
+            const vadDetails = document.getElementById('vadDetails');
+            
+            if (vadFilter.checked) {
+                vadDetails.style.display = 'block';
+                console.log('VAD filter enabled');
+            } else {
+                vadDetails.style.display = 'none';
+                console.log('VAD filter disabled');
+                vadFilterData = null;
+                // 원본 문장 표시로 복원
+                if (currentMedia) {
+                    loadGroupedSentences(currentMedia);
+                }
+            }
+        }
+        
+        function updateVADThreshold() {
+            const threshold = document.getElementById('vadThreshold').value;
+            document.getElementById('vadThresholdValue').textContent = threshold;
+        }
+        
+        function applyVADFilter() {
+            if (!currentMedia) return;
+            
+            const threshold = parseFloat(document.getElementById('vadThreshold').value);
+            updateVADStatus('VAD 필터 분석 중...');
+            
+            fetch(`/api/media/${currentMedia}/vad-filter`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({threshold: threshold})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    vadFilterData = data;
+                    updateVADStatus(`분석 완료: 음성 ${data.voice_sentences}개, 무음 ${data.silence_sentences}개`);
+                    console.log('VAD filter applied:', data);
+                    
+                    // 문장 표시 업데이트 (VAD 결과 반영)
+                    applyVADVisualization();
+                } else {
+                    updateVADStatus('VAD 필터 적용 실패: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('VAD filter error:', error);
+                updateVADStatus('VAD 필터 적용 중 오류 발생');
+            });
+        }
+        
+        function createVADAudio() {
+            if (!currentMedia) return;
+            
+            updateVADStatus('무음 제거 오디오 생성 중...');
+            
+            fetch(`/api/media/${currentMedia}/create-vad-audio`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateVADStatus(`무음 제거 오디오 생성 완료: <a href="${data.download_url}" download>다운로드</a>`);
+                } else {
+                    updateVADStatus('무음 제거 오디오 생성 실패: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('VAD audio creation error:', error);
+                updateVADStatus('무음 제거 오디오 생성 중 오류 발생');
+            });
+        }
+        
+        function updateVADStatus(message) {
+            const statusEl = document.getElementById('vadStatus');
+            if (statusEl) {
+                statusEl.innerHTML = message;
+            }
+        }
+        
+        // 번역 관련 함수들
+        function checkTranslationStatus() {
+            if (!currentMedia) return;
+            
+            fetch(`/api/media/${currentMedia}/translation-status`)
+                .then(response => response.json())
+                .then(data => {
+                    const infoEl = document.getElementById('translationInfo');
+                    const btnEl = document.getElementById('translateBtn');
+                    
+                    if (data.total === 0) {
+                        infoEl.innerHTML = '문장이 없습니다.';
+                        btnEl.disabled = true;
+                        return;
+                    }
+                    
+                    const percentage = Math.round((data.translated / data.total) * 100);
+                    infoEl.innerHTML = `
+                        <div>전체: ${data.total}개 문장</div>
+                        <div>번역됨: ${data.translated}개 (${percentage}%)</div>
+                        <div>미번역: ${data.untranslated}개</div>
+                    `;
+                    
+                    if (data.untranslated === 0) {
+                        btnEl.textContent = '✅ 번역 완료';
+                        btnEl.disabled = true;
+                    } else if (data.status === 'translating') {
+                        btnEl.textContent = '🔄 번역 중...';
+                        btnEl.disabled = true;
+                        document.getElementById('translationStatus').style.display = 'block';
+                        document.getElementById('translationStatus').innerHTML = data.current || '번역 진행 중...';
+                    } else {
+                        btnEl.textContent = '🔄 자동 번역 시작';
+                        btnEl.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Translation status error:', error);
+                });
+        }
+        
+        function startTranslation() {
+            if (!currentMedia) return;
+            
+            const btnEl = document.getElementById('translateBtn');
+            const statusEl = document.getElementById('translationStatus');
+            
+            btnEl.disabled = true;
+            btnEl.textContent = '🔄 번역 시작 중...';
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = '번역을 시작하는 중입니다...';
+            
+            fetch(`/api/media/${currentMedia}/translate`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusEl.innerHTML = `✅ ${data.message}`;
+                    
+                    // 번역 진행 상태 모니터링
+                    translationInterval = setInterval(checkTranslationProgress, 2000);
+                    
+                    // 문장 다시 로드
+                    setTimeout(() => {
+                        loadGroupedSentences(currentMedia);
+                    }, 1000);
+                } else {
+                    statusEl.innerHTML = `❌ 번역 실패: ${data.error}`;
+                    btnEl.disabled = false;
+                    btnEl.textContent = '🔄 자동 번역 시작';
+                }
+            })
+            .catch(error => {
+                console.error('Translation error:', error);
+                statusEl.innerHTML = '❌ 번역 중 오류가 발생했습니다.';
+                btnEl.disabled = false;
+                btnEl.textContent = '🔄 자동 번역 시작';
+            });
+        }
+        
+        function checkTranslationProgress() {
+            if (!currentMedia) {
+                clearInterval(translationInterval);
+                return;
+            }
+            
+            fetch(`/api/media/${currentMedia}/translation-status`)
+                .then(response => response.json())
+                .then(data => {
+                    const statusEl = document.getElementById('translationStatus');
+                    
+                    if (data.status === 'translating' && data.current) {
+                        statusEl.innerHTML = data.current;
+                    } else if (data.untranslated === 0) {
+                        clearInterval(translationInterval);
+                        statusEl.innerHTML = '✅ 번역이 완료되었습니다!';
+                        checkTranslationStatus();
+                        
+                        // 문장 다시 로드하여 번역 표시
+                        loadGroupedSentences(currentMedia);
+                    }
+                })
+                .catch(error => {
+                    console.error('Progress check error:', error);
+                    clearInterval(translationInterval);
+                });
+        }
+        
+        function applyVADVisualization() {
+            if (!vadFilterData) return;
+            
+            // 문장 요소들에 VAD 결과 시각화
+            document.querySelectorAll('.sentence-item').forEach(sentenceEl => {
+                const index = parseInt(sentenceEl.dataset.index);
+                const sentence = sentences[index];
+                
+                if (sentence && sentence.vad_ratio !== undefined) {
+                    if (sentence.vad_filtered) {
+                        // 음성 구간 - 강조 표시
+                        sentenceEl.style.borderLeft = '3px solid #4CAF50';
+                        sentenceEl.style.backgroundColor = 'rgba(76, 175, 80, 0.1)';
+                    } else {
+                        // 무음 구간 - 흐리게 표시
+                        sentenceEl.style.borderLeft = '3px solid #757575';
+                        sentenceEl.style.backgroundColor = 'rgba(117, 117, 117, 0.1)';
+                        sentenceEl.style.opacity = '0.6';
+                    }
+                    
+                    // VAD 비율 표시
+                    const vadInfo = document.createElement('div');
+                    vadInfo.className = 'vad-info';
+                    vadInfo.style.fontSize = '0.7em';
+                    vadInfo.style.color = sentence.vad_filtered ? '#4CAF50' : '#757575';
+                    vadInfo.textContent = `음성: ${(sentence.vad_ratio * 100).toFixed(0)}%`;
+                    sentenceEl.appendChild(vadInfo);
+                }
+            });
+        }
+        
+        function toggleBookmark(index, event) {
+            event.stopPropagation();
+            if (!currentMedia) return;
+            
+            const sentence = sentences[index];
+            console.log('toggleBookmark called:', index, sentence);
+            
+            if (!sentence || !sentence.id) {
+                console.error('No sentence ID found:', sentence);
+                return;
+            }
+            
+            fetch(`/api/media/${currentMedia}/sentences/${sentence.id}/bookmark`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    sentences[index].bookmark = data.bookmark ? 1 : 0;
+                    
+                    // 북마크 버튼 업데이트
+                    const sentenceEl = document.querySelector(`[data-index="${index}"]`);
+                    if (sentenceEl) {
+                        if (data.bookmark) {
+                            sentenceEl.classList.add('bookmarked');
+                        } else {
+                            sentenceEl.classList.remove('bookmarked');
+                        }
+                    }
+                    
+                    updateBookmarkedList();
+                }
+            })
+            .catch(error => {
+                console.error('Bookmark toggle error:', error);
+            });
+        }
+        
+        function updateBookmarkedList() {
+            const bookmarkedEl = document.getElementById('bookmarkedList');
+            const bookmarked = sentences.filter(s => s.bookmark);
+            
+            if (bookmarked.length === 0) {
+                bookmarkedEl.innerHTML = '<p style="color: #858585;">북마크된 문장이 없습니다.</p>';
+            } else {
+                bookmarkedEl.innerHTML = bookmarked.map(s => 
+                    `<div class="bookmarked-item">${s.id}. ${s.english}</div>`
+                ).join('');
+            }
+        }
+        
+        function repeatCurrent() {
+            if (currentSentenceIndex >= 0) {
+                playSentence(currentSentenceIndex);
+            }
+        }
+        
+        function playBookmarked() {
+            const bookmarked = sentences.filter(s => s.bookmark);
+            if (bookmarked.length > 0) {
+                let index = 0;
+                
+                function playNext() {
+                    if (index < bookmarked.length) {
+                        const sentenceIndex = sentences.findIndex(s => s.id === bookmarked[index].id);
+                        playSentence(sentenceIndex);
+                        index++;
+                        setTimeout(playNext, 3000); // 3초 간격
+                    }
+                }
+                
+                playNext();
+            }
+        }
+        
+        function extractMP3(index, event) {
+            event.stopPropagation();
+            const sentence = sentences[index];
+            
+            if (!currentMedia || !sentence.id) {
+                alert('문장 정보를 찾을 수 없습니다.');
+                return;
+            }
+            
+            // 버튼 상태 변경
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '추출중...';
+            btn.disabled = true;
+            
+            fetch(`/api/sentence/${currentMedia}/${sentence.id}/extract-mp3`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 다운로드 링크 생성
+                    const a = document.createElement('a');
+                    a.href = data.download_url;
+                    a.download = data.filename;
+                    a.click();
+                    
+                    console.log(`MP3 추출 완료: ${data.filename}`);
+                } else {
+                    console.error('MP3 추출 실패:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('MP3 추출 오류:', error);
+            })
+            .finally(() => {
+                // 버튼 상태 복원
+                btn.textContent = originalText;
+                btn.disabled = false;
+            });
+        }
+        
+        function extractMP4(index, event) {
+            event.stopPropagation();
+            const sentence = sentences[index];
+            
+            if (!currentMedia || !sentence.id) {
+                alert('문장 정보를 찾을 수 없습니다.');
+                return;
+            }
+            
+            // 버튼 상태 변경
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '추출중...';
+            btn.disabled = true;
+            
+            fetch(`/api/sentence/${currentMedia}/${sentence.id}/extract-mp4`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`MP4 추출 완료: ${data.output_path}`);
+                    alert(`MP4 파일이 생성되었습니다: ${data.output_path}`);
+                } else {
+                    console.error('MP4 추출 실패:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('MP4 추출 오류:', error);
+            })
+            .finally(() => {
+                // 버튼 상태 복원
+                btn.textContent = originalText;
+                btn.disabled = false;
+            });
+        }
+        
+        function exportBookmarks() {
+            const bookmarked = sentences.filter(s => s.bookmark);
+            if (bookmarked.length === 0) {
+                alert('북마크된 문장이 없습니다.');
+                return;
+            }
+            
+            const content = bookmarked.map(s => `${s.id}. ${s.english}\n${s.korean}`).join('\n\n');
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'bookmarked_sentences.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        let searchTimeout = null;
+        
+        function handleSearchInput(event) {
+            const query = event.target.value.trim();
+            const resultsEl = document.getElementById('searchResults');
+            
+            // 이전 타이머 취소
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+            
+            if (query.length < 3) {
+                resultsEl.innerHTML = '';
+                showAllSentences();
+                return;
+            }
+            
+            // 300ms 지연 후 검색 실행
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 300);
+        }
+        
+        function performSearch(query) {
+            const resultsEl = document.getElementById('searchResults');
+            
+            if (!sentences || sentences.length === 0) {
+                resultsEl.innerHTML = '검색할 문장이 없습니다.';
+                return;
+            }
+            
+            // 영어와 한국어에서 검색
+            const matches = sentences.filter(sentence => {
+                const englishMatch = sentence.english && sentence.english.toLowerCase().includes(query.toLowerCase());
+                const koreanMatch = sentence.korean && sentence.korean.includes(query);
+                return englishMatch || koreanMatch;
+            });
+            
+            if (matches.length === 0) {
+                resultsEl.innerHTML = `"${query}"에 대한 검색 결과가 없습니다.`;
+                hideAllSentences();
+                return;
+            }
+            
+            resultsEl.innerHTML = `${matches.length}개 문장이 발견되었습니다.`;
+            
+            // 매칭된 문장만 표시
+            highlightSearchResults(matches, query);
+        }
+        
+        function highlightSearchResults(matches, query) {
+            // 모든 문장 숨기기
+            document.querySelectorAll('.sentence-item').forEach(item => {
+                item.style.display = 'none';
+            });
+            
+            // 매칭된 문장만 표시하고 하이라이트
+            matches.forEach(match => {
+                const sentenceEl = document.querySelector(`[data-sentence-id="${match.id}"]`);
+                if (sentenceEl) {
+                    sentenceEl.style.display = 'block';
+                    
+                    // 검색어 하이라이트
+                    const englishEl = sentenceEl.querySelector('.sentence-text');
+                    const koreanEl = sentenceEl.querySelector('.sentence-korean');
+                    
+                    if (englishEl) {
+                        const highlightedEnglish = highlightText(match.english, query);
+                        englishEl.innerHTML = highlightedEnglish;
+                    }
+                    
+                    if (koreanEl && match.korean) {
+                        const highlightedKorean = highlightText(match.korean, query);
+                        koreanEl.innerHTML = highlightedKorean;
+                    }
+                    
+                    // 부모 챕터/씬도 표시
+                    let parent = sentenceEl.closest('.scene-section');
+                    while (parent) {
+                        parent.style.display = 'block';
+                        const content = parent.querySelector('.scene-content, .chapter-content');
+                        if (content) content.style.display = 'block';
+                        parent = parent.closest('.chapter-section');
+                    }
+                }
+            });
+        }
+        
+        function highlightText(text, query) {
+            if (!text || !query) return text;
+            
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<mark style="background: #ffd700; color: #000;">$1</mark>');
+        }
+        
+        function showAllSentences() {
+            document.querySelectorAll('.sentence-item, .scene-section, .chapter-section').forEach(item => {
+                item.style.display = 'block';
+            });
+            
+            // 원본 텍스트 복원
+            sentences.forEach(sentence => {
+                const sentenceEl = document.querySelector(`[data-sentence-id="${sentence.id}"]`);
+                if (sentenceEl) {
+                    const englishEl = sentenceEl.querySelector('.sentence-text');
+                    const koreanEl = sentenceEl.querySelector('.sentence-korean');
+                    
+                    if (englishEl) englishEl.innerHTML = sentence.english;
+                    if (koreanEl) koreanEl.innerHTML = sentence.korean || '';
+                }
+            });
+        }
+        
+        function hideAllSentences() {
+            document.querySelectorAll('.sentence-item').forEach(item => {
+                item.style.display = 'none';
+            });
+        }
+        
+        function deleteMedia(mediaId, event) {
+            event.stopPropagation();
+            
+            if (!confirm('정말로 이 미디어를 삭제하시겠습니까? 모든 문장과 북마크가 삭제됩니다.')) {
+                return;
+            }
+            
+            fetch(`/api/media/${mediaId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 현재 선택된 미디어인 경우 초기화
+                    if (currentMedia == mediaId) {
+                        currentMedia = null;
+                        document.querySelector('.media-player').style.display = 'none';
+                        document.getElementById('sentenceList').innerHTML = '';
+                        document.getElementById('bookmarkedList').innerHTML = '<p style="color: #858585;">북마크된 문장이 없습니다.</p>';
+                        document.getElementById('processingOptions').style.display = 'none';
+                        document.getElementById('searchSection').style.display = 'none';
+                        document.getElementById('subtitleGenerationMenu').style.display = 'none';
+                        document.getElementById('uploadSection').style.display = 'block';
+                    }
+                    
+                    // 미디어 목록 새로고침
+                    loadMediaList();
+                    
+                    console.log('Media deleted successfully');
+                } else {
+                    alert('삭제 실패: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Delete error:', error);
+                alert('삭제 중 오류가 발생했습니다.');
+            });
+        }
+    </script>
+</body>
+</html>

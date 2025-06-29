@@ -1,0 +1,51 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-py"
+}
+
+model Media {
+  id        Int       @id @default(autoincrement())
+  filename  String
+  duration  Float?
+  createdAt DateTime  @default(now())
+  chapters  Chapter[]
+}
+
+model Chapter {
+  id        Int      @id @default(autoincrement())
+  mediaId   Int
+  title     String
+  startTime Float
+  endTime   Float
+  order     Int
+  media     Media    @relation(fields: [mediaId], references: [id])
+  scenes    Scene[]
+}
+
+model Scene {
+  id        Int        @id @default(autoincrement())
+  chapterId Int
+  title     String
+  startTime Float
+  endTime   Float
+  order     Int
+  chapter   Chapter    @relation(fields: [chapterId], references: [id])
+  sentences Sentence[]
+}
+
+model Sentence {
+  id        Int     @id @default(autoincrement())
+  sceneId   Int
+  english   String
+  korean    String?
+  keyWords  String?
+  startTime Float
+  endTime   Float
+  bookmark  Boolean @default(false)
+  order     Int
+  scene     Scene   @relation(fields: [sceneId], references: [id])
+}
