@@ -58,6 +58,162 @@
             border-left: 2px solid #ffffff;
         }
         
+        /* 단어 클릭 스타일 */
+        .interactive-word {
+            cursor: pointer;
+            border-bottom: 1px dotted rgba(255,255,255,0.2);
+            transition: all 0.2s ease;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+        
+        /* 로딩 스피너 */
+        .loading-spinner {
+            width: 12px;
+            height: 12px;
+            border: 2px solid #333;
+            border-top: 2px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 단어장 추가 관련 스타일 */
+        .vocab-added {
+            background: rgba(76, 175, 80, 0.2) !important;
+            border: 1px solid #4CAF50 !important;
+        }
+        
+        /* 난이도별 색상 스타일 */
+        .difficulty-easy {
+            color: #81C784 !important; /* 연한 초록 - 쉬운 단어 */
+            border-bottom-color: rgba(129, 199, 132, 0.3) !important;
+        }
+        
+        .difficulty-medium {
+            color: #FFB74D !important; /* 주황 - 중간 단어 */
+            border-bottom-color: rgba(255, 183, 77, 0.3) !important;
+        }
+        
+        .difficulty-hard {
+            color: #F06292 !important; /* 분홍 - 어려운 단어 */
+            border-bottom-color: rgba(240, 98, 146, 0.3) !important;
+        }
+        
+        .difficulty-very-hard {
+            color: #E57373 !important; /* 빨강 - 매우 어려운 단어 */
+            border-bottom-color: rgba(229, 115, 115, 0.3) !important;
+            font-weight: 600;
+        }
+        
+        
+        /* 문법 패턴 하이라이트 스타일 */
+        .grammar-conditional {
+            background: linear-gradient(90deg, #2196F3, #21CBF3);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(33, 150, 243, 0.3);
+        }
+        
+        .grammar-time {
+            background: linear-gradient(90deg, #9C27B0, #E91E63);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(156, 39, 176, 0.3);
+        }
+        
+        .grammar-cause {
+            background: linear-gradient(90deg, #FF9800, #FF5722);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(255, 152, 0, 0.3);
+        }
+        
+        .grammar-contrast {
+            background: linear-gradient(90deg, #F44336, #E91E63);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(244, 67, 54, 0.3);
+        }
+        
+        .grammar-passive {
+            background: linear-gradient(90deg, #607D8B, #455A64);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(96, 125, 139, 0.3);
+        }
+        
+        .grammar-perfect {
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(76, 175, 80, 0.3);
+        }
+        
+        .grammar-future {
+            background: linear-gradient(90deg, #00BCD4, #03A9F4);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(0, 188, 212, 0.3);
+        }
+        
+        .grammar-modal {
+            background: linear-gradient(90deg, #795548, #5D4037);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(121, 85, 72, 0.3);
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
         .sidebar {
             width: 300px;
             min-width: 200px;
@@ -1745,12 +1901,12 @@
                                 m.filename;
                             
                             return `
-                            <div class="media-item" onclick="loadMediaSentences(${m.id})" data-media-id="${m.id}">
+                            <div class="media-item" onclick="loadMediaSentences('${m.id}')" data-media-id="${m.id}">
                                 <div style="font-weight: bold;" title="${displayName}">${displayName}</div>
                                 <div style="font-size: 0.8em; color: #858585;">
                                     ${m.createdAt ? new Date(m.createdAt).toLocaleDateString() : ''}
                                 </div>
-                                <button class="delete-btn" onclick="deleteMedia(${m.id}, event)" 
+                                <button class="delete-btn" onclick="deleteMedia('${m.id}', event)" 
                                         style="position: absolute; right: 5px; top: 5px; background: #d32f2f; color: white; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">
                                     ✕
                                 </button>
@@ -2102,7 +2258,7 @@
                 
                 // 이전 자막
                 if (currentIndex > 0) {
-                    previousSubtitleDiv.innerHTML = formatSpeakerText(sentences[currentIndex - 1].english);
+                    previousSubtitleDiv.innerHTML = formatSpeakerText(sentences[currentIndex - 1].english, sentences[currentIndex - 1].id);
                     previousSubtitleDiv.style.display = 'block';
                 } else {
                     previousSubtitleDiv.style.display = 'none';
@@ -2110,7 +2266,7 @@
                 
                 // 현재 자막
                 const currentSentence = sentences[currentIndex];
-                currentSubtitleDiv.innerHTML = formatSpeakerText(currentSentence.english);
+                currentSubtitleDiv.innerHTML = formatSpeakerText(currentSentence.english, currentSentence.id);
                 
                 // 동사 하이라이트를 나중에 적용 (비동기로)
                 if (highlightVerbs) {
@@ -2127,7 +2283,7 @@
                 
                 // 다음 자막
                 if (currentIndex < sentences.length - 1) {
-                    nextSubtitleDiv.innerHTML = formatSpeakerText(sentences[currentIndex + 1].english);
+                    nextSubtitleDiv.innerHTML = formatSpeakerText(sentences[currentIndex + 1].english, sentences[currentIndex + 1].id);
                     nextSubtitleDiv.style.display = 'block';
                 } else {
                     nextSubtitleDiv.style.display = 'none';
@@ -2182,7 +2338,7 @@
                 
                 // 이전 자막
                 if (currentIndex > 0) {
-                    previousSubtitleDiv.innerHTML = formatSpeakerText(sentences[currentIndex - 1].english);
+                    previousSubtitleDiv.innerHTML = formatSpeakerText(sentences[currentIndex - 1].english, sentences[currentIndex - 1].id);
                     previousSubtitleDiv.style.display = 'block';
                 } else {
                     previousSubtitleDiv.style.display = 'none';
@@ -2190,7 +2346,7 @@
                 
                 // 현재 자막
                 const currentSentence = sentences[currentIndex];
-                currentSubtitleDiv.innerHTML = formatSpeakerText(currentSentence.english);
+                currentSubtitleDiv.innerHTML = formatSpeakerText(currentSentence.english, currentSentence.id);
                 
                 // 동사 하이라이트를 나중에 적용 (비동기로)
                 if (highlightVerbs) {
@@ -2207,7 +2363,7 @@
                 
                 // 다음 자막
                 if (currentIndex < sentences.length - 1) {
-                    nextSubtitleDiv.innerHTML = formatSpeakerText(sentences[currentIndex + 1].english);
+                    nextSubtitleDiv.innerHTML = formatSpeakerText(sentences[currentIndex + 1].english, sentences[currentIndex + 1].id);
                     nextSubtitleDiv.style.display = 'block';
                 } else {
                     nextSubtitleDiv.style.display = 'none';
@@ -2274,13 +2430,13 @@
                 // 언어 선택에 따른 텍스트 설정 (동기 처리)
                 switch(subtitleLanguage) {
                     case 'english':
-                        subtitleText = formatSpeakerText(currentSentence.english || '');
+                        subtitleText = formatSpeakerText(currentSentence.english || '', currentSentence.id);
                         break;
                     case 'korean':
                         subtitleText = formatSpeakerText(currentSentence.korean || '');
                         break;
                     case 'both':
-                        const englishText = formatSpeakerText(currentSentence.english || '');
+                        const englishText = formatSpeakerText(currentSentence.english || '', currentSentence.id);
                         const koreanText = currentSentence.korean ? 
                             formatSpeakerText(currentSentence.korean) : '';
                         if (englishText && koreanText) {
@@ -2313,6 +2469,7 @@
         let highlightVerbs = true; // 동사 하이라이트 기본값
         let verbHighlightMode = 'highlight'; // 'highlight' or 'blank'
         let verbCache = new Map(); // 동사 감지 결과 캐시
+        let showBlanks = true; // 빈칸 표시 여부 (C키로 토글)
         
         // spaCy API를 통한 정확한 동사 감지 (DB 캐시 우선)
         async function detectVerbs(text, sentenceId = null) {
@@ -2388,10 +2545,17 @@
                         '<span style="color: #ff6b35; font-weight: 600;">$1</span>'
                     );
                 } else if (verbHighlightMode === 'blank') {
-                    // 빈칸으로 대체 (흰색 밑줄)
-                    processedText = processedText.replace(regex, 
-                        '<span style="color: #ffffff; border-bottom: 1px solid #ffffff; display: inline-block; min-width: ' + (verb.length * 8) + 'px; text-align: center;">____</span>'
-                    );
+                    if (showBlanks) {
+                        // 빈칸으로 대체 (흰색 밑줄)
+                        processedText = processedText.replace(regex, 
+                            '<span style="color: #ffffff; border-bottom: 1px solid #ffffff; display: inline-block; min-width: ' + (verb.length * 8) + 'px; text-align: center;">____</span>'
+                        );
+                    } else {
+                        // 빈칸 숨김 (원래 단어 표시하지만 투명하게)
+                        processedText = processedText.replace(regex, 
+                            '<span style="color: transparent; background: none;">$1</span>'
+                        );
+                    }
                 }
             });
             
@@ -2488,6 +2652,11 @@
                 case 'Enter':
                     event.preventDefault();
                     toggleCurrentSubtitleBookmark();
+                    break;
+                    
+                case 'KeyC':
+                    event.preventDefault();
+                    toggleBlankVisibility();
                     break;
             }
         }
@@ -2607,13 +2776,320 @@
             }
         }
         
+        // 빈칸 표시/숨김 토글 (C키)
+        function toggleBlankVisibility() {
+            showBlanks = !showBlanks;
+            
+            // 빈칸 상태 표시
+            showBlankToggleIndicator(showBlanks);
+            
+            // 현재 표시된 자막들을 다시 업데이트
+            updateCurrentSubtitles();
+        }
+        
+        // 빈칸 토글 상태 표시기
+        function showBlankToggleIndicator(isVisible) {
+            // 기존 인디케이터 제거
+            const existingIndicator = document.getElementById('blankToggleIndicator');
+            if (existingIndicator) {
+                existingIndicator.remove();
+            }
+            
+            // 새 상태 인디케이터 생성
+            const indicator = document.createElement('div');
+            indicator.id = 'blankToggleIndicator';
+            indicator.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 10px 20px;
+                border-radius: 5px;
+                font-size: 18px;
+                z-index: 10000;
+                pointer-events: none;
+            `;
+            indicator.innerHTML = isVisible ? '👁️ 빈칸 보이기' : '🙈 빈칸 숨기기';
+            
+            document.body.appendChild(indicator);
+            
+            // 2초 후 제거
+            setTimeout(() => {
+                if (indicator.parentNode) {
+                    indicator.remove();
+                }
+            }, 2000);
+        }
+        
         // 화자 구분을 위한 텍스트 처리 함수 (동기)
-        function formatSpeakerText(text) {
+        function formatSpeakerText(text, sentenceId = null) {
             if (!text) return '';
             // ' - ' 를 줄바꿈으로 변환 (화자 구분)
             let formattedText = text.replace(/\s*-\s*/g, '<br>');
-            // 동사 하이라이트는 별도로 나중에 적용
+            
+            // 문법 패턴 하이라이트 먼저 적용
+            if (grammarHighlightEnabled && sentenceId) {
+                formattedText = applyGrammarHighlight(formattedText);
+            }
+            
+            // 단어를 클릭 가능하게 만들기 (sentenceId가 있을 때만)
+            if (sentenceId) {
+                formattedText = makeWordsInteractive(formattedText, sentenceId, text);
+            }
+            
             return formattedText;
+        }
+        
+        // 문법 패턴 하이라이트 적용
+        function applyGrammarHighlight(text) {
+            let highlightedText = text;
+            
+            // 1. 조건문 패턴 (if, unless, provided that 등)
+            highlightedText = highlightedText.replace(
+                /\b(if|unless|provided that|as long as|in case)\b/gi,
+                '<span class="grammar-conditional">$1</span>'
+            );
+            
+            // 2. 시간 표현 (when, while, before, after 등)
+            highlightedText = highlightedText.replace(
+                /\b(when|while|before|after|during|since|until|as soon as)\b/gi,
+                '<span class="grammar-time">$1</span>'
+            );
+            
+            // 3. 원인/결과 (because, so, therefore 등)
+            highlightedText = highlightedText.replace(
+                /\b(because|since|as|so|therefore|thus|consequently|as a result)\b/gi,
+                '<span class="grammar-cause">$1</span>'
+            );
+            
+            // 4. 대조/양보 (but, however, although 등)
+            highlightedText = highlightedText.replace(
+                /\b(but|however|although|though|despite|in spite of|nevertheless|nonetheless)\b/gi,
+                '<span class="grammar-contrast">$1</span>'
+            );
+            
+            // 5. 수동태 패턴 (be + past participle)
+            highlightedText = highlightedText.replace(
+                /\b(am|is|are|was|were|been|being)\s+([\w]+ed|[\w]+en)\b/gi,
+                '<span class="grammar-passive">$1 $2</span>'
+            );
+            
+            // 6. 완료시제 (have/has + past participle)
+            highlightedText = highlightedText.replace(
+                /\b(have|has|had)\s+([\w]+ed|[\w]+en)\b/gi,
+                '<span class="grammar-perfect">$1 $2</span>'
+            );
+            
+            // 7. 미래시제 (will, going to)
+            highlightedText = highlightedText.replace(
+                /\b(will|shall|going to)\s+(\w+)/gi,
+                '<span class="grammar-future">$1 $2</span>'
+            );
+            
+            // 8. 모달동사 (can, could, should 등)
+            highlightedText = highlightedText.replace(
+                /\b(can|could|should|would|might|may|must|ought to)\s+(\w+)/gi,
+                '<span class="grammar-modal">$1 $2</span>'
+            );
+            
+            return highlightedText;
+        }
+        
+        // 단어 캐시 (북마크 기능용)
+        let wordDefinitionCache = new Map(); // 단어 정보 캐시
+        let difficultyHighlightEnabled = true; // 난이도 하이라이트 활성화
+        let difficultyHighlightCache = new Map(); // 난이도 캐시
+        let grammarHighlightEnabled = true; // 문법 패턴 하이라이트 활성화
+        
+        // 텍스트의 단어들을 인터랙티브하게 만들기
+        function makeWordsInteractive(text, sentenceId, originalText) {
+            // HTML 태그 내부는 건드리지 않고, 일반 텍스트만 처리
+            return text.replace(/([^<>]+)(?=<|$)/g, function(match) {
+                // 단어 단위로 분할하여 span으로 감싸기
+                return match.replace(/\b([a-zA-Z]+(?:'[a-zA-Z]+)?)\b/g, function(word) {
+                    const wordLower = word.toLowerCase();
+                    
+                    // 난이도별 클래스 추가
+                    let difficultyClass = '';
+                    if (difficultyHighlightEnabled) {
+                        difficultyClass = getDifficultyClass(wordLower);
+                    }
+                    
+                    return `<span class="interactive-word ${difficultyClass}" 
+                                  data-word="${wordLower}" 
+                                  data-sentence-id="${sentenceId}"
+                                  data-context="${originalText}"
+                                  onclick="bookmarkWord(this)">
+                                ${word}
+                            </span>`;
+                });
+            });
+        }
+        
+        // 단어 난이도에 따른 CSS 클래스 반환
+        function getDifficultyClass(word) {
+            // 캐시에서 확인
+            if (difficultyHighlightCache.has(word)) {
+                return difficultyHighlightCache.get(word);
+            }
+            
+            // 간단한 난이도 추정 (나중에 API로 개선 가능)
+            const difficultyLevel = estimateWordDifficulty(word);
+            const className = `difficulty-${difficultyLevel}`;
+            
+            // 캐시에 저장
+            difficultyHighlightCache.set(word, className);
+            
+            return className;
+        }
+        
+        // 단어 난이도 간단 추정
+        function estimateWordDifficulty(word) {
+            // 매우 기본적인 단어들 (A1-A2 레벨)
+            const easyWords = new Set([
+                'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+                'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
+                'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+                'do', 'does', 'did', 'will', 'would', 'can', 'could', 'should', 'may', 'might',
+                'go', 'come', 'get', 'give', 'take', 'make', 'see', 'know', 'think', 'want',
+                'like', 'love', 'good', 'bad', 'big', 'small', 'new', 'old', 'yes', 'no',
+                'hello', 'hi', 'bye', 'please', 'thank', 'thanks', 'sorry', 'ok', 'okay',
+                'because', 'so', 'if', 'when', 'what', 'where', 'who', 'why', 'how'
+            ]);
+            
+            // 중급 단어들 (B1-B2 레벨)
+            const mediumWords = new Set([
+                'although', 'however', 'therefore', 'moreover', 'furthermore',
+                'important', 'different', 'interesting', 'beautiful', 'difficult', 'easy',
+                'understand', 'explain', 'describe', 'discuss', 'suggest', 'recommend',
+                'experience', 'opportunity', 'situation', 'information', 'knowledge',
+                'remember', 'forget', 'decide', 'choose', 'compare', 'consider'
+            ]);
+            
+            // 단어 길이와 복잡성 기반 추정
+            const length = word.length;
+            const hasComplexSuffix = /(?:tion|sion|ment|ness|ity|able|ible|ous|ious|ful|less|ing|ed)$/.test(word);
+            
+            if (easyWords.has(word) || length <= 3) {
+                return 'easy';
+            } else if (mediumWords.has(word) || (length <= 6 && !hasComplexSuffix)) {
+                return 'medium';
+            } else if (length <= 9 || hasComplexSuffix) {
+                return 'hard';
+            } else {
+                return 'very-hard';
+            }
+        }
+        
+        
+        // 단어 북마크 (클릭 시)
+        async function bookmarkWord(element) {
+            const word = element.dataset.word;
+            const sentenceId = element.dataset.sentenceId;
+            const context = element.dataset.context;
+            
+            console.log('Adding word to vocabulary:', word);
+            
+            // 시각적 피드백 - 로딩
+            element.style.background = 'rgba(255, 193, 7, 0.3)';
+            element.style.transition = 'all 0.3s ease';
+            
+            try {
+                // 개인 단어장에 추가 (단순화된 버전)
+                const addResponse = await fetch('/api/vocabulary/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        word: word,
+                        context_sentence: context,
+                        sentence_id: sentenceId
+                    })
+                });
+                
+                if (addResponse.ok) {
+                    // 성공 피드백
+                    element.style.background = 'rgba(76, 175, 80, 0.4)';
+                    element.style.border = '1px solid #4CAF50';
+                    element.classList.add('vocab-added');
+                    
+                    // 성공 메시지 표시
+                    showVocabMessage('📚 단어장에 추가됨!', '#4CAF50');
+                    
+                    // 개인 단어장 통계 업데이트
+                    updateVocabularyStats();
+                    
+                } else {
+                    throw new Error('Failed to add word to vocabulary');
+                }
+                
+            } catch (error) {
+                console.error('Error adding word to vocabulary:', error);
+                
+                // 오류 피드백
+                element.style.background = 'rgba(244, 67, 54, 0.3)';
+                showVocabMessage('❌ 단어장 추가 실패', '#F44336');
+            }
+            
+            // 2초 후 원래 스타일로 복원 (vocab-added 클래스는 유지)
+            setTimeout(() => {
+                if (!element.classList.contains('vocab-added')) {
+                    element.style.background = '';
+                    element.style.border = '';
+                }
+            }, 2000);
+        }
+        
+        // 단어장 메시지 표시
+        function showVocabMessage(message, color) {
+            const existingMsg = document.getElementById('vocabMessage');
+            if (existingMsg) {
+                existingMsg.remove();
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.id = 'vocabMessage';
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${color};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 6px;
+                font-size: 14px;
+                z-index: 10002;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                animation: slideInRight 0.3s ease;
+            `;
+            messageDiv.textContent = message;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.style.animation = 'slideOutRight 0.3s ease';
+                    setTimeout(() => messageDiv.remove(), 300);
+                }
+            }, 3000);
+        }
+        
+        // 개인 단어장 통계 업데이트
+        async function updateVocabularyStats() {
+            try {
+                const response = await fetch('/api/vocabulary/statistics');
+                if (response.ok) {
+                    const stats = await response.json();
+                    
+                    // 통계 표시 (필요시 UI 업데이트)
+                    console.log('Vocabulary stats:', stats);
+                    
+                    // TODO: 통계를 UI에 표시하는 기능 구현
+                }
+            } catch (error) {
+                console.error('Error updating vocabulary stats:', error);
+            }
         }
         
         // 동사 하이라이트를 나중에 적용하는 함수
@@ -3272,7 +3748,7 @@
                         
                         sentenceEl.innerHTML = `
                             <span class="sentence-number">${sentence.order}.</span>
-                            <span class="sentence-text">${formatSpeakerText(sentence.english)}</span>
+                            <span class="sentence-text">${formatSpeakerText(sentence.english, sentence.id)}</span>
                             <span class="sentence-korean">${formatSpeakerText(sentence.korean || '')}</span>
                             <div style="font-size: 0.7em; color: #666; margin-top: 3px;">
                                 ${sentence.startTime?.toFixed(1) || 0}s - ${sentence.endTime?.toFixed(1) || 0}s
@@ -4332,7 +4808,7 @@
             .then(data => {
                 if (data.success) {
                     // 현재 선택된 미디어인 경우 초기화
-                    if (currentMedia == mediaId) {
+                    if (currentMedia === mediaId) {
                         currentMedia = null;
                         document.querySelector('.media-player').style.display = 'none';
                         document.getElementById('sentenceList').innerHTML = '';

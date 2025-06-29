@@ -23,7 +23,7 @@ except (ImportError, OSError):
     nlp = None
 
 # Import our new modules
-from database import media_repo, chapter_repo, scene_repo, sentence_repo, db_manager
+from database import media_repo, chapter_repo, scene_repo, sentence_repo, vocab_repo, db_manager
 from file_manager import file_manager
 from ffmpeg_processor import ffmpeg_processor, media_extractor, subtitle_processor
 
@@ -104,7 +104,7 @@ def get_sentences(media_id):
 
 @app.route('/api/media/<media_id>', methods=['DELETE'])
 def delete_media(media_id):
-    """Delete media and all associated data"""
+    """Delete media and all related data"""
     try:
         # Get media info first
         media = media_repo.get_by_id(media_id)
@@ -112,35 +112,34 @@ def delete_media(media_id):
             return jsonify({'error': 'Media not found'}), 404
         
         # Delete media file
-        file_manager.delete_media_file(media['filename'])
+        if media.get('filename'):
+            file_manager.delete_media_file(media['filename'])
+            
+            # Also delete converted MP3 if it's a video
+            if media.get('fileType') == 'video':
+                mp3_filename = f"{media_id}.mp3"
+                file_manager.delete_media_file(mp3_filename)
         
-        # Clean up output files
+        # Delete output files
         file_manager.cleanup_media_outputs(media_id)
         
-        # Delete from database (cascades to all related data)
-        media_repo.delete(media_id)
+        # Delete from database (cascades to chapters, scenes, sentences)
+        success = media_repo.delete(media_id)
         
-        return jsonify({'success': True, 'message': 'Media deleted successfully'})
-    
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Media deleted successfully'
+            })
+        else:
+            return jsonify({'error': 'Failed to delete media from database'}), 500
+            
     except Exception as e:
         logger.error(f"Error deleting media {media_id}: {e}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/media/<media_id>/subtitles', methods=['DELETE'])
-def delete_subtitles(media_id):
-    """Delete subtitle data for media"""
-    try:
-        sentence_repo.delete_by_media_id(media_id)
-        media_repo.update_status(media_id, 'uploaded')
-        
-        return jsonify({'success': True, 'message': 'Subtitles deleted successfully'})
-    
-    except Exception as e:
-        logger.error(f"Error deleting subtitles for media {media_id}: {e}")
-        return jsonify({'error': str(e)}), 500
-
 # =============================================================================
-# FILE UPLOAD AND PROCESSING ROUTES
+# FILE UPLOAD ROUTES
 # =============================================================================
 
 @app.route('/api/upload', methods=['POST'])
@@ -1496,6 +1495,135 @@ def _create_scene_subtitle_file(scene, sentences, subtitle_options):
     except Exception as e:
         logger.error(f"Error creating scene subtitle file: {e}")
         return None
+
+
+# =============================================================================
+# PERSONAL VOCABULARY API
+# =============================================================================
+
+@app.route('/api/vocabulary/add', methods=['POST'])
+def add_word_to_vocabulary():
+    """Add word to personal vocabulary"""
+    try:
+        data = request.get_json()
+        word = data.get('word', '').lower().strip()
+        
+        if not word:
+            return jsonify({'error': 'Word is required'}), 400
+        
+        # Prepare word data with defaults
+        word_data = {
+            'word': word,
+            'lemma': data.get('lemma', word),
+            'definition': data.get('definition', ''),
+            'pos': data.get('pos', ''),
+            'difficulty_level': data.get('difficulty_level', 'medium'),
+            'frequency_rank': data.get('frequency_rank', 5000),
+            'context_sentence': data.get('context_sentence', ''),
+            'sentence_id': data.get('sentence_id')
+        }
+        
+        success = vocab_repo.add_word(word_data)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Word added to vocabulary'})
+        else:
+            return jsonify({'error': 'Failed to add word'}), 500
+            
+    except Exception as e:
+        logger.error(f"Add vocabulary error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/vocabulary', methods=['GET'])
+def get_vocabulary():
+    """Get personal vocabulary list"""
+    try:
+        difficulty = request.args.get('difficulty')
+        
+        if difficulty:
+            words = vocab_repo.get_words_by_difficulty(difficulty)
+        else:
+            words = vocab_repo.get_all_words()
+        
+        return jsonify({'words': words})
+        
+    except Exception as e:
+        logger.error(f"Get vocabulary error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/vocabulary/statistics', methods=['GET'])
+def get_vocabulary_statistics():
+    """Get vocabulary learning statistics"""
+    try:
+        stats = vocab_repo.get_statistics()
+        return jsonify(stats)
+        
+    except Exception as e:
+        logger.error(f"Get vocabulary stats error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/vocabulary/mark-known', methods=['POST'])
+def mark_word_known():
+    """Mark word as known"""
+    try:
+        data = request.get_json()
+        word = data.get('word', '').lower().strip()
+        lemma = data.get('lemma', word)
+        
+        if not word:
+            return jsonify({'error': 'Word is required'}), 400
+        
+        success = vocab_repo.mark_as_known(word, lemma)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Word marked as known'})
+        else:
+            return jsonify({'error': 'Failed to mark word as known'}), 500
+            
+    except Exception as e:
+        logger.error(f"Mark known error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/vocabulary/mark-unknown', methods=['POST'])
+def mark_word_unknown():
+    """Mark word as unknown"""
+    try:
+        data = request.get_json()
+        word = data.get('word', '').lower().strip()
+        lemma = data.get('lemma', word)
+        
+        if not word:
+            return jsonify({'error': 'Word is required'}), 400
+        
+        success = vocab_repo.mark_as_unknown(word, lemma)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Word marked as unknown'})
+        else:
+            return jsonify({'error': 'Failed to mark word as unknown'}), 500
+            
+    except Exception as e:
+        logger.error(f"Mark unknown error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/vocabulary/check-known', methods=['POST'])
+def check_word_known():
+    """Check if word is known"""
+    try:
+        data = request.get_json()
+        word = data.get('word', '').lower().strip()
+        lemma = data.get('lemma', word)
+        
+        if not word:
+            return jsonify({'error': 'Word is required'}), 400
+        
+        is_known = vocab_repo.is_word_known(word, lemma)
+        
+        return jsonify({'word': word, 'is_known': is_known})
+        
+    except Exception as e:
+        logger.error(f"Check known error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 # =============================================================================
 # VERB DETECTION API (spaCy-based)
