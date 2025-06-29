@@ -536,6 +536,32 @@ def translate_sentences_background(media_id):
 # SRT UPLOAD AND PROCESSING
 # =============================================================================
 
+@app.route('/api/media/<media_id>/subtitles', methods=['DELETE'])
+def delete_subtitles(media_id):
+    """Delete all subtitles (sentences) for a media"""
+    try:
+        media = media_repo.get_by_id(media_id)
+        if not media:
+            return jsonify({'error': 'Media not found'}), 404
+        
+        # Delete all sentences for this media
+        success = sentence_repo.delete_by_media_id(media_id)
+        
+        if success:
+            # Update media status back to uploaded
+            media_repo.update_status(media_id, 'uploaded')
+            
+            return jsonify({
+                'success': True,
+                'message': 'Subtitles deleted successfully'
+            })
+        else:
+            return jsonify({'error': 'Failed to delete subtitles'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error deleting subtitles for media {media_id}: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/media/<media_id>/upload-sentences', methods=['POST'])
 def upload_sentences(media_id):
     """Upload SRT file or JSON data"""
