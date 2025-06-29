@@ -994,6 +994,15 @@
             <!-- 오버레이 자막 컨트롤 패널 -->
             <div id="overlayControlPanel" style="margin-top: 15px; padding: 12px; background: #2a2a2a; border-radius: 8px; border: 1px solid #444444; display: block;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <!-- 언어 선택 -->
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #cccccc; font-size: 0.9em; min-width: 60px;">🗣️ 언어:</span>
+                        <button id="subtitleEngBtn" onclick="setSubtitleLanguage('english')" style="padding: 4px 8px; background: #0e639c; color: #ffffff; border: 1px solid #0e639c; border-radius: 4px; cursor: pointer; font-size: 0.9em;">EN</button>
+                        <button id="subtitleKorBtn" onclick="setSubtitleLanguage('korean')" style="padding: 4px 8px; background: #333333; color: #cccccc; border: 1px solid #555555; border-radius: 4px; cursor: pointer; font-size: 0.9em;">한</button>
+                        <button id="subtitleBothBtn" onclick="setSubtitleLanguage('both')" style="padding: 4px 8px; background: #333333; color: #cccccc; border: 1px solid #555555; border-radius: 4px; cursor: pointer; font-size: 0.9em;">둘다</button>
+                        <button id="overlayToggleBtn" onclick="toggleOverlaySubtitles()" style="padding: 4px 8px; background: #4a4a2d; color: #cccccc; border: 1px solid #6b6b00; border-radius: 4px; cursor: pointer; font-size: 0.9em; margin-left: 8px;">숨기기</button>
+                    </div>
+                    
                     <!-- 크기 조절 -->
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span style="color: #cccccc; font-size: 0.9em; min-width: 60px;">📏 크기:</span>
@@ -1018,9 +1027,6 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <div style="color: #888888; font-size: 0.9em;">🎬 실시간 자막</div>
                     <div style="display: flex; gap: 8px;">
-                        <button id="overlayToggleBtn" onclick="toggleOverlaySubtitles()" style="padding: 5px 10px; background: #4a4a2d; color: #cccccc; border: 1px solid #6b6b00; border-radius: 5px; cursor: pointer; font-size: 0.85em;">
-                            📺 오버레이 숨기기
-                        </button>
                         <button id="subtitleToggleBtn" onclick="toggleSubtitleDisplay()" style="padding: 5px 10px; background: #333333; color: #cccccc; border: 1px solid #444444; border-radius: 5px; cursor: pointer; font-size: 0.85em;">
                             🔽 숨기기
                         </button>
@@ -2084,7 +2090,7 @@
                 
                 // 이전 자막
                 if (currentIndex > 0) {
-                    previousSubtitleDiv.innerHTML = sentences[currentIndex - 1].english;
+                    previousSubtitleDiv.innerHTML = formatSpeakerText(sentences[currentIndex - 1].english);
                     previousSubtitleDiv.style.display = 'block';
                 } else {
                     previousSubtitleDiv.style.display = 'none';
@@ -2092,11 +2098,11 @@
                 
                 // 현재 자막
                 const currentSentence = sentences[currentIndex];
-                currentSubtitleDiv.innerHTML = currentSentence.english;
+                currentSubtitleDiv.innerHTML = formatSpeakerText(currentSentence.english);
                 
                 // 현재 자막 번역
                 if (currentSentence.korean && currentSentence.korean.trim() !== '') {
-                    currentSubtitleKoreanDiv.innerHTML = currentSentence.korean;
+                    currentSubtitleKoreanDiv.innerHTML = formatSpeakerText(currentSentence.korean);
                     currentSubtitleKoreanDiv.style.display = 'block';
                 } else {
                     currentSubtitleKoreanDiv.style.display = 'none';
@@ -2104,7 +2110,7 @@
                 
                 // 다음 자막
                 if (currentIndex < sentences.length - 1) {
-                    nextSubtitleDiv.innerHTML = sentences[currentIndex + 1].english;
+                    nextSubtitleDiv.innerHTML = formatSpeakerText(sentences[currentIndex + 1].english);
                     nextSubtitleDiv.style.display = 'block';
                 } else {
                     nextSubtitleDiv.style.display = 'none';
@@ -2159,7 +2165,7 @@
                 
                 // 이전 자막
                 if (currentIndex > 0) {
-                    previousSubtitleDiv.innerHTML = sentences[currentIndex - 1].english;
+                    previousSubtitleDiv.innerHTML = formatSpeakerText(sentences[currentIndex - 1].english);
                     previousSubtitleDiv.style.display = 'block';
                 } else {
                     previousSubtitleDiv.style.display = 'none';
@@ -2167,11 +2173,11 @@
                 
                 // 현재 자막
                 const currentSentence = sentences[currentIndex];
-                currentSubtitleDiv.innerHTML = currentSentence.english;
+                currentSubtitleDiv.innerHTML = formatSpeakerText(currentSentence.english);
                 
                 // 현재 자막 번역
                 if (currentSentence.korean && currentSentence.korean.trim() !== '') {
-                    currentSubtitleKoreanDiv.innerHTML = currentSentence.korean;
+                    currentSubtitleKoreanDiv.innerHTML = formatSpeakerText(currentSentence.korean);
                     currentSubtitleKoreanDiv.style.display = 'block';
                 } else {
                     currentSubtitleKoreanDiv.style.display = 'none';
@@ -2179,7 +2185,7 @@
                 
                 // 다음 자막
                 if (currentIndex < sentences.length - 1) {
-                    nextSubtitleDiv.innerHTML = sentences[currentIndex + 1].english;
+                    nextSubtitleDiv.innerHTML = formatSpeakerText(sentences[currentIndex + 1].english);
                     nextSubtitleDiv.style.display = 'block';
                 } else {
                     nextSubtitleDiv.style.display = 'none';
@@ -2232,7 +2238,7 @@
             }
         }
         
-        // 오버레이 자막 업데이트 함수 (영어만)
+        // 오버레이 자막 업데이트 함수
         function updateOverlaySubtitles(currentSentence) {
             if (!overlaySubtitlesVisible) {
                 return;
@@ -2241,8 +2247,28 @@
             const overlaySubtitle = document.getElementById('videoOverlaySubtitles');
             
             if (currentSentence) {
-                // 영어 자막만 표시
-                overlaySubtitle.innerHTML = currentSentence.english;
+                let subtitleText = '';
+                
+                // 언어 선택에 따른 텍스트 설정
+                switch(subtitleLanguage) {
+                    case 'english':
+                        subtitleText = formatSpeakerText(currentSentence.english || '');
+                        break;
+                    case 'korean':
+                        subtitleText = formatSpeakerText(currentSentence.korean || '');
+                        break;
+                    case 'both':
+                        const englishText = formatSpeakerText(currentSentence.english || '');
+                        const koreanText = formatSpeakerText(currentSentence.korean || '');
+                        if (englishText && koreanText) {
+                            subtitleText = englishText + '<br><br>' + koreanText;
+                        } else {
+                            subtitleText = englishText || koreanText;
+                        }
+                        break;
+                }
+                
+                overlaySubtitle.innerHTML = subtitleText;
                 overlaySubtitle.style.display = 'block';
             } else {
                 overlaySubtitle.style.display = 'none';
@@ -2259,7 +2285,7 @@
             overlaySubtitlesVisible = !overlaySubtitlesVisible;
             
             if (overlaySubtitlesVisible) {
-                overlayBtn.innerHTML = '📺 오버레이 숨기기';
+                overlayBtn.innerHTML = '숨기기';
                 overlayBtn.style.background = '#4a4a2d';
                 overlayBtn.style.borderColor = '#6b6b00';
                 
@@ -2271,7 +2297,7 @@
                     updateOverlaySubtitles(currentSubtitleSentence);
                 }
             } else {
-                overlayBtn.innerHTML = '📺 오버레이 표시';
+                overlayBtn.innerHTML = '표시';
                 overlayBtn.style.background = '#2d4a2d';
                 overlayBtn.style.borderColor = '#4CAF50';
                 
@@ -2286,6 +2312,57 @@
         // 오버레이 자막 설정 변수
         let overlayFontSizeScale = 1.2; // 기본 크기 (120%)
         let overlayPosition = 'center'; // 기본 위치 (중앙)
+        let subtitleLanguage = 'english'; // 기본 언어 (영어만)
+        
+        // 화자 구분을 위한 텍스트 처리 함수
+        function formatSpeakerText(text) {
+            if (!text) return '';
+            // ' - ' 를 줄바꿈으로 변환 (화자 구분)
+            return text.replace(/\s*-\s*/g, '<br>');
+        }
+        
+        // 자막 언어 선택 함수
+        function setSubtitleLanguage(language) {
+            subtitleLanguage = language;
+            
+            // 버튼 스타일 업데이트
+            const engBtn = document.getElementById('subtitleEngBtn');
+            const korBtn = document.getElementById('subtitleKorBtn');
+            const bothBtn = document.getElementById('subtitleBothBtn');
+            
+            // 모든 버튼 초기화
+            [engBtn, korBtn, bothBtn].forEach(btn => {
+                btn.style.background = '#333333';
+                btn.style.color = '#cccccc';
+                btn.style.borderColor = '#555555';
+            });
+            
+            // 선택된 버튼 활성화
+            let activeBtn;
+            switch(language) {
+                case 'english':
+                    activeBtn = engBtn;
+                    break;
+                case 'korean':
+                    activeBtn = korBtn;
+                    break;
+                case 'both':
+                    activeBtn = bothBtn;
+                    break;
+            }
+            
+            if (activeBtn) {
+                activeBtn.style.background = '#0e639c';
+                activeBtn.style.color = '#ffffff';
+                activeBtn.style.borderColor = '#0e639c';
+            }
+            
+            // 현재 자막 업데이트
+            if (currentSubtitleSentence) {
+                updateVideoSubtitles();
+                updateOverlaySubtitles(currentSubtitleSentence);
+            }
+        }
         
         // 오버레이 크기 조절 함수
         function adjustOverlaySize(delta) {
@@ -2860,8 +2937,8 @@
                         
                         sentenceEl.innerHTML = `
                             <span class="sentence-number">${sentence.order}.</span>
-                            <span class="sentence-text">${sentence.english}</span>
-                            <span class="sentence-korean">${sentence.korean || ''}</span>
+                            <span class="sentence-text">${formatSpeakerText(sentence.english)}</span>
+                            <span class="sentence-korean">${formatSpeakerText(sentence.korean || '')}</span>
                             <div style="font-size: 0.7em; color: #666; margin-top: 3px;">
                                 ${sentence.startTime?.toFixed(1) || 0}s - ${sentence.endTime?.toFixed(1) || 0}s
                             </div>
