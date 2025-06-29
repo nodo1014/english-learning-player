@@ -8,8 +8,19 @@ import logging
 import threading
 import time
 import uuid
+import re
 from datetime import datetime
 from pathlib import Path
+
+# spaCy import (with fallback)
+try:
+    import spacy
+    # Load English model
+    nlp = spacy.load("en_core_web_sm")
+    SPACY_AVAILABLE = True
+except (ImportError, OSError):
+    SPACY_AVAILABLE = False
+    nlp = None
 
 # Import our new modules
 from database import media_repo, chapter_repo, scene_repo, sentence_repo, db_manager
@@ -519,6 +530,49 @@ def upload_sentences(media_id):
         logger.error(f"Error uploading sentences for media {media_id}: {e}")
         return jsonify({'error': str(e)}), 500
 
+def clean_subtitle_text(text):
+    """Clean subtitle text by removing unnecessary elements"""
+    import re
+    
+    if not text:
+        return text
+    
+    # Remove speaker names (화자: 형태)
+    text = re.sub(r'^[^:]*:\s*', '', text)
+    
+    # Remove sound effects in parentheses (의성어)
+    text = re.sub(r'\([^)]*\)', '', text)
+    
+    # Remove descriptions in brackets [묘사]
+    text = re.sub(r'\[[^\]]*\]', '', text)
+    
+    # Remove HTML tags
+    text = re.sub(r'<[^>]*>', '', text)
+    
+    # Remove common filler words and expressions
+    filler_patterns = [
+        r'\bwww+\b',  # www, wwww, etc.
+        r'\bahh*\b',  # ah, ahh, ahhh
+        r'\bumm*\b',  # um, umm, ummm
+        r'\berr*\b',  # er, err, errr
+        r'\buh+\b',   # uh, uhh, uhhh
+        r'\bmm+\b',   # mm, mmm, mmmm
+        r'\bhm+\b',   # hm, hmm, hmmm
+    ]
+    
+    for pattern in filler_patterns:
+        text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+    
+    # Remove multiple spaces and clean up
+    text = re.sub(r'\s+', ' ', text)
+    text = text.strip()
+    
+    # Remove leading/trailing punctuation if it's isolated
+    text = re.sub(r'^[.,!?;:-]+\s*', '', text)
+    text = re.sub(r'\s*[.,!?;:-]+$', '', text)
+    
+    return text
+
 def parse_srt_content(srt_content):
     """Parse SRT file content into sentence data"""
     import re
@@ -537,6 +591,13 @@ def parse_srt_content(srt_content):
             time_line = lines[1]
             text = ' '.join(lines[2:])
             
+            # Clean the subtitle text
+            cleaned_text = clean_subtitle_text(text)
+            
+            # Skip empty or very short text after cleaning
+            if not cleaned_text or len(cleaned_text.strip()) < 3:
+                continue
+            
             # Parse time format: 00:00:10,500 --> 00:00:13,240
             time_match = re.match(r'(\d{2}):(\d{2}):(\d{2}),(\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}),(\d{3})', time_line)
             if not time_match:
@@ -549,7 +610,7 @@ def parse_srt_content(srt_content):
             end_time = end_h * 3600 + end_m * 60 + end_s + end_ms / 1000
             
             sentences.append({
-                'english': text.strip(),
+                'english': cleaned_text,
                 'startTime': start_time,
                 'endTime': end_time,
                 'order': number
@@ -1436,5 +1497,127 @@ def _create_scene_subtitle_file(scene, sentences, subtitle_options):
         logger.error(f"Error creating scene subtitle file: {e}")
         return None
 
+# =============================================================================
+# VERB DETECTION API (spaCy-based)
+# =============================================================================
+
+@app.route('/api/detect-verbs', methods=['POST'])
+def detect_verbs():
+    """Detect verbs in text - now returns cached results instantly"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        sentence_id = data.get('sentence_id')
+        
+        if not text:
+            return jsonify({'verbs': []})
+        
+        # Try to get from DB first if sentence_id provided
+        if sentence_id:
+            try:
+                sentence = sentence_repo.get_by_id(sentence_id)
+                if sentence and sentence.get('detectedVerbs'):
+                    import json
+                    cached_verbs = json.loads(sentence['detectedVerbs'])
+                    return jsonify({'verbs': cached_verbs, 'cached': True})
+            except Exception as e:
+                logger.warning(f"Could not load cached verbs for sentence {sentence_id}: {e}")
+        
+        # Fallback to real-time analysis (should be rare now)
+        if not SPACY_AVAILABLE:
+            return jsonify({'verbs': _detect_verbs_fallback(text)})
+        
+        # Use spaCy for accurate POS tagging
+        doc = nlp(text)
+        verbs = []
+        
+        for token in doc:
+            if token.pos_ == 'VERB' and not token.is_stop and len(token.text) > 2:
+                verbs.append(token.text)
+        
+        # Remove duplicates and limit to top 3
+        unique_verbs = list(set(verbs))[:3]
+        
+        return jsonify({'verbs': unique_verbs, 'cached': False})
+        
+    except Exception as e:
+        logger.error(f"Error detecting verbs: {e}")
+        return jsonify({'verbs': _detect_verbs_fallback(text)})
+
+def _detect_verbs_fallback(text):
+    """Fallback verb detection using simple patterns"""
+    # Basic patterns for common verbs
+    common_verbs = ['am', 'is', 'are', 'was', 'were', 'have', 'has', 'had', 'do', 'does', 'did', 
+                   'will', 'would', 'can', 'could', 'should', 'go', 'went', 'come', 'came', 
+                   'get', 'got', 'make', 'made', 'take', 'took', 'give', 'gave', 'see', 'saw',
+                   'work', 'works', 'working', 'worked', 'play', 'plays', 'playing', 'played',
+                   'run', 'runs', 'running', 'ran', 'walk', 'walks', 'walking', 'walked',
+                   'talk', 'talks', 'talking', 'talked', 'eat', 'eats', 'eating', 'ate',
+                   'think', 'thinks', 'thinking', 'thought', 'say', 'says', 'saying', 'said']
+    
+    words = re.findall(r'\b\w+\b', text.lower())
+    found_verbs = [word for word in words if word in common_verbs]
+    
+    return list(set(found_verbs))[:3]
+
+@app.route('/api/media/<media_id>/analyze-verbs', methods=['POST'])
+def analyze_verbs_background(media_id):
+    """Start background verb analysis for all sentences"""
+    try:
+        def analyze_verbs_task():
+            """Background task to analyze verbs"""
+            sentences = sentence_repo.get_sentences_without_verbs(media_id)
+            
+            if not sentences:
+                logger.info(f"No sentences need verb analysis for media {media_id}")
+                return
+            
+            logger.info(f"Starting verb analysis for {len(sentences)} sentences")
+            
+            for sentence in sentences:
+                try:
+                    if not sentence.get('english'):
+                        continue
+                        
+                    # Detect verbs using spaCy
+                    if SPACY_AVAILABLE:
+                        doc = nlp(sentence['english'])
+                        verbs = []
+                        
+                        for token in doc:
+                            if token.pos_ == 'VERB' and not token.is_stop and len(token.text) > 2:
+                                verbs.append(token.text)
+                        
+                        # Remove duplicates and limit to top 3
+                        unique_verbs = list(set(verbs))[:3]
+                    else:
+                        # Fallback
+                        unique_verbs = _detect_verbs_fallback(sentence['english'])
+                    
+                    # Store as JSON
+                    import json
+                    verbs_json = json.dumps(unique_verbs)
+                    sentence_repo.update_verbs(sentence['id'], verbs_json)
+                    
+                except Exception as e:
+                    logger.error(f"Error analyzing sentence {sentence['id']}: {e}")
+                    continue
+            
+            logger.info(f"Completed verb analysis for media {media_id}")
+        
+        # Start background thread
+        thread = threading.Thread(target=analyze_verbs_task)
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({
+            'success': True,
+            'message': '동사 분석이 백그라운드에서 시작되었습니다.'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error starting verb analysis: {e}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=8000)

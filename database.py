@@ -87,9 +87,18 @@ class DatabaseManager:
                     `order` INTEGER NOT NULL,
                     isBookmarked BOOLEAN DEFAULT 0,
                     confidence REAL,
+                    detectedVerbs TEXT,
                     FOREIGN KEY (sceneId) REFERENCES Scene (id) ON DELETE CASCADE
                 )
             ''')
+            
+            # Add detectedVerbs column if it doesn't exist (migration)
+            try:
+                cursor.execute('ALTER TABLE Sentence ADD COLUMN detectedVerbs TEXT')
+                conn.commit()
+            except Exception:
+                # Column already exists or other error - ignore
+                pass
             
             conn.commit()
             logger.info("Database initialized successfully")
@@ -254,6 +263,14 @@ class SentenceRepository:
             ''', (media_id,))
             return [dict(row) for row in cursor.fetchall()]
     
+    def get_by_id(self, sentence_id: int) -> Optional[Dict]:
+        """Get sentence by ID"""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM Sentence WHERE id = ?", (sentence_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+    
     def get_by_scene_id(self, scene_id: int) -> List[Dict]:
         """Get sentences by scene ID"""
         with self.db.get_connection() as conn:
@@ -315,6 +332,27 @@ class SentenceRepository:
             cursor.execute("UPDATE Sentence SET korean = ? WHERE id = ?", (korean_text, sentence_id))
             conn.commit()
             return cursor.rowcount > 0
+    
+    def update_verbs(self, sentence_id: int, verbs_json: str) -> bool:
+        """Update detected verbs"""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE Sentence SET detectedVerbs = ? WHERE id = ?", (verbs_json, sentence_id))
+            conn.commit()
+            return cursor.rowcount > 0
+    
+    def get_sentences_without_verbs(self, media_id: str) -> List[Dict]:
+        """Get sentences that need verb analysis"""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT s.* FROM Sentence s
+                JOIN Scene sc ON s.sceneId = sc.id
+                JOIN Chapter c ON sc.chapterId = c.id
+                WHERE c.mediaId = ? AND (s.detectedVerbs IS NULL OR s.detectedVerbs = '')
+                ORDER BY s.`order`
+            ''', (media_id,))
+            return [dict(row) for row in cursor.fetchall()]
     
     def create_batch(self, sentences: List[Dict]) -> List[int]:
         """Create multiple sentences"""
