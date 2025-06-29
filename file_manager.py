@@ -189,6 +189,21 @@ class FileManager:
         else:
             return 'other'
     
+    def delete_media_file(self, filename: str) -> bool:
+        """Delete a media file from upload folder"""
+        try:
+            file_path = self.upload_folder / filename
+            if file_path.exists():
+                file_path.unlink()
+                logger.info(f"Deleted media file: {filename}")
+                return True
+            else:
+                logger.warning(f"Media file not found: {filename}")
+                return False
+        except Exception as e:
+            logger.error(f"Error deleting media file {filename}: {e}")
+            return False
+    
     def cleanup_media_outputs(self, media_id: str) -> bool:
         """Remove all output files for a media"""
         try:
