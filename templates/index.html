@@ -3379,8 +3379,20 @@
             // 업로드 섹션 숨기기
             document.getElementById('uploadSection').style.display = 'none';
             
-            // 자막 패널로 자동 전환 (미디어가 선택된 경우)
-            showPanel('subtitle');
+            // 영상 재생화면이 항상 보이도록 설정 (자막 패널로 전환하지 않음)
+            // showPanel('subtitle'); // 이 줄을 제거하여 현재 패널 유지
+            
+            // 미디어 플레이어와 자막 컨테이너가 보이도록 확인
+            const mediaPlayerDiv = document.querySelector('.media-player');
+            if (mediaPlayerDiv) {
+                mediaPlayerDiv.style.display = 'block';
+            }
+            
+            // 자막 컨테이너도 항상 보이도록 설정
+            const videoSubtitlesContainer = document.getElementById('videoSubtitlesContainer');
+            if (videoSubtitlesContainer) {
+                videoSubtitlesContainer.style.display = 'block';
+            }
             
             // 현재 선택된 미디어 강조
             document.querySelectorAll('.media-item').forEach(item => {
