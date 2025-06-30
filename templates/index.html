@@ -5015,42 +5015,56 @@
         }
         
         function extractAllSentencesMP4() {
-            if (!currentMedia) return;
+            if (!currentMedia) {
+                showMessage('미디어 파일이 선택되지 않았습니다.');
+                return;
+            }
             
-            const englishChecked = document.getElementById('subtitleEnglish').checked;
-            const koreanChecked = document.getElementById('subtitleKorean').checked;
-            const commentaryChecked = document.getElementById('allSentencesCommentary').checked;
+            const englishChecked = document.getElementById('englishSub').checked;
+            const koreanChecked = document.getElementById('koreanSub').checked;
+            const englishFontSize = document.querySelector('input[name="sideEnglishFontSize"]:checked')?.value || '32';
+            const koreanFontSize = document.querySelector('input[name="sideKoreanFontSize"]:checked')?.value || '24';
+            
+            // Get commentary settings (assuming there are UI elements for these)
+            const includeCommentary = document.getElementById('includeCommentary')?.checked || false;
             const commentaryStyle = document.querySelector('input[name="commentaryStyle"]:checked')?.value || 'orange';
-            const englishFontSize = document.querySelector('input[name="allSentencesEnglishFontSize"]:checked')?.value || '32';
-            const koreanFontSize = document.querySelector('input[name="allSentencesKoreanFontSize"]:checked')?.value || '24';
             
-            console.log('Extracting all sentences as MP4', {englishChecked, koreanChecked, commentaryChecked, commentaryStyle, englishFontSize, koreanFontSize});
-            updateExtractStatusMP4('전체 문장 분할 MP4 추출 중...');
+            console.log('Extracting all sentences as MP4', {
+                englishChecked, 
+                koreanChecked, 
+                englishFontSize, 
+                koreanFontSize, 
+                includeCommentary, 
+                commentaryStyle
+            });
             
             fetch(`/api/media/${currentMedia}/extract-all-sentences-mp4`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     subtitle_english: englishChecked,
                     subtitle_korean: koreanChecked,
-                    include_commentary: commentaryChecked,
                     english_font_size: parseInt(englishFontSize),
-                    korean_font_size: parseInt(koreanFontSize)
+                    korean_font_size: parseInt(koreanFontSize),
+                    include_commentary: includeCommentary,
+                    commentary_style: commentaryStyle
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    updateExtractStatusMP4(`전체 문장 분할 MP4 추출 완료: ${data.output_path}`);
+                    console.log(`전체 문장 MP4 추출 완료: ${data.message}`);
+                    alert('전체 문장분할 MP4 추출이 완료되었습니다.');
                 } else {
-                    updateExtractStatusMP4('전체 문장 분할 MP4 추출 실패: ' + data.error);
+                    console.error('전체 MP4 추출 실패:', data.error);
+                    alert('전체 MP4 추출에 실패했습니다.');
                 }
             })
             .catch(error => {
-                console.error('Extract error:', error);
-                updateExtractStatusMP4('전체 문장 분할 MP4 추출 중 오류 발생');
+                console.error('전체 MP4 추출 오류:', error);
+                alert('전체 MP4 추출 중 오류가 발생했습니다.');
             });
         }
         

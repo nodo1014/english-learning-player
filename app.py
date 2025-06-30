@@ -1128,14 +1128,35 @@ def extract_all_sentences_mp4(media_id):
         english_font_size = data.get('english_font_size', 32)
         korean_font_size = data.get('korean_font_size', 24)
         
+        # 디버깅 로그 추가
+        logger.info(f"전체 문장 추출 요청 데이터: {data}")
+        logger.info(f"subtitle_english: {subtitle_english}, subtitle_korean: {subtitle_korean}")
+        
         # 디버깅: 실제 받은 데이터 로그
         logger.info(f"전체 문장 MP4 추출 요청 데이터: {data}")
         logger.info(f"subtitle_korean 값: {subtitle_korean} (타입: {type(subtitle_korean)})")
+        
+        # 디버깅: 북마크 함수와 일반 함수 비교
+        bookmarked_test = sentence_repo.get_bookmarked_by_media_id(media_id)
+        all_test = sentence_repo.get_by_media_id(media_id)
+        if bookmarked_test and all_test:
+            logger.info(f"북마크 문장 첫번째 korean: {bookmarked_test[0].get('korean', 'None')}")
+            logger.info(f"전체 문장 첫번째 korean: {all_test[0].get('korean', 'None')}")
+            # 동일한 ID 찾기
+            for sentence in all_test:
+                if sentence['id'] == bookmarked_test[0]['id']:
+                    logger.info(f"동일 문장 ID {sentence['id']} - 전체에서: {sentence.get('korean', 'None')}")
+                    break
         
         # Get all sentences
         all_sentences = sentence_repo.get_by_media_id(media_id)
         if not all_sentences:
             return jsonify({'error': 'No sentences found'}), 404
+        
+        # 한글 자막이 필요한데 번역이 없는 문장들 필터링
+        if subtitle_korean:
+            all_sentences = [s for s in all_sentences if s.get('korean')]
+            logger.info(f"한글 번역이 있는 문장 수: {len(all_sentences)}")
         
         # Start background processing
         thread = threading.Thread(
