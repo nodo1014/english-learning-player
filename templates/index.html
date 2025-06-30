@@ -824,6 +824,82 @@
             color: #cccccc;
         }
         
+        /* 탭 스타일 */
+        .modal-tabs {
+            display: flex;
+            border-bottom: 1px solid #444444;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            background: #333333;
+            color: #cccccc;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn:hover {
+            background: #404040;
+            color: #ffffff;
+        }
+        
+        .tab-btn.active {
+            background: #0e639c;
+            color: #ffffff;
+            border-bottom-color: #0e639c;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 상태 배지 스타일 */
+        .status-badges {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .status-badge {
+            font-size: 9px;
+            padding: 2px 5px;
+            border-radius: 10px;
+            background: #444444;
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: help;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        
+        .status-badge.subtitle {
+            background: #28a745;
+        }
+        
+        .status-badge.translation {
+            background: #17a2b8;
+        }
+        
+        .status-badge.spacy {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .status-badge.vocabulary {
+            background: #6f42c1;
+        }
+
         .modal-form {
             display: flex;
             flex-direction: column;
@@ -1142,7 +1218,7 @@
                 </video>
                 
                 <!-- Video Overlay Subtitles -->
-                <div id="videoOverlaySubtitles" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; color: white; text-align: center; max-width: 90%; display: none; font-family: 'Noto Sans KR', 'Segoe UI', sans-serif; font-size: 3.5em; font-weight: 700; line-height: 1.3; text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9), 1px 1px 2px rgba(0, 0, 0, 0.8), -1px -1px 2px rgba(0, 0, 0, 0.8);">
+                <div id="videoOverlaySubtitles" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; color: white; text-align: center; max-width: 50%; display: none; font-family: 'Noto Sans KR', 'Segoe UI', sans-serif; font-size: 3.5em; font-weight: 700; line-height: 1.3; text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9), 1px 1px 2px rgba(0, 0, 0, 0.8), -1px -1px 2px rgba(0, 0, 0, 0.8);">
                     오버레이 자막이 여기에 표시됩니다
                 </div>
             </div>
@@ -1179,7 +1255,7 @@
             </div>
             
             <!-- Language Reactor 스타일 자막 표시 영역 -->
-            <div id="videoSubtitlesContainer" style="margin-top: 20px; min-height: 200px; position: relative;">
+            <div id="videoSubtitlesContainer" style="margin-top: 20px; position: relative; transition: all 0.3s ease;">
                 <!-- 자막 토글 버튼 -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <div style="color: #888888; font-size: 0.9em;">🎬 실시간 자막</div>
@@ -1190,27 +1266,29 @@
                     </div>
                 </div>
                 
-                <div id="videoSubtitles" style="background: #1e1e1e; border-radius: 10px; padding: 20px; border: 2px solid #333333; height: 180px; min-height: 180px; max-height: 180px; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
-                    <!-- 이전 자막 -->
-                    <div id="previousSubtitle" style="text-align: center; padding: 8px 15px; color: #888888; font-size: 0.9em; line-height: 1.4; margin-bottom: 10px; opacity: 0.6; min-height: 20px;">
-                    </div>
-                    
-                    <!-- 현재 자막 -->
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-                        <div id="currentSubtitle" style="flex: 1; text-align: center; font-size: 1.4em; color: #ffffff; line-height: 1.6; padding: 15px 20px; background: #2d2d30; border-radius: 8px; border: 2px solid #0e639c; font-weight: 500; font-family: 'Segoe UI', 'Noto Sans KR', sans-serif; min-height: 60px; display: flex; align-items: center; justify-content: center;">
-                            자막이 여기에 표시됩니다
+                <div id="videoSubtitlesWrapper" style="height: 220px; overflow: hidden; transition: all 0.3s ease;">
+                    <div id="videoSubtitles" style="background: #1e1e1e; border-radius: 10px; padding: 20px; border: 2px solid #333333; height: 180px; min-height: 180px; max-height: 180px; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
+                        <!-- 이전 자막 -->
+                        <div id="previousSubtitle" style="text-align: center; padding: 8px 15px; color: #888888; font-size: 0.9em; line-height: 1.4; margin-bottom: 10px; opacity: 0.6; min-height: 20px;">
                         </div>
-                        <button id="subtitleBookmarkBtn" onclick="toggleSubtitleBookmark()" style="padding: 10px 14px; background: #333333; color: #cccccc; border: 1px solid #444444; border-radius: 8px; cursor: pointer; font-size: 1em; white-space: nowrap; transition: all 0.2s;" title="북마크 추가/제거">
-                            ☆
-                        </button>
-                    </div>
-                    
-                    <!-- 현재 자막 번역 -->
-                    <div id="currentSubtitleKorean" style="text-align: center; color: #cccccc; font-size: 1.1em; line-height: 1.5; margin-bottom: 15px; font-family: 'Noto Sans KR', sans-serif; min-height: 20px;">
-                    </div>
-                    
-                    <!-- 다음 자막 -->
-                    <div id="nextSubtitle" style="text-align: center; padding: 8px 15px; color: #888888; font-size: 0.9em; line-height: 1.4; opacity: 0.6; min-height: 20px;">
+                        
+                        <!-- 현재 자막 -->
+                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                            <div id="currentSubtitle" style="flex: 1; text-align: center; font-size: 1.4em; color: #ffffff; line-height: 1.6; padding: 15px 20px; background: #2d2d30; border-radius: 8px; border: 2px solid #0e639c; font-weight: 500; font-family: 'Segoe UI', 'Noto Sans KR', sans-serif; min-height: 60px; display: flex; align-items: center; justify-content: center;">
+                                자막이 여기에 표시됩니다
+                            </div>
+                            <button id="subtitleBookmarkBtn" onclick="toggleSubtitleBookmark()" style="padding: 10px 14px; background: #333333; color: #cccccc; border: 1px solid #444444; border-radius: 8px; cursor: pointer; font-size: 1em; white-space: nowrap; transition: all 0.2s;" title="북마크 추가/제거">
+                                ☆
+                            </button>
+                        </div>
+                        
+                        <!-- 현재 자막 번역 -->
+                        <div id="currentSubtitleKorean" style="text-align: center; color: #cccccc; font-size: 1.1em; line-height: 1.5; margin-bottom: 15px; font-family: 'Noto Sans KR', sans-serif; min-height: 20px;">
+                        </div>
+                        
+                        <!-- 다음 자막 -->
+                        <div id="nextSubtitle" style="text-align: center; padding: 8px 15px; color: #888888; font-size: 0.9em; line-height: 1.4; opacity: 0.6; min-height: 20px;">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1220,10 +1298,23 @@
             </div>
         </div>
         
-        <div class="controls">
-            <button class="btn" onclick="repeatCurrent()">구간 반복</button>
-            <button class="btn" onclick="playBookmarked()">북마크 재생</button>
-            <button class="btn btn-export" onclick="exportBookmarks()">북마크 내보내기</button>
+        
+        <!-- Media processing controls -->
+        <div class="media-processing-controls" style="margin-top: 15px; padding: 15px; background: #2a2a2a; border-radius: 8px; border: 1px solid #444444;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <button class="btn" onclick="openSubtitleModal()" style="background: #28a745; border: 1px solid #28a745;">
+                    🎤 자막 생성
+                </button>
+                <button class="btn" onclick="translateAllSentences()" style="background: #17a2b8; border: 1px solid #17a2b8;">
+                    🌐 번역
+                </button>
+                <button class="btn" onclick="startVerbAnalysisManual()" style="background: #ffc107; color: #333; border: 1px solid #ffc107;">
+                    🔍 SpaCy 분석
+                </button>
+                <button class="btn" onclick="startVocabularyCacheManual()" style="background: #6f42c1; border: 1px solid #6f42c1;">
+                    📚 어휘 분석 DB 저장
+                </button>
+            </div>
         </div>
         
     </main>
@@ -1256,55 +1347,67 @@
         </div>
     </div>
     
-    <!-- Whisper 모달 -->
-    <div id="whisperModal" class="modal">
+    <!-- 자막 생성 모달 (탭 UI) -->
+    <div id="subtitleModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>🎤 Whisper 자막 생성</h3>
-                <button class="modal-close" onclick="closeModal('whisperModal')">&times;</button>
+                <h3>🎬 자막 생성</h3>
+                <button class="modal-close" onclick="closeModal('subtitleModal')">&times;</button>
             </div>
-            <div class="modal-form">
-                <div>
-                    <label>모델 선택:</label>
-                    <select id="modalModelSelect">
-                        <option value="tiny">⚡ Tiny (빠름, 낮은 정확도)</option>
-                        <option value="small">🔹 Small (보통 속도, 보통 정확도)</option>
-                        <option value="medium" selected>🔸 Medium (느림, 높은 정확도)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>구조 템플릿:</label>
-                    <select id="modalTemplateSelect">
-                        <option value="auto">🤖 자동 감지</option>
-                        <option value="toeic_lc" selected>📚 TOEIC LC (Part 1-4)</option>
-                        <option value="toeic_rc">📖 TOEIC RC (Part 5-7)</option>
-                        <option value="general">📝 일반 강의</option>
-                        <option value="conversation">💬 대화/인터뷰</option>
-                        <option value="audiobook">📚 오디오북</option>
-                        <option value="manual">⚙️ 수동 설정</option>
-                    </select>
-                </div>
-                <button onclick="startModalWhisper()">🎤 Whisper 생성 시작</button>
+            
+            <!-- 탭 헤더 -->
+            <div class="modal-tabs">
+                <button class="tab-btn active" onclick="switchTab('whisper')" id="whisperTab">
+                    🎤 Whisper 생성
+                </button>
+                <button class="tab-btn" onclick="switchTab('srt')" id="srtTab">
+                    📄 SRT 업로드
+                </button>
             </div>
-        </div>
-    </div>
-    
-    <!-- SRT 업로드 모달 -->
-    <div id="srtModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>📄 SRT 자막 업로드</h3>
-                <button class="modal-close" onclick="closeModal('srtModal')">&times;</button>
-            </div>
-            <div class="modal-form">
-                <div>
-                    <label>SRT 파일 선택:</label>
-                    <input type="file" id="modalSrtFileInput" accept=".srt">
-                    <div style="font-size: 0.8em; color: #858585; margin-top: 5px;">
-                        자막 파일 (.srt) 형식으로 시간 정보와 텍스트를 포함해야 합니다
+            
+            <!-- Whisper 탭 내용 -->
+            <div id="whisperTabContent" class="tab-content active">
+                <div class="modal-form">
+                    <div>
+                        <label>모델 선택:</label>
+                        <select id="modalModelSelect">
+                            <option value="tiny">⚡ Tiny (빠름, 낮은 정확도)</option>
+                            <option value="small">🔹 Small (보통 속도, 보통 정확도)</option>
+                            <option value="medium" selected>🔸 Medium (느림, 높은 정확도)</option>
+                        </select>
                     </div>
+                    <div>
+                        <label>구조 템플릿:</label>
+                        <select id="modalTemplateSelect">
+                            <option value="auto">🤖 자동 감지</option>
+                            <option value="toeic_lc" selected>📚 TOEIC LC (Part 1-4)</option>
+                            <option value="toeic_rc">📖 TOEIC RC (Part 5-7)</option>
+                            <option value="general">📝 일반 강의</option>
+                            <option value="conversation">💬 대화/인터뷰</option>
+                            <option value="audiobook">📚 오디오북</option>
+                            <option value="manual">⚙️ 수동 설정</option>
+                        </select>
+                    </div>
+                    <button onclick="startModalWhisper()" style="background: #28a745; border: 1px solid #28a745;">
+                        🎤 Whisper 생성 시작
+                    </button>
                 </div>
-                <button class="srt-btn" onclick="startModalSrtUpload()">📄 SRT 업로드 시작</button>
+            </div>
+            
+            <!-- SRT 업로드 탭 내용 -->
+            <div id="srtTabContent" class="tab-content">
+                <div class="modal-form">
+                    <div>
+                        <label>SRT 파일 선택:</label>
+                        <input type="file" id="modalSrtFileInput" accept=".srt">
+                        <div style="font-size: 0.8em; color: #858585; margin-top: 5px;">
+                            자막 파일 (.srt) 형식으로 시간 정보와 텍스트를 포함해야 합니다
+                        </div>
+                    </div>
+                    <button onclick="startModalSrtUpload()" style="background: #17a2b8; border: 1px solid #17a2b8;">
+                        📄 SRT 업로드 시작
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1387,6 +1490,7 @@
             // HTML5 비디오 이벤트 리스너
             videoPlayer.addEventListener('timeupdate', updateVideoSubtitles);
             
+            
             // HTML5 오디오 이벤트 리스너
             audioPlayer.addEventListener('timeupdate', updateAudioSubtitles);
             
@@ -1396,6 +1500,7 @@
             
             // 키보드 이벤트 리스너 추가
             document.addEventListener('keydown', handleKeyboardControls);
+            
             
             // 파일 업로드 처리
             document.getElementById('fileInput').addEventListener('change', handleFileUpload);
@@ -1894,25 +1999,87 @@
                     if (media.length === 0) {
                         listEl.innerHTML = '<div style="color: #858585; padding: 10px;">업로드된 미디어가 없습니다.</div>';
                     } else {
-                        listEl.innerHTML = media.map(m => {
-                            // UUID 제거: UUID는 36자리 (8-4-4-4-12) 형태이므로 첫 37자(UUID + _)를 제거
-                            const displayName = m.filename.includes('_') ? 
-                                m.filename.substring(m.filename.indexOf('_') + 1) : 
-                                m.filename;
-                            
-                            return `
-                            <div class="media-item" onclick="loadMediaSentences('${m.id}')" data-media-id="${m.id}">
-                                <div style="font-weight: bold;" title="${displayName}">${displayName}</div>
-                                <div style="font-size: 0.8em; color: #858585;">
-                                    ${m.createdAt ? new Date(m.createdAt).toLocaleDateString() : ''}
+                        // 각 미디어의 상태 정보를 병렬로 가져오기
+                        const mediaPromises = media.map(async (m) => {
+                            try {
+                                // 문장 개수 확인 (자막 상태)
+                                const sentencesResponse = await fetch(`/api/media/${m.id}/sentences-grouped`);
+                                const sentences = await sentencesResponse.json();
+                                const hasSentences = sentences && sentences.length > 0 && 
+                                    sentences.some(chapter => chapter.scenes && chapter.scenes.length > 0 && 
+                                        chapter.scenes.some(scene => scene.sentences && scene.sentences.length > 0));
+                                
+                                // 번역 상태 확인
+                                const translationResponse = await fetch(`/api/media/${m.id}/translation-status`);
+                                const translationData = await translationResponse.json();
+                                const hasTranslation = translationData.translated_count > 0;
+                                
+                                // 분석 상태 확인 (SpaCy, 어휘)
+                                let analysisData = { spacy: { percentage: 0 }, vocabulary: { percentage: 0 } };
+                                try {
+                                    const analysisResponse = await fetch(`/api/media/${m.id}/analysis-status`);
+                                    if (analysisResponse.ok) {
+                                        analysisData = await analysisResponse.json();
+                                    }
+                                } catch (error) {
+                                    console.warn(`Failed to get analysis status for media ${m.id}:`, error);
+                                }
+                                
+                                return {
+                                    ...m,
+                                    hasSentences,
+                                    hasTranslation,
+                                    translatedCount: translationData.translated_count || 0,
+                                    totalCount: translationData.total_count || 0,
+                                    spacyPercentage: analysisData.spacy.percentage || 0,
+                                    vocabularyPercentage: analysisData.vocabulary.percentage || 0
+                                };
+                            } catch (error) {
+                                console.warn(`Failed to get status for media ${m.id}:`, error);
+                                return { ...m, hasSentences: false, hasTranslation: false };
+                            }
+                        });
+                        
+                        Promise.all(mediaPromises).then(mediaWithStatus => {
+                            listEl.innerHTML = mediaWithStatus.map(m => {
+                                // UUID 제거: UUID는 36자리 (8-4-4-4-12) 형태이므로 첫 37자(UUID + _)를 제거
+                                const displayName = m.filename.includes('_') ? 
+                                    m.filename.substring(m.filename.indexOf('_') + 1) : 
+                                    m.filename;
+                                
+                                // 상태 배지 생성
+                                const badges = [];
+                                if (m.hasSentences) {
+                                    badges.push('<span class="status-badge subtitle" title="자막 있음">자막</span>');
+                                }
+                                if (m.hasTranslation) {
+                                    const percentage = m.totalCount > 0 ? Math.round((m.translatedCount / m.totalCount) * 100) : 0;
+                                    badges.push(`<span class="status-badge translation" title="번역 ${percentage}%">번역${percentage}%</span>`);
+                                }
+                                if (m.spacyPercentage > 0) {
+                                    badges.push(`<span class="status-badge spacy" title="SpaCy 분석 ${m.spacyPercentage}%">동사${m.spacyPercentage}%</span>`);
+                                }
+                                if (m.vocabularyPercentage > 0) {
+                                    badges.push(`<span class="status-badge vocabulary" title="어휘 분석 ${m.vocabularyPercentage}%">어휘${m.vocabularyPercentage}%</span>`);
+                                }
+                                
+                                return `
+                                <div class="media-item" onclick="loadMediaSentences('${m.id}')" data-media-id="${m.id}">
+                                    <div style="font-weight: bold;" title="${displayName}">${displayName}</div>
+                                    <div style="font-size: 0.8em; color: #858585; display: flex; justify-content: space-between; align-items: center;">
+                                        <span>${m.createdAt ? new Date(m.createdAt).toLocaleDateString() : ''}</span>
+                                        <div class="status-badges">
+                                            ${badges.join('')}
+                                        </div>
+                                    </div>
+                                    <button class="delete-btn" onclick="deleteMedia('${m.id}', event)" 
+                                            style="position: absolute; right: 5px; top: 5px; background: #d32f2f; color: white; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">
+                                        ✕
+                                    </button>
                                 </div>
-                                <button class="delete-btn" onclick="deleteMedia('${m.id}', event)" 
-                                        style="position: absolute; right: 5px; top: 5px; background: #d32f2f; color: white; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">
-                                    ✕
-                                </button>
-                            </div>
-                            `;
-                        }).join('');
+                                `;
+                            }).join('');
+                        });
                     }
                     console.log(`Media list updated: ${media.length} items`);
                 })
@@ -2147,14 +2314,37 @@
             console.log('Upload section shown');
         }
         
+        function openSubtitleModal() {
+            // 자막 생성 모달 띄우기 (기본으로 Whisper 탭 활성화)
+            switchTab('whisper');
+            document.getElementById('subtitleModal').style.display = 'block';
+        }
+        
         function showWhisperOptions() {
-            // Whisper 모달 띄우기
-            document.getElementById('whisperModal').style.display = 'block';
+            // 기존 호환성 유지
+            openSubtitleModal();
         }
         
         function showSrtUpload() {
-            // SRT 업로드 모달 띄우기
-            document.getElementById('srtModal').style.display = 'block';
+            // SRT 탭으로 모달 열기
+            switchTab('srt');
+            document.getElementById('subtitleModal').style.display = 'block';
+        }
+        
+        function switchTab(tabName) {
+            // 모든 탭 버튼 비활성화
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            // 모든 탭 내용 숨기기
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // 선택된 탭 활성화
+            if (tabName === 'whisper') {
+                document.getElementById('whisperTab').classList.add('active');
+                document.getElementById('whisperTabContent').classList.add('active');
+            } else if (tabName === 'srt') {
+                document.getElementById('srtTab').classList.add('active');
+                document.getElementById('srtTabContent').classList.add('active');
+            }
         }
         
         function closeModal(modalId) {
@@ -2430,15 +2620,15 @@
                 // 언어 선택에 따른 텍스트 설정 (동기 처리)
                 switch(subtitleLanguage) {
                     case 'english':
-                        subtitleText = formatSpeakerText(currentSentence.english || '', currentSentence.id);
+                        subtitleText = formatSpeakerText(currentSentence.english || '', currentSentence.id, true);
                         break;
                     case 'korean':
-                        subtitleText = formatSpeakerText(currentSentence.korean || '');
+                        subtitleText = formatSpeakerText(currentSentence.korean || '', null, true);
                         break;
                     case 'both':
-                        const englishText = formatSpeakerText(currentSentence.english || '', currentSentence.id);
+                        const englishText = formatSpeakerText(currentSentence.english || '', currentSentence.id, true);
                         const koreanText = currentSentence.korean ? 
-                            formatSpeakerText(currentSentence.korean) : '';
+                            formatSpeakerText(currentSentence.korean, null, true) : '';
                         if (englishText && koreanText) {
                             subtitleText = englishText + '<br><br>' + koreanText;
                         } else {
@@ -2449,6 +2639,10 @@
                 
                 overlaySubtitle.innerHTML = subtitleText;
                 overlaySubtitle.style.display = 'block';
+                
+                // 현재 텍스트 저장
+                currentOverlayText = subtitleText;
+                
                 
                 // 동사 하이라이트를 나중에 적용 (비동기로)
                 if (highlightVerbs && subtitleLanguage !== 'korean') {
@@ -2824,10 +3018,10 @@
         }
         
         // 화자 구분을 위한 텍스트 처리 함수 (동기)
-        function formatSpeakerText(text, sentenceId = null) {
+        function formatSpeakerText(text, sentenceId = null, isOverlay = false) {
             if (!text) return '';
-            // ' - ' 를 줄바꿈으로 변환 (화자 구분)
-            let formattedText = text.replace(/\s*-\s*/g, '<br>');
+            // ' - ' 를 줄바꿈으로 변환 (화자 구분) - 오버레이에서는 제외
+            let formattedText = isOverlay ? text : text.replace(/\s*-\s*/g, '<br>');
             
             // 문법 패턴 하이라이트 먼저 적용
             if (grammarHighlightEnabled && sentenceId) {
@@ -2903,6 +3097,71 @@
         let difficultyHighlightCache = new Map(); // 난이도 캐시
         let grammarHighlightEnabled = true; // 문법 패턴 하이라이트 활성화
         
+        // 배치 단어 난이도 체크를 위한 큐
+        let wordDifficultyQueue = new Set();
+        let wordDifficultyTimer = null;
+        
+        // 현재 오버레이 자막 저장 (리사이즈 시 재조정용)
+        let currentOverlayText = '';
+        let overlayTextSizeTimer = null;
+        
+        // 배치 요청 처리 함수
+        async function processDifficultyBatch() {
+            if (wordDifficultyQueue.size === 0) return;
+            
+            const words = Array.from(wordDifficultyQueue);
+            wordDifficultyQueue.clear();
+            
+            try {
+                const response = await fetch('/api/word/difficulty/batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ words })
+                });
+                
+                if (!response.ok) throw new Error('Batch request failed');
+                
+                const data = await response.json();
+                const results = data.results || {};
+                
+                // 결과를 캐시에 저장하고 UI 업데이트
+                for (const [word, info] of Object.entries(results)) {
+                    const className = info.difficulty === 'hard' ? 'difficulty-hard' : '';
+                    difficultyHighlightCache.set(word.toLowerCase(), className);
+                    
+                    // 해당 단어의 모든 인스턴스에 클래스 적용
+                    if (className) {
+                        const elements = document.querySelectorAll(`[data-word="${word.toLowerCase()}"]`);
+                        elements.forEach(el => el.classList.add(className));
+                    }
+                }
+            } catch (error) {
+                console.error('Batch difficulty check failed:', error);
+            }
+        }
+        
+        // 단어를 큐에 추가하고 배치 처리 예약
+        function queueWordForDifficultyCheck(word) {
+            if (difficultyHighlightCache.has(word)) {
+                const className = difficultyHighlightCache.get(word);
+                if (className) {
+                    const elements = document.querySelectorAll(`[data-word="${word}"]`);
+                    elements.forEach(el => el.classList.add(className));
+                }
+                return;
+            }
+            
+            wordDifficultyQueue.add(word);
+            
+            // 타이머 리셋 - 50ms 후에 배치 처리
+            if (wordDifficultyTimer) {
+                clearTimeout(wordDifficultyTimer);
+            }
+            wordDifficultyTimer = setTimeout(processDifficultyBatch, 50);
+        }
+        
         // 텍스트의 단어들을 인터랙티브하게 만들기
         function makeWordsInteractive(text, sentenceId, originalText) {
             // HTML 태그 내부는 건드리지 않고, 일반 텍스트만 처리
@@ -2920,20 +3179,9 @@
                                 ${word}
                             </span>`;
                     
-                    // 난이도 클래스를 비동기로 적용
+                    // 난이도 체크를 큐에 추가
                     if (difficultyHighlightEnabled) {
-                        setTimeout(async () => {
-                            try {
-                                const difficultyClass = await getDifficultyClass(wordLower);
-                                if (difficultyClass) {
-                                    // 같은 단어의 모든 인스턴스에 클래스 적용
-                                    const elements = document.querySelectorAll(`[data-word="${wordLower}"]`);
-                                    elements.forEach(el => el.classList.add(difficultyClass));
-                                }
-                            } catch (error) {
-                                console.warn('Failed to apply difficulty class:', error);
-                            }
-                        }, 0);
+                        queueWordForDifficultyCheck(wordLower);
                     }
                     
                     return spanHtml;
@@ -3158,6 +3406,71 @@
             updatePositionButtons();
         }
         
+        // 오버레이 텍스트 크기를 브라우저에 표시된 비디오 크기에 맞게 조정 (디바운싱 적용)
+        function adjustOverlayTextSize(text) {
+            const videoPlayer = document.getElementById('videoPlayer');
+            const overlaySubtitle = document.getElementById('videoOverlaySubtitles');
+            
+            if (!videoPlayer || !overlaySubtitle || !text) return;
+            
+            // 이전 타이머 취소
+            if (overlayTextSizeTimer) {
+                clearTimeout(overlayTextSizeTimer);
+            }
+            
+            // 50ms 디바운싱
+            overlayTextSizeTimer = setTimeout(() => {
+                adjustOverlayTextSizeImmediate(text);
+            }, 50);
+        }
+        
+        // 즉시 실행되는 오버레이 텍스트 크기 조정 함수
+        function adjustOverlayTextSizeImmediate(text) {
+            const videoPlayer = document.getElementById('videoPlayer');
+            const overlaySubtitle = document.getElementById('videoOverlaySubtitles');
+            
+            if (!videoPlayer || !overlaySubtitle || !text) return;
+            
+            // 브라우저에서 실제 표시되는 비디오 크기 (원본 크기와 무관)
+            const videoRect = videoPlayer.getBoundingClientRect();
+            const browserVideoWidth = videoRect.width;
+            const browserVideoHeight = videoRect.height;
+            
+            // 자막 박스의 최대 너비는 브라우저 표시 비디오 너비의 90%
+            const maxWidth = browserVideoWidth * 0.9;
+            
+            // 뷰포트 기반 폰트 크기 계산 (4K 모니터 대응)
+            // 기본 크기: 5vw (뷰포트 너비의 5%) + 사용자 스케일 적용
+            const baseVW = 5 * overlayFontSizeScale; // vw 단위
+            
+            // 임시 요소로 텍스트 너비 측정
+            const testDiv = document.createElement('div');
+            testDiv.style.position = 'absolute';
+            testDiv.style.visibility = 'hidden';
+            testDiv.style.whiteSpace = 'nowrap';
+            testDiv.style.fontFamily = overlaySubtitle.style.fontFamily;
+            testDiv.style.fontWeight = overlaySubtitle.style.fontWeight;
+            testDiv.innerHTML = text;
+            document.body.appendChild(testDiv);
+            
+            // 적절한 폰트 크기 찾기 (vw 단위)
+            let fontSizeVW = baseVW;
+            testDiv.style.fontSize = fontSizeVW + 'vw';
+            
+            // 텍스트가 최대 너비를 초과하면 폰트 크기 줄이기
+            while (testDiv.offsetWidth > maxWidth && fontSizeVW > 1) {
+                fontSizeVW -= 0.1;
+                testDiv.style.fontSize = fontSizeVW + 'vw';
+            }
+            
+            // 측정용 요소 제거
+            document.body.removeChild(testDiv);
+            
+            // 계산된 스타일 적용 (vw 단위 사용)
+            overlaySubtitle.style.fontSize = fontSizeVW + 'vw';
+            overlaySubtitle.style.maxWidth = maxWidth + 'px';
+        }
+        
         // 오버레이 스타일 업데이트
         function updateOverlayStyles() {
             const overlaySubtitle = document.getElementById('videoOverlaySubtitles');
@@ -3209,16 +3522,19 @@
         
         // 자막 표시 토글 함수
         function toggleSubtitleDisplay() {
-            const videoSubtitlesDiv = document.getElementById('videoSubtitles');
+            const videoSubtitlesWrapper = document.getElementById('videoSubtitlesWrapper');
             const toggleBtn = document.getElementById('subtitleToggleBtn');
+            const videoSubtitlesContainer = document.getElementById('videoSubtitlesContainer');
             
             subtitleDisplayVisible = !subtitleDisplayVisible;
             
             if (subtitleDisplayVisible) {
-                videoSubtitlesDiv.style.display = 'flex';
+                videoSubtitlesWrapper.style.height = '220px'; // 원래 높이
+                videoSubtitlesWrapper.style.marginBottom = '0';
                 toggleBtn.innerHTML = '🔽 숨기기';
             } else {
-                videoSubtitlesDiv.style.display = 'none';
+                videoSubtitlesWrapper.style.height = '0';
+                videoSubtitlesWrapper.style.marginBottom = '-10px';
                 toggleBtn.innerHTML = '🔼 보이기';
             }
         }
@@ -3361,14 +3677,10 @@
         
         // 모달 외부 클릭 시 닫기
         window.onclick = function(event) {
-            const whisperModal = document.getElementById('whisperModal');
-            const srtModal = document.getElementById('srtModal');
+            const subtitleModal = document.getElementById('subtitleModal');
             
-            if (event.target == whisperModal) {
-                whisperModal.style.display = 'none';
-            }
-            if (event.target == srtModal) {
-                srtModal.style.display = 'none';
+            if (event.target == subtitleModal) {
+                subtitleModal.style.display = 'none';
             }
         }
         
@@ -3494,8 +3806,8 @@
             // 번역 상태 확인
             checkTranslationStatus();
             
-            // 백그라운드에서 동사 분석 시작
-            startVerbAnalysis(mediaId);
+            // 백그라운드에서 동사 분석 시작은 선택적으로 진행
+            // startVerbAnalysis(mediaId);
             
             // 오른쪽 사이드바 표시 (문장 목록이 있는 경우)
             const rightSidebar = document.getElementById('rightSidebar');
@@ -3504,7 +3816,75 @@
             }
         }
         
-        // 백그라운드 동사 분석 시작
+        // 수동 동사 분석 시작 (선택적)
+        function startVerbAnalysisManual() {
+            const mediaId = currentMediaId;
+            if (!mediaId) {
+                alert('미디어를 먼저 선택해주세요.');
+                return;
+            }
+            
+            if (confirm('SpaCy 동사 분석을 시작하시겠습니까? 처리 시간이 다소 소요될 수 있습니다.')) {
+                console.log('Starting manual verb analysis for media:', mediaId);
+                
+                fetch(`/api/media/${mediaId}/analyze-verbs`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('SpaCy 동사 분석이 시작되었습니다. 백그라운드에서 처리됩니다.');
+                        console.log('✓ Manual verb analysis started:', data.message);
+                    } else {
+                        alert('동사 분석 시작에 실패했습니다: ' + data.error);
+                        console.warn('Failed to start verb analysis:', data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('동사 분석 시작 중 오류가 발생했습니다.');
+                    console.warn('Error starting verb analysis:', error);
+                });
+            }
+        }
+        
+        // 수동 어휘 분석 DB 저장 시작 (선택적)
+        function startVocabularyCacheManual() {
+            const mediaId = currentMediaId;
+            if (!mediaId) {
+                alert('미디어를 먼저 선택해주세요.');
+                return;
+            }
+            
+            if (confirm('어휘 분석 DB 저장을 시작하시겠습니까? 모든 단어의 난이도를 미리 계산해서 DB에 저장합니다.')) {
+                console.log('Starting manual vocabulary caching for media:', mediaId);
+                
+                fetch(`/api/media/${mediaId}/cache-vocabulary`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('어휘 분석 DB 저장이 시작되었습니다. 백그라운드에서 처리됩니다.');
+                        console.log('✓ Manual vocabulary caching started:', data.message);
+                    } else {
+                        alert('어휘 분석 DB 저장 시작에 실패했습니다: ' + data.error);
+                        console.warn('Failed to start vocabulary caching:', data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('어휘 분석 DB 저장 시작 중 오류가 발생했습니다.');
+                    console.warn('Error starting vocabulary caching:', error);
+                });
+            }
+        }
+        
+        // 백그라운드 동사 분석 시작 (자동)
         function startVerbAnalysis(mediaId) {
             console.log('Starting background verb analysis for media:', mediaId);
             

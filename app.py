@@ -23,7 +23,7 @@ except (ImportError, OSError):
     nlp = None
 
 # Import our new modules
-from database import media_repo, chapter_repo, scene_repo, sentence_repo, db_manager
+from database import media_repo, chapter_repo, scene_repo, sentence_repo, db_manager, word_difficulty_repo
 from file_manager import file_manager
 from ffmpeg_processor import ffmpeg_processor, media_extractor, subtitle_processor
 
@@ -407,6 +407,9 @@ def extract_sentence_mp4(media_id, sentence_id):
         # Prepare paths
         is_video = media['fileType'] == 'video'
         input_file = file_manager.get_media_path(media['filename'])
+        
+        # Debug logging
+        logger.info(f"Extracting sentence: is_video={is_video}, input_file={input_file}, file_exists={os.path.exists(input_file) if input_file else False}")
         
         # Create output directory
         output_dir = file_manager.create_output_directory(media_id, media['filename'])
@@ -1699,20 +1702,36 @@ def check_word_known():
 
 @app.route('/api/word/difficulty/<word>', methods=['GET'])
 def get_word_difficulty(word):
-    """Get word difficulty level based on CEFR data"""
+    """Get word difficulty level based on CEFR data with database cache"""
     try:
         word_lower = word.lower().strip()
+        
+        # Check database cache first
+        cached_result = word_difficulty_repo.get_word_difficulty(word_lower)
+        if cached_result:
+            return jsonify({
+                'word': word,
+                'difficulty': cached_result['difficulty'],
+                'level': cached_result['level'],
+                'cached': True
+            })
         
         # Check if word is in C1/C2 (hard) category
         if word_lower in CEFR_WORD_LEVELS:
             difficulty = CEFR_WORD_LEVELS[word_lower]
         else:
             difficulty = 'normal'  # Not in C1/C2 list
+            
+        level = 'C1/C2' if difficulty == 'hard' else 'A1-B2'
+        
+        # Cache the result
+        word_difficulty_repo.cache_word_difficulty(word_lower, difficulty, level)
         
         return jsonify({
             'word': word,
             'difficulty': difficulty,
-            'level': 'C1/C2' if difficulty == 'hard' else 'A1-B2'
+            'level': level,
+            'cached': False
         })
         
     except Exception as e:
@@ -1839,6 +1858,160 @@ def analyze_verbs_background(media_id):
         
     except Exception as e:
         logger.error(f"Error starting verb analysis: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/media/<media_id>/cache-vocabulary', methods=['POST'])
+def cache_vocabulary_background(media_id):
+    """Cache vocabulary difficulty for all sentences in a media"""
+    try:
+        def cache_vocabulary_task():
+            """Background task to cache vocabulary"""
+            sentences = sentence_repo.get_by_media_id(media_id)
+            
+            if not sentences:
+                logger.info(f"No sentences found for media {media_id}")
+                return
+            
+            logger.info(f"Starting vocabulary caching for {len(sentences)} sentences")
+            
+            cached_count = 0
+            for sentence in sentences:
+                try:
+                    if not sentence.get('english'):
+                        continue
+                    
+                    # Extract words from sentence
+                    import re
+                    words = re.findall(r'\b[a-zA-Z]+\b', sentence['english'].lower())
+                    
+                    for word in set(words):  # Remove duplicates
+                        if len(word) < 3:  # Skip very short words
+                            continue
+                            
+                        # Check if already cached
+                        if word_difficulty_repo.get_word_difficulty(word):
+                            continue
+                        
+                        # Cache word difficulty
+                        if word in CEFR_WORD_LEVELS:
+                            difficulty = CEFR_WORD_LEVELS[word]
+                        else:
+                            difficulty = 'normal'
+                            
+                        level = 'C1/C2' if difficulty == 'hard' else 'A1-B2'
+                        word_difficulty_repo.cache_word_difficulty(word, difficulty, level)
+                        cached_count += 1
+                        
+                except Exception as e:
+                    logger.error(f"Error caching vocabulary for sentence {sentence['id']}: {e}")
+                    continue
+            
+            logger.info(f"Completed vocabulary caching for media {media_id}: {cached_count} words cached")
+        
+        # Start background thread
+        thread = threading.Thread(target=cache_vocabulary_task)
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({
+            'success': True,
+            'message': '어휘 분석 DB 저장이 백그라운드에서 시작되었습니다.'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error starting vocabulary caching: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/media/<media_id>/analysis-status', methods=['GET'])
+def get_analysis_status(media_id):
+    """Get analysis status for a media (SpaCy and vocabulary cache)"""
+    try:
+        # Check SpaCy analysis status (sentences with detected verbs)
+        sentences = sentence_repo.get_by_media_id(media_id)
+        spacy_analyzed = 0
+        total_sentences = len(sentences)
+        
+        for sentence in sentences:
+            if sentence.get('detectedVerbs'):
+                spacy_analyzed += 1
+        
+        # Check vocabulary cache status
+        # Get all unique words from sentences
+        all_words = set()
+        for sentence in sentences:
+            if sentence.get('english'):
+                import re
+                words = re.findall(r'\b[a-zA-Z]+\b', sentence['english'].lower())
+                all_words.update(word for word in words if len(word) >= 3)
+        
+        # Check how many are cached
+        cached_words = 0
+        for word in all_words:
+            if word_difficulty_repo.get_word_difficulty(word):
+                cached_words += 1
+        
+        return jsonify({
+            'spacy': {
+                'analyzed': spacy_analyzed,
+                'total': total_sentences,
+                'percentage': round((spacy_analyzed / total_sentences * 100) if total_sentences > 0 else 0)
+            },
+            'vocabulary': {
+                'cached': cached_words,
+                'total': len(all_words),
+                'percentage': round((cached_words / len(all_words) * 100) if len(all_words) > 0 else 0)
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting analysis status: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/word/difficulty/batch', methods=['POST'])
+def get_word_difficulty_batch():
+    """Get word difficulty levels for multiple words at once"""
+    try:
+        data = request.get_json()
+        words = data.get('words', [])
+        
+        if not words:
+            return jsonify({'results': {}})
+        
+        # Process all words at once
+        results = {}
+        for word in words:
+            word_lower = word.lower().strip()
+            
+            # Check database cache first
+            cached_result = word_difficulty_repo.get_word_difficulty(word_lower)
+            if cached_result:
+                results[word] = {
+                    'difficulty': cached_result['difficulty'],
+                    'level': cached_result['level'],
+                    'cached': True
+                }
+            else:
+                # Check CEFR levels
+                if word_lower in CEFR_WORD_LEVELS:
+                    difficulty = CEFR_WORD_LEVELS[word_lower]
+                else:
+                    difficulty = 'normal'
+                    
+                level = 'C1/C2' if difficulty == 'hard' else 'A1-B2'
+                
+                # Cache the result
+                word_difficulty_repo.cache_word_difficulty(word_lower, difficulty, level)
+                
+                results[word] = {
+                    'difficulty': difficulty,
+                    'level': level,
+                    'cached': False
+                }
+        
+        return jsonify({'results': results})
+        
+    except Exception as e:
+        logger.error(f"Batch word difficulty error: {e}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

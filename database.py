@@ -100,6 +100,24 @@ class DatabaseManager:
                 # Column already exists or other error - ignore
                 pass
             
+            # Add isBookmarked column if it doesn't exist (migration)
+            try:
+                cursor.execute('ALTER TABLE Sentence ADD COLUMN isBookmarked BOOLEAN DEFAULT 0')
+                conn.commit()
+            except Exception:
+                # Column already exists or other error - ignore
+                pass
+            
+            # Create WordDifficulty cache table
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS WordDifficulty (
+                    word TEXT PRIMARY KEY,
+                    difficulty TEXT NOT NULL,
+                    level TEXT NOT NULL,
+                    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
             conn.commit()
             logger.info("Database initialized successfully")
 
@@ -387,9 +405,37 @@ class SentenceRepository:
             conn.commit()
             return cursor.rowcount > 0
 
+class WordDifficultyRepository:
+    """Repository for WordDifficulty operations"""
+    
+    def __init__(self, db_manager: DatabaseManager):
+        self.db = db_manager
+    
+    def get_word_difficulty(self, word: str) -> Dict:
+        """Get cached word difficulty"""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT difficulty, level FROM WordDifficulty WHERE word = ?", (word.lower(),))
+            row = cursor.fetchone()
+            if row:
+                return {'difficulty': row[0], 'level': row[1]}
+            return None
+    
+    def cache_word_difficulty(self, word: str, difficulty: str, level: str) -> bool:
+        """Cache word difficulty result"""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT OR REPLACE INTO WordDifficulty (word, difficulty, level) VALUES (?, ?, ?)",
+                (word.lower(), difficulty, level)
+            )
+            conn.commit()
+            return True
+
 # Singleton instances
 db_manager = DatabaseManager()
 media_repo = MediaRepository(db_manager)
 chapter_repo = ChapterRepository(db_manager)
 scene_repo = SceneRepository(db_manager)
 sentence_repo = SentenceRepository(db_manager)
+word_difficulty_repo = WordDifficultyRepository(db_manager)

@@ -281,8 +281,8 @@ WrapStyle: 0
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: English,Noto Sans KR,24,&Hffffff,&Hffffff,&H0,&H80000000,1,0,0,0,100,100,0,0,1,2,0,2,3,3,60,1
-Style: Korean,Noto Sans KR,24,&Hffffff,&Hffffff,&H0,&H80000000,0,0,0,0,100,100,0,0,1,2,0,2,10,10,16,1
+Style: English,Noto Sans KR,48,&Hffffff,&Hffffff,&H0,&H80000000,1,0,0,0,100,100,0,0,1,2,0,2,5,5,100,1
+Style: Korean,Noto Sans KR,40,&Hffffff,&Hffffff,&H0,&H80000000,0,0,0,0,100,100,0,0,1,2,0,2,5,5,50,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -331,7 +331,7 @@ class MediaExtractor:
         """Extract single sentence with subtitle options"""
         start_time = sentence_data['startTime']
         end_time = sentence_data['endTime'] 
-        duration = end_time - start_time
+        duration = end_time - start_time + 0.5  # 0.5초 정지 추가
         
         # Create subtitle file if needed
         subtitle_file = None
@@ -340,11 +340,14 @@ class MediaExtractor:
         
         try:
             # Extract based on file type
+            logger.info(f"Extracting: is_video_file={is_video_file}, input_file={input_file}")
             if is_video_file:
+                logger.info("Using extract_video_segment")
                 success = self.ffmpeg.extract_video_segment(
                     input_file, output_file, start_time, duration, subtitle_file
                 )
             else:
+                logger.info("Using create_video_from_audio")
                 success = self.ffmpeg.create_video_from_audio(
                     input_file, output_file, start_time, duration, subtitle_file
                 )
