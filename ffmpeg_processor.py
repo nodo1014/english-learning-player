@@ -5,8 +5,23 @@ import os
 import subprocess
 import uuid
 import logging
+import shutil
 from typing import Dict, List, Optional, Tuple, Union
 from pathlib import Path
+from enum import Enum
+
+class FFmpegError(Exception):
+    """Custom exception for FFmpeg operations"""
+    pass
+
+class ProcessingStatus(Enum):
+    """Processing status enumeration"""
+    SUCCESS = "success"
+    TIMEOUT = "timeout"
+    FILE_NOT_FOUND = "file_not_found"
+    PERMISSION_ERROR = "permission_error"
+    FFMPEG_ERROR = "ffmpeg_error"
+    UNKNOWN_ERROR = "unknown_error"
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +32,71 @@ class FFmpegProcessor:
         self.fonts_dir = fonts_dir
         self.default_timeout = 120  # seconds
         self.chapter_timeout = 900  # seconds for longer operations
+        self._validate_environment()
+    
+    def _validate_environment(self):
+        """Validate FFmpeg installation and environment"""
+        if not shutil.which('ffmpeg'):
+            raise FFmpegError("FFmpeg not found in system PATH")
+        
+        # Test FFmpeg installation
+        try:
+            result = subprocess.run(['ffmpeg', '-version'], 
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode != 0:
+                raise FFmpegError("FFmpeg installation appears to be corrupted")
+            logger.info("FFmpeg validation successful")
+        except subprocess.TimeoutExpired:
+            raise FFmpegError("FFmpeg validation timeout")
+        except Exception as e:
+            raise FFmpegError(f"FFmpeg validation failed: {e}")
+    
+    def _validate_input_file(self, input_file: str) -> None:
+        """Validate input file exists and is readable"""
+        if not os.path.exists(input_file):
+            raise FFmpegError(f"Input file not found: {input_file}")
+        if not os.access(input_file, os.R_OK):
+            raise FFmpegError(f"Input file not readable: {input_file}")
+        if os.path.getsize(input_file) == 0:
+            raise FFmpegError(f"Input file is empty: {input_file}")
+    
+    def _validate_output_path(self, output_file: str) -> None:
+        """Validate output directory is writable"""
+        output_dir = os.path.dirname(output_file)
+        if output_dir and not os.path.exists(output_dir):
+            try:
+                os.makedirs(output_dir, exist_ok=True)
+            except Exception as e:
+                raise FFmpegError(f"Cannot create output directory: {e}")
+        
+        if output_dir and not os.access(output_dir, os.W_OK):
+            raise FFmpegError(f"Output directory not writable: {output_dir}")
+    
+    def _calculate_timeout(self, duration: float) -> int:
+        """Calculate appropriate timeout based on content duration"""
+        # Base timeout + extra time based on duration
+        base_timeout = self.default_timeout
+        duration_factor = max(1.0, duration / 60.0)  # At least 1x, more for longer content
+        return int(base_timeout * duration_factor * 1.5)  # 50% buffer
     
     def extract_audio_segment(self, input_file: str, output_file: str, 
                             start_time: float, duration: float, 
                             volume: float = 3.0, timeout: int = None) -> bool:
-        """Extract audio segment from media file"""
+        """Extract audio segment from media file with comprehensive error handling"""
         try:
+            # Validate inputs
+            self._validate_input_file(input_file)
+            self._validate_output_path(output_file)
+            
+            # Validate parameters
+            if start_time < 0 or duration <= 0:
+                raise FFmpegError(f"Invalid time parameters: start={start_time}, duration={duration}")
+            if not 0.1 <= volume <= 10.0:
+                logger.warning(f"Volume {volume} outside recommended range [0.1, 10.0]")
+            
+            # Calculate appropriate timeout
+            actual_timeout = timeout or self._calculate_timeout(duration)
+            
             cmd = [
                 'ffmpeg',
                 '-ss', str(start_time),
@@ -31,30 +105,52 @@ class FFmpegProcessor:
                 '-af', f'volume={volume}',
                 '-c:a', 'mp3',
                 '-b:a', '128k',
+                '-avoid_negative_ts', 'make_zero',  # Handle negative timestamps
                 '-y',
                 output_file
             ]
+            
+            logger.debug(f"Executing FFmpeg command: {' '.join(cmd)}")
             
             result = subprocess.run(
                 cmd, 
                 capture_output=True, 
                 text=True, 
-                timeout=timeout or self.default_timeout
+                timeout=actual_timeout
             )
             
             if result.returncode == 0:
-                logger.info(f"Audio segment extracted: {output_file}")
+                # Verify output file was created and has content
+                if not os.path.exists(output_file) or os.path.getsize(output_file) == 0:
+                    raise FFmpegError("Output file was not created or is empty")
+                logger.info(f"Audio segment extracted successfully: {output_file}")
                 return True
             else:
-                logger.error(f"FFmpeg error: {result.stderr}")
-                return False
+                error_msg = result.stderr.strip() if result.stderr else "Unknown FFmpeg error"
+                logger.error(f"FFmpeg failed with return code {result.returncode}: {error_msg}")
+                raise FFmpegError(f"FFmpeg processing failed: {error_msg}")
                 
         except subprocess.TimeoutExpired:
-            logger.error(f"FFmpeg timeout extracting audio segment")
-            return False
+            error_msg = f"FFmpeg timeout ({actual_timeout}s) extracting audio segment"
+            logger.error(error_msg)
+            # Clean up partial output file
+            if os.path.exists(output_file):
+                try:
+                    os.remove(output_file)
+                except Exception:
+                    pass
+            raise FFmpegError(error_msg)
+        except FFmpegError:
+            raise
+        except FileNotFoundError:
+            raise FFmpegError(f"Input file not found: {input_file}")
+        except PermissionError as e:
+            raise FFmpegError(f"Permission error: {e}")
         except Exception as e:
-            logger.error(f"Error extracting audio segment: {e}")
-            return False
+            logger.error(f"Unexpected error extracting audio segment: {e}")
+            raise FFmpegError(f"Unexpected error: {e}")
+        
+        return False
     
     def extract_video_segment(self, input_file: str, output_file: str,
                             start_time: float, duration: float,

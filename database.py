@@ -3,23 +3,61 @@ Database operations and models for English Learning Player
 """
 import sqlite3
 import logging
+import threading
 from contextlib import contextmanager
 from typing import Dict, List, Optional, Any
+from queue import Queue, Empty
 
 logger = logging.getLogger(__name__)
 
 class DatabaseManager:
-    """Centralized database operations manager"""
+    """Centralized database operations manager with connection pooling"""
     
-    def __init__(self, db_path: str = 'dev.db'):
+    def __init__(self, db_path: str = 'dev.db', pool_size: int = 10):
         self.db_path = db_path
+        self.pool_size = pool_size
+        self._pool = Queue(maxsize=pool_size)
+        self._lock = threading.Lock()
+        self._initialize_pool()
         self.init_database()
+    
+    def _initialize_pool(self):
+        """Initialize connection pool"""
+        for _ in range(self.pool_size):
+            conn = sqlite3.connect(self.db_path, check_same_thread=False)
+            conn.row_factory = sqlite3.Row
+            # Enable WAL mode for better concurrency
+            conn.execute('PRAGMA journal_mode=WAL')
+            # Enable foreign key constraints
+            conn.execute('PRAGMA foreign_keys=ON')
+            self._pool.put(conn)
+        logger.info(f"Database connection pool initialized with {self.pool_size} connections")
+    
+    def _get_connection_from_pool(self):
+        """Get connection from pool"""
+        try:
+            return self._pool.get(timeout=5.0)  # 5 second timeout
+        except Empty:
+            # Pool exhausted, create temporary connection
+            logger.warning("Connection pool exhausted, creating temporary connection")
+            conn = sqlite3.connect(self.db_path, check_same_thread=False)
+            conn.row_factory = sqlite3.Row
+            conn.execute('PRAGMA journal_mode=WAL')
+            conn.execute('PRAGMA foreign_keys=ON')
+            return conn
+    
+    def _return_connection_to_pool(self, conn):
+        """Return connection to pool"""
+        try:
+            self._pool.put_nowait(conn)
+        except:
+            # Pool is full, close the connection
+            conn.close()
     
     @contextmanager
     def get_connection(self):
-        """Context manager for database connections"""
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
+        """Context manager for pooled database connections"""
+        conn = self._get_connection_from_pool()
         try:
             yield conn
         except Exception as e:
@@ -27,7 +65,7 @@ class DatabaseManager:
             logger.error(f"Database operation failed: {e}")
             raise
         finally:
-            conn.close()
+            self._return_connection_to_pool(conn)
     
     def init_database(self):
         """Initialize database with required tables"""
@@ -118,8 +156,47 @@ class DatabaseManager:
                 )
             ''')
             
+            # Create performance indexes
+            self._create_indexes(cursor)
+            
             conn.commit()
             logger.info("Database initialized successfully")
+    
+    def _create_indexes(self, cursor):
+        """Create indexes for performance optimization"""
+        indexes = [
+            # High-impact indexes for frequent queries
+            "CREATE INDEX IF NOT EXISTS idx_chapter_media_id ON Chapter(mediaId)",
+            "CREATE INDEX IF NOT EXISTS idx_scene_chapter_id ON Scene(chapterId)", 
+            "CREATE INDEX IF NOT EXISTS idx_sentence_scene_id ON Sentence(sceneId)",
+            "CREATE INDEX IF NOT EXISTS idx_sentence_media_order ON Sentence(sceneId, `order`)",
+            
+            # Bookmark queries optimization
+            "CREATE INDEX IF NOT EXISTS idx_sentence_bookmarked ON Sentence(sceneId) WHERE isBookmarked = 1",
+            
+            # Media status queries
+            "CREATE INDEX IF NOT EXISTS idx_media_status ON Media(status)",
+            
+            # Word difficulty lookup optimization
+            "CREATE INDEX IF NOT EXISTS idx_word_difficulty_lookup ON WordDifficulty(word)",
+            
+            # Chapter and Scene ordering
+            "CREATE INDEX IF NOT EXISTS idx_chapter_order ON Chapter(mediaId, `order`)",
+            "CREATE INDEX IF NOT EXISTS idx_scene_order ON Scene(chapterId, `order`)",
+            
+            # Time-based queries
+            "CREATE INDEX IF NOT EXISTS idx_sentence_time ON Sentence(startTime, endTime)",
+            "CREATE INDEX IF NOT EXISTS idx_media_created ON Media(createdAt)"
+        ]
+        
+        for index_sql in indexes:
+            try:
+                cursor.execute(index_sql)
+                logger.debug(f"Created index: {index_sql}")
+            except Exception as e:
+                logger.warning(f"Failed to create index: {index_sql}, Error: {e}")
+        
+        logger.info("Database indexes created successfully")
 
 class MediaRepository:
     """Repository for Media operations"""
