@@ -338,6 +338,277 @@ function handleFileUpload(event) {
     // TODO: Implement in file-upload module
 }
 
+// Folder import functionality - make sure it's global
+window.switchUploadMethod = function(method) {
+    const singleFileBtn = document.getElementById('singleFileBtn');
+    const folderOpenBtn = document.getElementById('folderOpenBtn');
+    const singleFileUpload = document.getElementById('singleFileUpload');
+    const folderImport = document.getElementById('folderImport');
+    
+    if (method === 'single') {
+        singleFileBtn.style.background = '#007acc';
+        folderOpenBtn.style.background = '#404040';
+        singleFileUpload.style.display = 'block';
+        folderImport.style.display = 'none';
+    } else {
+        singleFileBtn.style.background = '#404040';
+        folderOpenBtn.style.background = '#007acc';
+        singleFileUpload.style.display = 'none';
+        folderImport.style.display = 'block';
+    }
+}
+
+async function loadSyncDirectory() {
+    try {
+        const loadBtn = document.getElementById('loadSyncFolderBtn');
+        loadBtn.disabled = true;
+        loadBtn.textContent = '로딩 중...';
+        
+        const response = await fetch('/api/sync-directory');
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to load sync directory');
+        }
+        
+        displaySyncFiles(data.files);
+        document.getElementById('syncFileList').style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error loading sync directory:', error);
+        alert('폴더를 불러오는 중 오류가 발생했습니다: ' + error.message);
+    } finally {
+        const loadBtn = document.getElementById('loadSyncFolderBtn');
+        loadBtn.disabled = false;
+        loadBtn.textContent = '📂 sync_directory 새로고침';
+    }
+}
+
+// Make function globally available
+window.loadSyncDirectory = loadSyncDirectory;
+
+// Store selected files globally
+let selectedFiles = new Set();
+
+function displaySyncFiles(files) {
+    const fileList = document.getElementById('fileClickList');
+    fileList.innerHTML = '';
+    selectedFiles.clear();
+    updateSelectedCount();
+    
+    if (files.length === 0) {
+        fileList.innerHTML = '<div style="color: #858585; text-align: center; padding: 20px;">sync_directory 폴더에 미디어 파일이 없습니다.</div>';
+        return;
+    }
+    
+    files.forEach(fileGroup => {
+        const fileItem = document.createElement('div');
+        fileItem.style.cssText = 'margin-bottom: 8px; padding: 12px; background: #2d2d30; border-radius: 4px; border: 2px solid #404040; cursor: pointer; transition: all 0.2s;';
+        fileItem.dataset.baseName = fileGroup.baseName;
+        
+        // Click event for selection
+        fileItem.addEventListener('click', function() {
+            toggleFileSelection(this, fileGroup.baseName);
+        });
+        
+        // Hover effect
+        fileItem.addEventListener('mouseenter', function() {
+            if (!this.classList.contains('selected')) {
+                this.style.borderColor = '#007acc';
+                this.style.background = '#3d3d40';
+            }
+        });
+        
+        fileItem.addEventListener('mouseleave', function() {
+            if (!this.classList.contains('selected')) {
+                this.style.borderColor = '#404040';
+                this.style.background = '#2d2d30';
+            }
+        });
+        
+        let labelText = `📁 ${fileGroup.baseName}`;
+        let details = [];
+        
+        if (fileGroup.mediaFile) {
+            const sizeText = formatFileSize(fileGroup.mediaFile.size);
+            details.push(`🎬 ${fileGroup.mediaFile.extension} (${sizeText})`);
+        }
+        
+        if (fileGroup.subtitleFile) {
+            details.push(`📄 자막 파일`);
+        }
+        
+        if (details.length > 0) {
+            labelText += ` - ${details.join(', ')}`;
+        }
+        
+        fileItem.innerHTML = `
+            <div style="display: flex; align-items: center; color: #cccccc;">
+                <span style="margin-right: 8px;">☐</span>
+                <span>${labelText}</span>
+            </div>
+        `;
+        
+        fileList.appendChild(fileItem);
+    });
+}
+
+function toggleFileSelection(element, baseName) {
+    const checkbox = element.querySelector('span');
+    
+    if (selectedFiles.has(baseName)) {
+        // Deselect
+        selectedFiles.delete(baseName);
+        element.classList.remove('selected');
+        element.style.borderColor = '#404040';
+        element.style.background = '#2d2d30';
+        checkbox.textContent = '☐';
+    } else {
+        // Select
+        selectedFiles.add(baseName);
+        element.classList.add('selected');
+        element.style.borderColor = '#28a745';
+        element.style.background = '#1a3d1a';
+        checkbox.textContent = '☑';
+    }
+    
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const countSpan = document.getElementById('selectedCount');
+    const importBtn = document.getElementById('importSelectedBtn');
+    
+    countSpan.textContent = selectedFiles.size;
+    importBtn.disabled = selectedFiles.size === 0;
+    
+    if (selectedFiles.size === 0) {
+        importBtn.style.background = '#666666';
+    } else {
+        importBtn.style.background = '#28a745';
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function selectAllFiles() {
+    const fileItems = document.querySelectorAll('#fileClickList div[data-base-name]');
+    fileItems.forEach(item => {
+        const baseName = item.dataset.baseName;
+        if (!selectedFiles.has(baseName)) {
+            toggleFileSelection(item, baseName);
+        }
+    });
+}
+
+function deselectAllFiles() {
+    const fileItems = document.querySelectorAll('#fileClickList div[data-base-name]');
+    fileItems.forEach(item => {
+        const baseName = item.dataset.baseName;
+        if (selectedFiles.has(baseName)) {
+            toggleFileSelection(item, baseName);
+        }
+    });
+}
+
+// Make functions globally available
+window.selectAllFiles = selectAllFiles;
+window.deselectAllFiles = deselectAllFiles;
+
+async function importSelectedFiles() {
+    const selectedFilesArray = Array.from(selectedFiles);
+    
+    if (selectedFilesArray.length === 0) {
+        alert('가져올 파일을 선택해주세요.');
+        return;
+    }
+    
+    try {
+        const importBtn = document.getElementById('importSelectedBtn');
+        importBtn.disabled = true;
+        importBtn.textContent = '가져오는 중...';
+        
+        document.getElementById('importProgress').style.display = 'block';
+        updateImportProgress(0, '파일 가져오기 시작...');
+        
+        const response = await fetch('/api/sync-directory/import', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                selectedFiles: selectedFilesArray
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Import failed');
+        }
+        
+        // Process results
+        const successCount = data.results.filter(r => r.success).length;
+        const totalCount = data.results.length;
+        
+        updateImportProgress(100, `완료: ${successCount}/${totalCount} 파일 가져오기 성공`);
+        
+        // Show detailed results
+        let message = `파일 가져오기 완료!\n성공: ${successCount}개\n실패: ${totalCount - successCount}개`;
+        
+        const failedFiles = data.results.filter(r => !r.success);
+        if (failedFiles.length > 0) {
+            message += '\n\n실패한 파일:';
+            failedFiles.forEach(file => {
+                message += `\n- ${file.baseName}: ${file.error}`;
+            });
+        }
+        
+        alert(message);
+        
+        // Refresh the file list
+        if (successCount > 0) {
+            loadSyncDirectory();
+            // Refresh media list if it's visible
+            if (typeof loadMedia === 'function') {
+                loadMedia();
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error importing files:', error);
+        alert('파일 가져오기 중 오류가 발생했습니다: ' + error.message);
+        updateImportProgress(0, '오류 발생');
+    } finally {
+        const importBtn = document.getElementById('importSelectedBtn');
+        importBtn.disabled = false;
+        importBtn.textContent = '선택한 파일 가져오기';
+        
+        setTimeout(() => {
+            document.getElementById('importProgress').style.display = 'none';
+        }, 3000);
+    }
+}
+
+// Make function globally available
+window.importSelectedFiles = importSelectedFiles;
+
+function updateImportProgress(percentage, status) {
+    const progressFill = document.getElementById('importProgressFill');
+    const statusDiv = document.getElementById('importStatus');
+    
+    progressFill.style.width = percentage + '%';
+    statusDiv.textContent = status || '';
+}
+
+// Auto-load sync directory on page load - handled in HTML
+
 function showUploadSection() {
     const uploadSection = document.getElementById('uploadSection');
     if (uploadSection) {

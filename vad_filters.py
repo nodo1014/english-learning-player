@@ -50,12 +50,50 @@ def apply_content_filters(sentences, min_words=2):
         r'\(.*?\)',  # (웃음), (기침) 등
     ]
     
+    # 조동사 + 동사 패턴들 및 접속사 패턴들 (50+ 패턴)
+    modal_patterns = [
+        # 어려운 조동사 구문 패턴
+        r'\bsupposed to\b', r'\bmight be\b', r'\bmight have\b', r'\bmust have been\b',
+        r'\bcould have been\b', r'\bwould have been\b', r'\bshould have been\b',
+        r'\bmay have been\b', r'\bwould rather\b', r'\bhad better\b',
+        r'\bused to\b', r'\bgoing to\b', r'\bhave to\b', r'\bhas to\b',
+        r'\bwould like to\b', r'\bwould prefer to\b', r'\bwould love to\b',
+        r'\bwould hate to\b', r'\bwould mind\b', r'\bwould appreciate\b',
+        # 기본 조동사 패턴
+        r'\bmust have\b', r'\bcan help\b', r'\bwill be\b', r'\bwould be\b',
+        r'\bshould be\b', r'\bcould be\b', r'\bmay be\b', r'\bmust be\b',
+        r'\bwill have\b', r'\bwould have\b', r'\bshould have\b',
+        r'\bcould have\b', r'\bmay have\b', r'\bcan be\b',
+        r'\bwill do\b', r'\bwould do\b', r'\bshould do\b', r'\bcould do\b',
+        r'\bmight do\b', r'\bmay do\b', r'\bcan do\b', r'\bmust do\b',
+        r'\bwill get\b', r'\bwould get\b', r'\bshould get\b', r'\bcould get\b',
+        r'\bmight get\b', r'\bmay get\b', r'\bcan get\b', r'\bmust get\b',
+        r'\bwill go\b', r'\bwould go\b', r'\bshould go\b', r'\bcould go\b',
+        r'\bmight go\b', r'\bmay go\b', r'\bcan go\b', r'\bmust go\b',
+        r'\bwill make\b', r'\bwould make\b', r'\bshould make\b', r'\bcould make\b',
+        r'\bmight make\b', r'\bmay make\b', r'\bcan make\b', r'\bmust make\b',
+        r'\bwill take\b', r'\bwould take\b', r'\bshould take\b', r'\bcould take\b',
+        r'\bmight take\b', r'\bmay take\b', r'\bcan take\b', r'\bmust take\b',
+        r'\bwill give\b', r'\bwould give\b', r'\bshould give\b', r'\bcould give\b',
+        r'\bmight give\b', r'\bmay give\b', r'\bcan give\b', r'\bmust give\b',
+        r'\bwill see\b', r'\bwould see\b', r'\bshould see\b', r'\bcould see\b',
+        r'\bmight see\b', r'\bmay see\b', r'\bcan see\b', r'\bmust see\b',
+        # 접속사 패턴
+        r'\bbut\b', r'\bbecause\b', r'\balthough\b', r'\bthough\b', r'\bwhile\b',
+        r'\bwhereas\b', r'\bhowever\b', r'\btherefore\b', r'\bmoreover\b',
+        r'\bfurthermore\b', r'\bnevertheless\b', r'\bnonetheless\b',
+        r'\band\b.*\band\b', r'\bor\b.*\bor\b', r'\bso\b.*\bthat\b',
+        r'\bif\b.*\bthen\b', r'\beither\b.*\bor\b', r'\bneither\b.*\bnor\b'
+    ]
+    
     for sentence in sentences:
         text = sentence['english'].strip()
         
         # 소음 패턴 제거
         for pattern in noise_patterns:
             text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+        
+        # 원래대로 복원 - 필터링하지 않음
         
         text = re.sub(r'\s+', ' ', text).strip()  # 공백 정리
         

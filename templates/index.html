@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=1200, initial-scale=1.0, user-scalable=yes">
     <title>영어 학습 플레이어</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     
@@ -21,6 +21,7 @@
             height: 100vh;
             margin: 0;
             overflow: hidden;
+            min-width: 1200px; /* PC 최소 너비 보장 */
         }
         
         /* VSCode style layout */
@@ -190,6 +191,66 @@
             font-size: 0.9em;
             font-weight: 500;
             box-shadow: 0 1px 3px rgba(121, 85, 72, 0.3);
+        }
+        
+        .grammar-idiom {
+            background: linear-gradient(90deg, #FF6B35, #F7931E);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(255, 107, 53, 0.4);
+        }
+        
+        .grammar-phrasal {
+            background: linear-gradient(90deg, #8E44AD, #9B59B6);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(142, 68, 173, 0.3);
+        }
+        
+        .grammar-compound {
+            background: linear-gradient(90deg, #E67E22, #F39C12);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(230, 126, 34, 0.3);
+        }
+        
+        .grammar-advanced-modal {
+            background: linear-gradient(90deg, #3498DB, #5DADE2);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(52, 152, 219, 0.4);
+        }
+        
+        .grammar-expression {
+            background: linear-gradient(90deg, #E74C3C, #EC7063);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(231, 76, 60, 0.3);
+        }
+        
+        .grammar-collocation {
+            background: linear-gradient(90deg, #9B59B6, #BB8FCE);
+            color: white !important;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 1px 3px rgba(155, 89, 182, 0.3);
         }
         
         @keyframes slideInRight {
@@ -698,6 +759,45 @@
             background: #fabd2f;
         }
         
+        /* 사이드바 탭 스타일 */
+        .sidebar-tabs {
+            display: flex;
+            background: #1e1e1e;
+            border-bottom: 1px solid #444444;
+        }
+        
+        .sidebar-tab-btn {
+            flex: 1;
+            padding: 12px 8px;
+            background: #2d2d30;
+            color: #888888;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .sidebar-tab-btn:hover {
+            background: #3a3a3a;
+            color: #cccccc;
+        }
+        
+        .sidebar-tab-btn.active {
+            background: #1e1e1e;
+            color: #cccccc;
+            border-bottom-color: #0e639c;
+        }
+        
+        .sidebar-tab-content {
+            display: none;
+            padding: 15px;
+        }
+        
+        .sidebar-tab-content.active {
+            display: block;
+        }
+        
         /* Upload area */
         .upload-area {
             border: 2px dashed #444444;
@@ -1053,6 +1153,30 @@
                             <input type="checkbox" id="koreanSub" style="margin-right: 8px;">
                             🇰🇷 한글 자막
                         </label>
+                        <label style="display: block; padding: 5px 0; color: #cccccc; cursor: pointer;">
+                            <input type="checkbox" id="commentarySub" style="margin-right: 8px;">
+                            💬 해설/Commentary
+                        </label>
+                        
+                        <div id="commentaryOptions" style="margin-left: 20px; margin-top: 5px; font-size: 0.85em; display: none;">
+                            <div style="margin-bottom: 3px; color: #aaa;">해설 스타일:</div>
+                            <label style="margin-right: 8px; color: #ccc;"><input type="radio" name="commentaryStyle" value="orange" checked style="margin-right: 3px;">🟠 주황</label>
+                            <label style="margin-right: 8px; color: #ccc;"><input type="radio" name="commentaryStyle" value="yellow" style="margin-right: 3px;">🟡 노랑</label>
+                            <label style="color: #ccc;"><input type="radio" name="commentaryStyle" value="cyan" style="margin-right: 3px;">🔵 청록</label>
+                        </div>
+                        
+                        <div style="margin-top: 10px; font-size: 0.9em;">
+                            <div style="margin-bottom: 5px; color: #cccccc;">영어 폰트 크기:</div>
+                            <label style="margin-right: 8px; color: #cccccc;"><input type="radio" name="sideEnglishFontSize" value="24" style="margin-right: 3px;">작게(24)</label>
+                            <label style="margin-right: 8px; color: #cccccc;"><input type="radio" name="sideEnglishFontSize" value="32" checked style="margin-right: 3px;">중간(32)</label>
+                            <label style="color: #cccccc;"><input type="radio" name="sideEnglishFontSize" value="48" style="margin-right: 3px;">크게(48)</label>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.9em;">
+                            <div style="margin-bottom: 5px; color: #cccccc;">한글 폰트 크기:</div>
+                            <label style="margin-right: 8px; color: #cccccc;"><input type="radio" name="sideKoreanFontSize" value="24" checked style="margin-right: 3px;">작게(24)</label>
+                            <label style="margin-right: 8px; color: #cccccc;"><input type="radio" name="sideKoreanFontSize" value="32" style="margin-right: 3px;">중간(32)</label>
+                            <label style="color: #cccccc;"><input type="radio" name="sideKoreanFontSize" value="48" style="margin-right: 3px;">크게(48)</label>
+                        </div>
                     </div>
                     <button onclick="extractSingleMP4()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">
                         🎬 현재 문장 MP4 추출
@@ -1131,6 +1255,22 @@
                                 <input type="checkbox" id="bookmarkSubtitleKorean" style="margin-right: 5px;">
                                 한글 자막
                             </label>
+                            <label style="display: inline-block; margin-left: 15px;">
+                                <input type="checkbox" id="bookmarkCommentary" style="margin-right: 5px;">
+                                💬 해설
+                            </label>
+                        </div>
+                        <div style="margin-bottom: 8px; font-size: 0.9em;">
+                            <div style="margin-bottom: 5px;">영어 폰트 크기:</div>
+                            <label style="margin-right: 10px;"><input type="radio" name="bookmarkEnglishFontSize" value="24" style="margin-right: 3px;">작게(24)</label>
+                            <label style="margin-right: 10px;"><input type="radio" name="bookmarkEnglishFontSize" value="32" checked style="margin-right: 3px;">중간(32)</label>
+                            <label><input type="radio" name="bookmarkEnglishFontSize" value="48" style="margin-right: 3px;">크게(48)</label>
+                        </div>
+                        <div style="margin-bottom: 8px; font-size: 0.9em;">
+                            <div style="margin-bottom: 5px;">한글 폰트 크기:</div>
+                            <label style="margin-right: 10px;"><input type="radio" name="bookmarkKoreanFontSize" value="24" checked style="margin-right: 3px;">작게(24)</label>
+                            <label style="margin-right: 10px;"><input type="radio" name="bookmarkKoreanFontSize" value="32" style="margin-right: 3px;">중간(32)</label>
+                            <label><input type="radio" name="bookmarkKoreanFontSize" value="48" style="margin-right: 3px;">크게(48)</label>
                         </div>
                         <button class="extract-option-btn" onclick="extractBookmarkedOnlyMP4()" style="width: 100%;">
                             ⭐ 북마크만 MP4 생성
@@ -1149,6 +1289,22 @@
                                 <input type="checkbox" id="subtitleKorean" style="margin-right: 5px;">
                                 한글 자막
                             </label>
+                            <label style="display: inline-block; margin-left: 15px;">
+                                <input type="checkbox" id="allSentencesCommentary" style="margin-right: 5px;">
+                                💬 해설
+                            </label>
+                        </div>
+                        <div style="margin-bottom: 8px; font-size: 0.9em;">
+                            <div style="margin-bottom: 5px;">영어 폰트 크기:</div>
+                            <label style="margin-right: 10px;"><input type="radio" name="allSentencesEnglishFontSize" value="24" style="margin-right: 3px;">작게(24)</label>
+                            <label style="margin-right: 10px;"><input type="radio" name="allSentencesEnglishFontSize" value="32" checked style="margin-right: 3px;">중간(32)</label>
+                            <label><input type="radio" name="allSentencesEnglishFontSize" value="48" style="margin-right: 3px;">크게(48)</label>
+                        </div>
+                        <div style="margin-bottom: 8px; font-size: 0.9em;">
+                            <div style="margin-bottom: 5px;">한글 폰트 크기:</div>
+                            <label style="margin-right: 10px;"><input type="radio" name="allSentencesKoreanFontSize" value="24" checked style="margin-right: 3px;">작게(24)</label>
+                            <label style="margin-right: 10px;"><input type="radio" name="allSentencesKoreanFontSize" value="32" style="margin-right: 3px;">중간(32)</label>
+                            <label><input type="radio" name="allSentencesKoreanFontSize" value="48" style="margin-right: 3px;">크게(48)</label>
                         </div>
                         <button class="extract-option-btn" onclick="extractAllSentencesMP4()" style="width: 100%;">
                             📝 전체 문장 분할 MP4 생성
@@ -1197,20 +1353,45 @@
     <!-- Main Content -->
     <main class="main-content">
         <div id="uploadSection" class="upload-area">
-            <h3>📁 미디어 파일 업로드</h3>
+            <h3>📁 미디어 파일 가져오기</h3>
             
-            <div style="margin-bottom: 15px;">
-                <div style="text-align: center; margin-bottom: 15px;">
-                    <div style="font-size: 1.2em; color: #cccccc; margin-bottom: 10px;">
-                        📁 파일을 여기로 드래그하거나 클릭하여 선택하세요
+            <div style="text-align: center; margin-bottom: 15px;">
+                <button id="loadSyncFolderBtn" onclick="console.log('Button clicked!'); if(typeof loadSyncDirectory === 'function') { loadSyncDirectory(); } else { alert('Function not found!'); }" 
+                        style="padding: 10px 20px; background: #007acc; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em;">
+                    📂 sync_directory 새로고침
+                </button>
+            </div>
+            
+            <div id="syncFileList">
+                <div style="margin-bottom: 10px; padding: 10px; background: #2d2d30; border-radius: 5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="color: #cccccc; margin: 0;">📁 sync_directory 파일 목록</h4>
+                        <div style="display: flex; gap: 5px;">
+                            <button onclick="selectAllFiles()" style="padding: 5px 10px; background: #404040; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.8em;">전체 선택</button>
+                            <button onclick="deselectAllFiles()" style="padding: 5px 10px; background: #404040; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 0.8em;">전체 해제</button>
+                        </div>
                     </div>
-                    <input type="file" id="fileInput" accept="audio/mp3,audio/mpeg,audio/wav,audio/mp4,audio/m4a,audio/ogg,video/mp4,video/avi,video/mov,video/mkv,video/webm,video/x-flv">
+                    
+                    <div id="fileClickList" style="max-height: 400px; overflow-y: auto; background: #1e1e1e; padding: 10px; border-radius: 3px;">
+                        <div id="loadingMessage" style="color: #858585; text-align: center; padding: 20px;">
+                            📂 sync_directory 새로고침을 클릭하여 파일 목록을 불러오세요
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 10px; text-align: center;">
+                        <button id="importSelectedBtn" onclick="importSelectedFiles()" 
+                                style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;" disabled>
+                            선택한 파일 가져오기 (<span id="selectedCount">0</span>개)
+                        </button>
+                    </div>
                 </div>
-                <div style="font-size: 0.8em; color: #858585; text-align: center;">
-                    <div><strong>🎵 오디오:</strong> MP3, WAV, M4A, OGG</div>
-                    <div><strong>🎬 영상:</strong> MP4, AVI, MOV, MKV, WebM, FLV</div>
-                    <div style="margin-top: 5px; color: #606060;">※ 영상 파일은 자동으로 오디오가 추출됩니다</div>
-                    <div style="margin-top: 5px; color: #606060;">※ 파일 크기 제한 없음</div>
+                
+                <div id="importProgress" style="display: none; margin-top: 10px; padding: 10px; background: #2d2d30; border-radius: 5px;">
+                    <div style="color: #cccccc; margin-bottom: 5px;">파일 가져오는 중...</div>
+                    <div id="importProgressBar" style="width: 100%; height: 20px; background: #404040; border-radius: 10px; overflow: hidden;">
+                        <div id="importProgressFill" style="width: 0%; height: 100%; background: #28a745; transition: width 0.3s;"></div>
+                    </div>
+                    <div id="importStatus" style="color: #858585; font-size: 0.8em; margin-top: 5px;"></div>
                 </div>
             </div>
             
@@ -1300,12 +1481,11 @@
             <!-- 오버레이 자막 컨트롤 패널 -->
             <div id="overlayControlPanel" style="margin-top: 15px; padding: 12px; background: #2a2a2a; border-radius: 8px; border: 1px solid #444444; display: block;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <!-- 언어 선택 -->
+                    <!-- 언어 토글 -->
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #cccccc; font-size: 0.9em; min-width: 60px;">🗣️ 언어:</span>
-                        <button id="subtitleEngBtn" onclick="setSubtitleLanguage('english')" style="padding: 4px 8px; background: #0e639c; color: #ffffff; border: 1px solid #0e639c; border-radius: 4px; cursor: pointer; font-size: 0.9em;">EN</button>
-                        <button id="subtitleKorBtn" onclick="setSubtitleLanguage('korean')" style="padding: 4px 8px; background: #333333; color: #cccccc; border: 1px solid #555555; border-radius: 4px; cursor: pointer; font-size: 0.9em;">한</button>
-                        <button id="subtitleBothBtn" onclick="setSubtitleLanguage('both')" style="padding: 4px 8px; background: #333333; color: #cccccc; border: 1px solid #555555; border-radius: 4px; cursor: pointer; font-size: 0.9em;">둘다</button>
+                        <span style="color: #cccccc; font-size: 0.9em; min-width: 60px;">🗣️ 자막:</span>
+                        <button id="subtitleEngBtn" onclick="toggleEnglishSubtitle()" style="padding: 4px 8px; background: #0e639c; color: #ffffff; border: 1px solid #0e639c; border-radius: 4px; cursor: pointer; font-size: 0.9em;">EN</button>
+                        <button id="subtitleKorBtn" onclick="toggleKoreanSubtitle()" style="padding: 4px 8px; background: #333333; color: #cccccc; border: 1px solid #555555; border-radius: 4px; cursor: pointer; font-size: 0.9em;">한</button>
                         <button id="verbHighlightBtn" onclick="toggleVerbHighlight()" style="padding: 4px 8px; background: #ffeb3b; color: #333; border: 1px solid #ffeb3b; border-radius: 4px; cursor: pointer; font-size: 0.9em; margin-left: 8px;">💛ON</button>
                         <button id="verbModeBtn" onclick="toggleVerbMode()" style="padding: 4px 8px; background: #333333; color: #cccccc; border: 1px solid #555555; border-radius: 4px; cursor: pointer; font-size: 0.9em;" title="하이라이트 모드 (클릭하면 빈칸 모드)">🔆</button>
                     </div>
@@ -1396,27 +1576,42 @@
     <!-- Right Sidebar -->
     <div class="right-sidebar" id="rightSidebar">
         <div class="right-sidebar-header">
-            <span>문장 목록</span>
+            <span>문장 관리</span>
             <button class="sidebar-toggle" onclick="toggleRightSidebar()" title="사이드바 숨김/보이기">×</button>
         </div>
         <div class="right-sidebar-resizer" id="rightSidebarResizer"></div>
-        <div class="right-sidebar-content">
         
-            <!-- 문장 검색 -->
-            <div class="search-area" style="margin-bottom: 20px;">
-                <h3>문장 검색</h3>
-                <input type="text" id="searchInput" placeholder="3글자 이상 입력하면 자동 검색..." 
-                       style="width: 100%; padding: 10px; border: 1px solid #444444; background: #2d2d30; color: #cccccc; border-radius: 3px;">
-                <div id="searchResults" style="margin-top: 10px; color: #858585;"></div>
+        <!-- 사이드바 탭 헤더 -->
+        <div class="sidebar-tabs">
+            <button class="sidebar-tab-btn active" onclick="switchSidebarTab('sentences')" id="sentencesTab">
+                📝 문장목록
+            </button>
+            <button class="sidebar-tab-btn" onclick="switchSidebarTab('bookmarks')" id="bookmarksTab">
+                ⭐ 북마크
+            </button>
+        </div>
+        
+        <div class="right-sidebar-content">
+            <!-- 문장 목록 탭 -->
+            <div id="sentencesTabContent" class="sidebar-tab-content active">
+                <!-- 문장 검색 -->
+                <div class="search-area" style="margin-bottom: 20px;">
+                    <h3>문장 검색</h3>
+                    <input type="text" id="searchInput" placeholder="3글자 이상 입력하면 자동 검색..." 
+                           style="width: 100%; padding: 10px; border: 1px solid #444444; background: #2d2d30; color: #cccccc; border-radius: 3px;">
+                    <div id="searchResults" style="margin-top: 10px; color: #858585;"></div>
+                </div>
+                
+                <!-- 문장 목록 -->
+                <div id="sentenceList"></div>
             </div>
             
-            <!-- 문장 목록 -->
-            <div id="sentenceList"></div>
-            
-            <!-- 북마크된 문장 -->
-            <div class="bookmarked-panel">
-                <h3>⭐ 북마크된 문장</h3>
-                <div id="bookmarkedList"></div>
+            <!-- 북마크 탭 -->
+            <div id="bookmarksTabContent" class="sidebar-tab-content">
+                <div class="bookmarked-panel">
+                    <h3>⭐ 북마크된 문장</h3>
+                    <div id="bookmarkedList"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -1493,6 +1688,7 @@
         let videoPlayer = null;
         let currentPlayer = null; // 현재 사용 중인 플레이어
         let currentSentenceIndex = -1;
+        let currentSentence = null; // 현재 재생 중인 문장 객체
         let currentSubtitleSentence = null; // 현재 표시 중인 자막의 문장 정보
         let subtitleDisplayVisible = true; // 자막 표시 상태
         let translationInterval = null;
@@ -1576,11 +1772,8 @@
             document.addEventListener('keydown', handleKeyboardControls);
             
             
-            // 파일 업로드 처리
-            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
-            
-            // 드래그 앤 드롭 설정
-            setupDragAndDrop();
+            // 드래그 앤 드롭 설정 (제거됨)
+            // setupDragAndDrop();
             
             // 검색 입력 처리
             document.getElementById('searchInput').addEventListener('input', handleSearchInput);
@@ -1593,9 +1786,296 @@
                 showPanel('media');
             }, 100);
             
+            // Sync directory functions - defined inline
+            let selectedFiles = new Set();
+            
+            window.loadSyncDirectory = async function() {
+                try {
+                    const loadBtn = document.getElementById('loadSyncFolderBtn');
+                    if (loadBtn) {
+                        loadBtn.disabled = true;
+                        loadBtn.textContent = '로딩 중...';
+                    }
+                    
+                    const response = await fetch('/api/sync-directory');
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Failed to load sync directory');
+                    }
+                    
+                    displaySyncFiles(data.files);
+                    
+                } catch (error) {
+                    console.error('Error loading sync directory:', error);
+                    const fileList = document.getElementById('fileClickList');
+                    if (fileList) {
+                        fileList.innerHTML = `<div style="color: #ff6b6b; text-align: center; padding: 20px;">폴더 로딩 실패: ${error.message}</div>`;
+                    }
+                } finally {
+                    const loadBtn = document.getElementById('loadSyncFolderBtn');
+                    if (loadBtn) {
+                        loadBtn.disabled = false;
+                        loadBtn.textContent = '📂 sync_directory 새로고침';
+                    }
+                }
+            }
+            
+            function displaySyncFiles(files) {
+                const fileList = document.getElementById('fileClickList');
+                fileList.innerHTML = '';
+                selectedFiles.clear();
+                updateSelectedCount();
+                
+                if (files.length === 0) {
+                    fileList.innerHTML = '<div style="color: #858585; text-align: center; padding: 20px;">sync_directory 폴더에 미디어 파일이 없습니다.</div>';
+                    return;
+                }
+                
+                files.forEach(fileGroup => {
+                    const fileItem = document.createElement('div');
+                    fileItem.style.cssText = 'margin-bottom: 8px; padding: 12px; background: #2d2d30; border-radius: 4px; border: 2px solid #404040; cursor: pointer; transition: all 0.2s;';
+                    fileItem.dataset.baseName = fileGroup.baseName;
+                    
+                    // Click event for selection
+                    fileItem.addEventListener('click', function() {
+                        toggleFileSelection(this, fileGroup.baseName);
+                    });
+                    
+                    // Hover effect
+                    fileItem.addEventListener('mouseenter', function() {
+                        if (!this.classList.contains('selected')) {
+                            this.style.borderColor = '#007acc';
+                            this.style.background = '#3d3d40';
+                        }
+                    });
+                    
+                    fileItem.addEventListener('mouseleave', function() {
+                        if (!this.classList.contains('selected')) {
+                            this.style.borderColor = '#404040';
+                            this.style.background = '#2d2d30';
+                        }
+                    });
+                    
+                    let labelText = `📁 ${fileGroup.baseName}`;
+                    let details = [];
+                    
+                    if (fileGroup.mediaFile) {
+                        const sizeText = formatFileSize(fileGroup.mediaFile.size);
+                        details.push(`🎬 ${fileGroup.mediaFile.extension} (${sizeText})`);
+                    }
+                    
+                    if (fileGroup.subtitleFile) {
+                        details.push(`📄 자막 파일`);
+                    }
+                    
+                    if (details.length > 0) {
+                        labelText += ` - ${details.join(', ')}`;
+                    }
+                    
+                    fileItem.innerHTML = `
+                        <div style="display: flex; align-items: center; color: #cccccc;">
+                            <span style="margin-right: 8px;">☐</span>
+                            <span>${labelText}</span>
+                        </div>
+                    `;
+                    
+                    fileList.appendChild(fileItem);
+                });
+            }
+            
+            function toggleFileSelection(element, baseName) {
+                const checkbox = element.querySelector('span');
+                
+                if (selectedFiles.has(baseName)) {
+                    // Deselect
+                    selectedFiles.delete(baseName);
+                    element.classList.remove('selected');
+                    element.style.borderColor = '#404040';
+                    element.style.background = '#2d2d30';
+                    checkbox.textContent = '☐';
+                } else {
+                    // Select
+                    selectedFiles.add(baseName);
+                    element.classList.add('selected');
+                    element.style.borderColor = '#28a745';
+                    element.style.background = '#1a3d1a';
+                    checkbox.textContent = '☑';
+                }
+                
+                updateSelectedCount();
+            }
+            
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            function updateSelectedCount() {
+                const countSpan = document.getElementById('selectedCount');
+                const importBtn = document.getElementById('importSelectedBtn');
+                
+                if (countSpan) {
+                    countSpan.textContent = selectedFiles.size;
+                }
+                
+                if (importBtn) {
+                    importBtn.disabled = selectedFiles.size === 0;
+                    
+                    if (selectedFiles.size === 0) {
+                        importBtn.style.background = '#666666';
+                    } else {
+                        importBtn.style.background = '#28a745';
+                    }
+                }
+            }
+            
+            window.selectAllFiles = function() {
+                const fileItems = document.querySelectorAll('#fileClickList div[data-base-name]');
+                fileItems.forEach(item => {
+                    const baseName = item.dataset.baseName;
+                    if (!selectedFiles.has(baseName)) {
+                        toggleFileSelection(item, baseName);
+                    }
+                });
+            }
+            
+            window.deselectAllFiles = function() {
+                const fileItems = document.querySelectorAll('#fileClickList div[data-base-name]');
+                fileItems.forEach(item => {
+                    const baseName = item.dataset.baseName;
+                    if (selectedFiles.has(baseName)) {
+                        toggleFileSelection(item, baseName);
+                    }
+                });
+            }
+            
+            window.importSelectedFiles = async function() {
+                const selectedFilesArray = Array.from(selectedFiles);
+                
+                if (selectedFilesArray.length === 0) {
+                    const fileList = document.getElementById('fileClickList');
+                    if (fileList) {
+                        fileList.innerHTML = '<div style="color: #ff9800; text-align: center; padding: 20px;">가져올 파일을 선택해주세요.</div>';
+                        setTimeout(() => {
+                            loadSyncDirectory();
+                        }, 2000);
+                    }
+                    return;
+                }
+                
+                try {
+                    const importBtn = document.getElementById('importSelectedBtn');
+                    importBtn.disabled = true;
+                    importBtn.textContent = '가져오는 중...';
+                    
+                    document.getElementById('importProgress').style.display = 'block';
+                    updateImportProgress(0, '파일 가져오기 시작...');
+                    
+                    const response = await fetch('/api/sync-directory/import', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            selectedFiles: selectedFilesArray
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Import failed');
+                    }
+                    
+                    // Process results
+                    const successCount = data.results.filter(r => r.success).length;
+                    const totalCount = data.results.length;
+                    
+                    updateImportProgress(100, `완료: ${successCount}/${totalCount} 파일 가져오기 성공`);
+                    
+                    // Show detailed results
+                    let message = `파일 가져오기 완료!\n성공: ${successCount}개\n실패: ${totalCount - successCount}개`;
+                    
+                    const failedFiles = data.results.filter(r => !r.success);
+                    if (failedFiles.length > 0) {
+                        message += '\n\n실패한 파일:';
+                        failedFiles.forEach(file => {
+                            message += `\n- ${file.baseName}: ${file.error}`;
+                        });
+                    }
+                    
+                    // Show success message in the file list area
+                    const fileList = document.getElementById('fileClickList');
+                    if (fileList) {
+                        fileList.innerHTML = `<div style="color: #28a745; text-align: center; padding: 20px; white-space: pre-line;">${message}</div>`;
+                        setTimeout(() => {
+                            loadSyncDirectory();
+                        }, 3000);
+                    }
+                    
+                    // Refresh the file list
+                    if (successCount > 0) {
+                        loadSyncDirectory();
+                        // Refresh media list if it's visible
+                        if (typeof loadMedia === 'function') {
+                            loadMedia();
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Error importing files:', error);
+                    const fileList = document.getElementById('fileClickList');
+                    if (fileList) {
+                        fileList.innerHTML = `<div style="color: #ff6b6b; text-align: center; padding: 20px;">파일 가져오기 중 오류 발생: ${error.message}</div>`;
+                        setTimeout(() => {
+                            loadSyncDirectory();
+                        }, 3000);
+                    }
+                    updateImportProgress(0, '오류 발생');
+                } finally {
+                    const importBtn = document.getElementById('importSelectedBtn');
+                    importBtn.disabled = false;
+                    importBtn.textContent = '선택한 파일 가져오기';
+                    
+                    setTimeout(() => {
+                        document.getElementById('importProgress').style.display = 'none';
+                    }, 3000);
+                }
+            }
+            
+            function updateImportProgress(percentage, status) {
+                const progressFill = document.getElementById('importProgressFill');
+                const statusDiv = document.getElementById('importStatus');
+                
+                progressFill.style.width = percentage + '%';
+                statusDiv.textContent = status || '';
+            }
+            
+            // 페이지 로드 시 sync directory 자동 로드
+            setTimeout(() => {
+                console.log('Attempting to load sync directory...');
+                if (typeof loadSyncDirectory === 'function') {
+                    console.log('loadSyncDirectory function found, calling it...');
+                    loadSyncDirectory();
+                } else {
+                    console.error('loadSyncDirectory function not found!');
+                }
+            }, 500);
+            
             // 초기 상태: 업로드 섹션 표시, 다른 섹션들 숨김
             document.getElementById('uploadSection').style.display = 'block';
             document.getElementById('processingOptions').style.display = 'none';
+            
+            // 자막 버튼 초기 스타일 설정
+            setTimeout(() => {
+                if (typeof updateSubtitleButtonStyles === 'function') {
+                    updateSubtitleButtonStyles();
+                }
+            }, 100);
             // document.getElementById('searchSection').style.display = 'none'; // 요소가 존재하지 않음
             
             // 시뮬레이션 데이터 로드 (개발용)
@@ -2083,7 +2563,7 @@
                                 // 번역 상태 확인
                                 const translationResponse = await fetch(`/api/media/${m.id}/translation-status`);
                                 const translationData = await translationResponse.json();
-                                const hasTranslation = translationData.translated_count > 0;
+                                const hasTranslation = translationData.progress > 0;
                                 
                                 // 분석 상태 확인 (SpaCy, 어휘)
                                 let analysisData = { spacy: { percentage: 0 }, vocabulary: { percentage: 0 } };
@@ -2100,8 +2580,8 @@
                                     ...m,
                                     hasSentences,
                                     hasTranslation,
-                                    translatedCount: translationData.translated_count || 0,
-                                    totalCount: translationData.total_count || 0,
+                                    translationProgress: translationData.progress || 0,
+                                    translationStage: translationData.stage || 'idle',
                                     spacyPercentage: analysisData.spacy.percentage || 0,
                                     vocabularyPercentage: analysisData.vocabulary.percentage || 0
                                 };
@@ -2124,8 +2604,9 @@
                                     badges.push('<span class="status-badge subtitle" title="자막 있음">자막</span>');
                                 }
                                 if (m.hasTranslation) {
-                                    const percentage = m.totalCount > 0 ? Math.round((m.translatedCount / m.totalCount) * 100) : 0;
-                                    badges.push(`<span class="status-badge translation" title="번역 ${percentage}%">번역${percentage}%</span>`);
+                                    const percentage = m.translationProgress || 0;
+                                    const stageText = m.translationStage === 'translating' ? '번역중' : '번역';
+                                    badges.push(`<span class="status-badge translation" title="번역 ${percentage}%">${stageText}${percentage}%</span>`);
                                 }
                                 if (m.spacyPercentage > 0) {
                                     badges.push(`<span class="status-badge spacy" title="SpaCy 분석 ${m.spacyPercentage}%">동사${m.spacyPercentage}%</span>`);
@@ -2688,39 +3169,39 @@
             
             const overlaySubtitle = document.getElementById('videoOverlaySubtitles');
             
-            if (currentSentence) {
-                let subtitleText = '';
+            if (currentSentence && (showEnglishSubtitle || showKoreanSubtitle)) {
+                let subtitleParts = [];
                 
-                // 언어 선택에 따른 텍스트 설정 (동기 처리)
-                switch(subtitleLanguage) {
-                    case 'english':
-                        subtitleText = formatSpeakerText(currentSentence.english || '', currentSentence.id, true);
-                        break;
-                    case 'korean':
-                        subtitleText = formatSpeakerText(currentSentence.korean || '', null, true);
-                        break;
-                    case 'both':
-                        const englishText = formatSpeakerText(currentSentence.english || '', currentSentence.id, true);
-                        const koreanText = currentSentence.korean ? 
-                            formatSpeakerText(currentSentence.korean, null, true) : '';
-                        if (englishText && koreanText) {
-                            subtitleText = englishText + '<br><br>' + koreanText;
-                        } else {
-                            subtitleText = englishText || koreanText;
-                        }
-                        break;
+                // 영어 자막 추가
+                if (showEnglishSubtitle && currentSentence.english) {
+                    const englishText = formatSpeakerText(currentSentence.english, currentSentence.id, true);
+                    if (englishText) {
+                        subtitleParts.push(englishText);
+                    }
                 }
                 
-                overlaySubtitle.innerHTML = subtitleText;
-                overlaySubtitle.style.display = 'block';
+                // 한국어 자막 추가
+                if (showKoreanSubtitle && currentSentence.korean) {
+                    const koreanText = formatSpeakerText(currentSentence.korean, null, true);
+                    if (koreanText) {
+                        subtitleParts.push(koreanText);
+                    }
+                }
                 
-                // 현재 텍스트 저장
-                currentOverlayText = subtitleText;
-                
-                
-                // 동사 하이라이트를 나중에 적용 (비동기로)
-                if (highlightVerbs && subtitleLanguage !== 'korean') {
-                    applyVerbHighlightToElement(overlaySubtitle, currentSentence.english, currentSentence.id);
+                if (subtitleParts.length > 0) {
+                    const subtitleText = subtitleParts.join('<br><br>');
+                    overlaySubtitle.innerHTML = subtitleText;
+                    overlaySubtitle.style.display = 'block';
+                    
+                    // 현재 텍스트 저장
+                    currentOverlayText = subtitleText;
+                    
+                    // 동사 하이라이트를 나중에 적용 (영어 자막이 있을 때만)
+                    if (highlightVerbs && showEnglishSubtitle && currentSentence.english) {
+                        applyVerbHighlightToElement(overlaySubtitle, currentSentence.english, currentSentence.id);
+                    }
+                } else {
+                    overlaySubtitle.style.display = 'none';
                 }
             } else {
                 overlaySubtitle.style.display = 'none';
@@ -2733,7 +3214,8 @@
         // 오버레이 자막 설정 변수
         let overlayFontSizeScale = 1.2; // 기본 크기 (120%)
         let overlayPosition = 'center'; // 기본 위치 (중앙)
-        let subtitleLanguage = 'english'; // 기본 언어 (영어만)
+        let showEnglishSubtitle = true; // 영어 자막 표시 여부
+        let showKoreanSubtitle = false; // 한국어 자막 표시 여부
         let highlightVerbs = true; // 동사 하이라이트 기본값
         let verbHighlightMode = 'highlight'; // 'highlight' or 'blank'
         let verbCache = new Map(); // 동사 감지 결과 캐시
@@ -2816,7 +3298,7 @@
                     if (showBlanks) {
                         // 빈칸으로 대체 (흰색 밑줄)
                         processedText = processedText.replace(regex, 
-                            '<span style="color: #ffffff; border-bottom: 1px solid #ffffff; display: inline-block; min-width: ' + (verb.length * 8) + 'px; text-align: center;">____</span>'
+                            '<span style="color: #ffffff; border-bottom: 1px solid #ffffff; display: inline-block; min-width: ' + (verb.length * 8) + 'px; text-align: center;">' + '_'.repeat(verb.length) + '</span>'
                         );
                     } else {
                         // 빈칸 숨김 (원래 단어 표시하지만 투명하게)
@@ -3092,14 +3574,14 @@
         }
         
         // 화자 구분을 위한 텍스트 처리 함수 (동기)
-        function formatSpeakerText(text, sentenceId = null, isOverlay = false) {
+        async function formatSpeakerText(text, sentenceId = null, isOverlay = false) {
             if (!text) return '';
             // ' - ' 를 줄바꿈으로 변환 (화자 구분) - 오버레이에서는 제외
             let formattedText = isOverlay ? text : text.replace(/\s*-\s*/g, '<br>');
             
             // 문법 패턴 하이라이트 먼저 적용
             if (grammarHighlightEnabled && sentenceId) {
-                formattedText = applyGrammarHighlight(formattedText);
+                formattedText = await applyGrammarHighlight(formattedText);
             }
             
             // 단어를 클릭 가능하게 만들기 (sentenceId가 있을 때만)
@@ -3111,56 +3593,86 @@
         }
         
         // 문법 패턴 하이라이트 적용
-        function applyGrammarHighlight(text) {
+        // 전역 변수로 패턴 데이터 저장
+        let grammarPatterns = null;
+        
+        // JSON 패턴 데이터 로드
+        async function loadGrammarPatterns() {
+            if (!grammarPatterns) {
+                try {
+                    const response = await fetch('/static/data/grammar_patterns.json');
+                    grammarPatterns = await response.json();
+                } catch (error) {
+                    console.error('Grammar patterns loading failed:', error);
+                    grammarPatterns = {}; // 빈 객체로 폴백
+                }
+            }
+            return grammarPatterns;
+        }
+        
+        async function applyGrammarHighlight(text) {
             let highlightedText = text;
             
-            // 1. 조건문 패턴 (if, unless, provided that 등)
+            // JSON 패턴 로드
+            const patterns = await loadGrammarPatterns();
+            
+            // 1. 기존 패턴들 (조건문, 시간, 원인/결과 등)
             highlightedText = highlightedText.replace(
                 /\b(if|unless|provided that|as long as|in case)\b/gi,
                 '<span class="grammar-conditional">$1</span>'
             );
             
-            // 2. 시간 표현 (when, while, before, after 등)
             highlightedText = highlightedText.replace(
                 /\b(when|while|before|after|during|since|until|as soon as)\b/gi,
                 '<span class="grammar-time">$1</span>'
             );
             
-            // 3. 원인/결과 (because, so, therefore 등)
             highlightedText = highlightedText.replace(
                 /\b(because|since|as|so|therefore|thus|consequently|as a result)\b/gi,
                 '<span class="grammar-cause">$1</span>'
             );
             
-            // 4. 대조/양보 (but, however, although 등)
             highlightedText = highlightedText.replace(
                 /\b(but|however|although|though|despite|in spite of|nevertheless|nonetheless)\b/gi,
                 '<span class="grammar-contrast">$1</span>'
             );
             
-            // 5. 수동태 패턴 (be + past participle)
             highlightedText = highlightedText.replace(
                 /\b(am|is|are|was|were|been|being)\s+([\w]+ed|[\w]+en)\b/gi,
                 '<span class="grammar-passive">$1 $2</span>'
             );
             
-            // 6. 완료시제 (have/has + past participle)
             highlightedText = highlightedText.replace(
                 /\b(have|has|had)\s+([\w]+ed|[\w]+en)\b/gi,
                 '<span class="grammar-perfect">$1 $2</span>'
             );
             
-            // 7. 미래시제 (will, going to)
             highlightedText = highlightedText.replace(
                 /\b(will|shall|going to)\s+(\w+)/gi,
                 '<span class="grammar-future">$1 $2</span>'
             );
             
-            // 8. 모달동사 (can, could, should 등)
             highlightedText = highlightedText.replace(
                 /\b(can|could|should|would|might|may|must|ought to)\s+(\w+)/gi,
                 '<span class="grammar-modal">$1 $2</span>'
             );
+            
+            // 2. JSON 기반 새로운 패턴들
+            Object.keys(patterns).forEach(category => {
+                const categoryData = patterns[category];
+                const className = categoryData.class;
+                const patternList = categoryData.patterns;
+                
+                patternList.forEach(pattern => {
+                    // 특수 문자 이스케이프 처리
+                    const escapedPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`\\b${escapedPattern}\\b`, 'gi');
+                    
+                    highlightedText = highlightedText.replace(regex, (match) => {
+                        return `<span class="${className}">${match}</span>`;
+                    });
+                });
+            });
             
             return highlightedText;
         }
@@ -3170,6 +3682,23 @@
         let difficultyHighlightEnabled = true; // 난이도 하이라이트 활성화
         let difficultyHighlightCache = new Map(); // 난이도 캐시
         let grammarHighlightEnabled = true; // 문법 패턴 하이라이트 활성화
+        
+        // 해설 옵션 토글 함수
+        function toggleCommentaryOptions() {
+            const checkbox = document.getElementById('commentarySub');
+            const options = document.getElementById('commentaryOptions');
+            if (checkbox && options) {
+                options.style.display = checkbox.checked ? 'block' : 'none';
+            }
+        }
+        
+        // 페이지 로드 시 이벤트 리스너 추가
+        document.addEventListener('DOMContentLoaded', function() {
+            const commentaryCheckbox = document.getElementById('commentarySub');
+            if (commentaryCheckbox) {
+                commentaryCheckbox.addEventListener('change', toggleCommentaryOptions);
+            }
+        });
         
         // 배치 단어 난이도 체크를 위한 큐
         let wordDifficultyQueue = new Set();
@@ -3286,46 +3815,45 @@
             }
         }
         
-        // 자막 언어 선택 함수
-        function setSubtitleLanguage(language) {
-            subtitleLanguage = language;
-            
-            // 버튼 스타일 업데이트
+        // 영어 자막 토글 함수
+        function toggleEnglishSubtitle() {
+            showEnglishSubtitle = !showEnglishSubtitle;
+            updateSubtitleButtonStyles();
+            updateOverlaySubtitles();
+        }
+        
+        // 한국어 자막 토글 함수
+        function toggleKoreanSubtitle() {
+            showKoreanSubtitle = !showKoreanSubtitle;
+            updateSubtitleButtonStyles();
+            updateOverlaySubtitles();
+        }
+        
+        // 자막 버튼 스타일 업데이트
+        function updateSubtitleButtonStyles() {
             const engBtn = document.getElementById('subtitleEngBtn');
             const korBtn = document.getElementById('subtitleKorBtn');
-            const bothBtn = document.getElementById('subtitleBothBtn');
             
-            // 모든 버튼 초기화
-            [engBtn, korBtn, bothBtn].forEach(btn => {
-                btn.style.background = '#333333';
-                btn.style.color = '#cccccc';
-                btn.style.borderColor = '#555555';
-            });
-            
-            // 선택된 버튼 활성화
-            let activeBtn;
-            switch(language) {
-                case 'english':
-                    activeBtn = engBtn;
-                    break;
-                case 'korean':
-                    activeBtn = korBtn;
-                    break;
-                case 'both':
-                    activeBtn = bothBtn;
-                    break;
+            // 영어 버튼 스타일
+            if (showEnglishSubtitle) {
+                engBtn.style.background = '#0e639c';
+                engBtn.style.color = '#ffffff';
+                engBtn.style.borderColor = '#0e639c';
+            } else {
+                engBtn.style.background = '#333333';
+                engBtn.style.color = '#cccccc';
+                engBtn.style.borderColor = '#555555';
             }
             
-            if (activeBtn) {
-                activeBtn.style.background = '#0e639c';
-                activeBtn.style.color = '#ffffff';
-                activeBtn.style.borderColor = '#0e639c';
-            }
-            
-            // 현재 자막 업데이트
-            if (currentSubtitleSentence) {
-                updateVideoSubtitles();
-                updateOverlaySubtitles(currentSubtitleSentence);
+            // 한국어 버튼 스타일
+            if (showKoreanSubtitle) {
+                korBtn.style.background = '#0e639c';
+                korBtn.style.color = '#ffffff';
+                korBtn.style.borderColor = '#0e639c';
+            } else {
+                korBtn.style.background = '#333333';
+                korBtn.style.color = '#cccccc';
+                korBtn.style.borderColor = '#555555';
             }
         }
         
@@ -3943,8 +4471,10 @@
             
             listEl.innerHTML = '';
             
-            // 전역 sentences 배열 초기화
+            // 전역 sentences 배열 및 현재 문장 정보 초기화
             sentences = [];
+            currentSentence = null;
+            currentSentenceIndex = -1;
             let globalIndex = 0;
             
             console.log('displayGroupedSentences called with:', chapters);
@@ -4066,21 +4596,25 @@
                         sentences.push(normalizedSentence);
                         
                         const sentenceEl = document.createElement('div');
-                        sentenceEl.className = 'sentence-item' + (sentence.bookmark ? ' bookmarked' : '');
+                        sentenceEl.className = 'sentence-item' + ((sentence.isBookmarked || sentence.bookmark) ? ' bookmarked' : '');
                         sentenceEl.dataset.index = globalIndex;
                         sentenceEl.dataset.sentenceId = sentence.id;
                         
-                        sentenceEl.innerHTML = `
-                            <span class="sentence-number">${sentence.order}.</span>
-                            <span class="sentence-text">${formatSpeakerText(sentence.english, sentence.id)}</span>
-                            <span class="sentence-korean">${formatSpeakerText(sentence.korean || '')}</span>
-                            <div style="font-size: 0.7em; color: #666; margin-top: 3px;">
-                                ${sentence.startTime?.toFixed(1) || 0}s - ${sentence.endTime?.toFixed(1) || 0}s
-                            </div>
-                            <button class="bookmark-btn" onclick="toggleBookmark(${globalIndex}, event)">★</button>
-                            <button class="extract-btn" onclick="extractMP3(${globalIndex}, event)">MP3</button>
-                            <button class="extract-btn" onclick="extractMP4(${globalIndex}, event)" style="background: #2563eb;">MP4</button>
-                        `;
+                        // async 함수 처리를 위해 innerHTML을 분리
+                        formatSpeakerText(sentence.english, sentence.id).then(formattedEnglish => {
+                            const koreanText = sentence.korean || '';
+                            sentenceEl.innerHTML = `
+                                <span class="sentence-number">${sentence.order}.</span>
+                                <span class="sentence-text">${formattedEnglish}</span>
+                                <span class="sentence-korean">${koreanText}</span>
+                                <div style="font-size: 0.7em; color: #666; margin-top: 3px;">
+                                    ${sentence.startTime?.toFixed(1) || 0}s - ${sentence.endTime?.toFixed(1) || 0}s
+                                </div>
+                                <button class="bookmark-btn" onclick="toggleBookmark(${globalIndex}, event)">★</button>
+                                <button class="extract-btn" onclick="extractMP3(${globalIndex}, event)">MP3</button>
+                                <button class="extract-btn" onclick="extractMP4(${globalIndex}, event)" style="background: #2563eb;">MP4</button>
+                            `;
+                        });
 
                         sentenceEl.onclick = (function(index, sentenceData) {
                             return function(e) {
@@ -4119,7 +4653,7 @@
             
             sentences.forEach((sentence, index) => {
                 const el = document.createElement('div');
-                el.className = 'sentence-item' + (sentence.bookmark ? ' bookmarked' : '');
+                el.className = 'sentence-item' + ((sentence.isBookmarked || sentence.bookmark) ? ' bookmarked' : '');
                 el.dataset.index = index;
                 
                 el.innerHTML = `
@@ -4166,6 +4700,7 @@
                 });
                 
                 currentSentenceIndex = index;
+                currentSentence = sentence; // 현재 문장 객체 업데이트
                 
                 // 현재 재생 중인 문장 강조 및 스크롤
                 updateSidebarHighlight(index);
@@ -4443,8 +4978,12 @@
             
             const englishChecked = document.getElementById('bookmarkSubtitleEnglish').checked;
             const koreanChecked = document.getElementById('bookmarkSubtitleKorean').checked;
+            const commentaryChecked = document.getElementById('bookmarkCommentary').checked;
+            const commentaryStyle = document.querySelector('input[name="commentaryStyle"]:checked')?.value || 'orange';
+            const englishFontSize = document.querySelector('input[name="bookmarkEnglishFontSize"]:checked')?.value || '32';
+            const koreanFontSize = document.querySelector('input[name="bookmarkKoreanFontSize"]:checked')?.value || '24';
             
-            console.log('Extracting bookmarked sentences as MP4', {englishChecked, koreanChecked});
+            console.log('Extracting bookmarked sentences as MP4', {englishChecked, koreanChecked, commentaryChecked, commentaryStyle, englishFontSize, koreanFontSize});
             updateExtractStatusMP4('북마크 문장 MP4 추출 중...');
             
             fetch(`/api/media/${currentMedia}/extract-bookmarked-mp4`, {
@@ -4454,7 +4993,11 @@
                 },
                 body: JSON.stringify({
                     subtitle_english: englishChecked,
-                    subtitle_korean: koreanChecked
+                    subtitle_korean: koreanChecked,
+                    include_commentary: commentaryChecked,
+                    commentary_style: commentaryStyle,
+                    english_font_size: parseInt(englishFontSize),
+                    korean_font_size: parseInt(koreanFontSize)
                 })
             })
             .then(response => response.json())
@@ -4476,8 +5019,12 @@
             
             const englishChecked = document.getElementById('subtitleEnglish').checked;
             const koreanChecked = document.getElementById('subtitleKorean').checked;
+            const commentaryChecked = document.getElementById('allSentencesCommentary').checked;
+            const commentaryStyle = document.querySelector('input[name="commentaryStyle"]:checked')?.value || 'orange';
+            const englishFontSize = document.querySelector('input[name="allSentencesEnglishFontSize"]:checked')?.value || '32';
+            const koreanFontSize = document.querySelector('input[name="allSentencesKoreanFontSize"]:checked')?.value || '24';
             
-            console.log('Extracting all sentences as MP4', {englishChecked, koreanChecked});
+            console.log('Extracting all sentences as MP4', {englishChecked, koreanChecked, commentaryChecked, commentaryStyle, englishFontSize, koreanFontSize});
             updateExtractStatusMP4('전체 문장 분할 MP4 추출 중...');
             
             fetch(`/api/media/${currentMedia}/extract-all-sentences-mp4`, {
@@ -4487,7 +5034,10 @@
                 },
                 body: JSON.stringify({
                     subtitle_english: englishChecked,
-                    subtitle_korean: koreanChecked
+                    subtitle_korean: koreanChecked,
+                    include_commentary: commentaryChecked,
+                    english_font_size: parseInt(englishFontSize),
+                    korean_font_size: parseInt(koreanFontSize)
                 })
             })
             .then(response => response.json())
@@ -4815,12 +5365,13 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    sentences[index].bookmark = data.bookmark ? 1 : 0;
+                    sentences[index].isBookmarked = data.bookmarked ? 1 : 0;
+                    sentences[index].bookmark = data.bookmarked ? 1 : 0;  // 호환성을 위해
                     
                     // 북마크 버튼 업데이트
                     const sentenceEl = document.querySelector(`[data-index="${index}"]`);
                     if (sentenceEl) {
-                        if (data.bookmark) {
+                        if (data.bookmarked) {
                             sentenceEl.classList.add('bookmarked');
                         } else {
                             sentenceEl.classList.remove('bookmarked');
@@ -4837,15 +5388,25 @@
         
         function updateBookmarkedList() {
             const bookmarkedEl = document.getElementById('bookmarkedList');
-            const bookmarked = sentences.filter(s => s.bookmark);
+            const bookmarked = sentences.filter(s => s.isBookmarked || s.bookmark);
             
             if (bookmarked.length === 0) {
                 bookmarkedEl.innerHTML = '<p style="color: #858585;">북마크된 문장이 없습니다.</p>';
             } else {
-                bookmarkedEl.innerHTML = bookmarked.map(s => 
-                    `<div class="bookmarked-item">${s.id}. ${s.english}</div>`
-                ).join('');
+                bookmarkedEl.innerHTML = bookmarked.map((s, idx) => {
+                    const globalIndex = sentences.findIndex(sentence => sentence.id === s.id);
+                    return `<div class="bookmarked-item" style="position: relative; margin-bottom: 10px; padding: 10px; background: #2d2d30; border-radius: 5px; cursor: pointer;" onclick="playSentence(${globalIndex})">
+                        <div style="color: #cccccc; margin-bottom: 5px;">${s.english}</div>
+                        ${s.korean ? `<div style="color: #858585; font-size: 0.9em;">${s.korean}</div>` : ''}
+                        <button class="bookmark-btn" onclick="toggleBookmark(${globalIndex}, event)" style="position: absolute; right: 10px; top: 10px; background: none; border: none; color: #ffd700; font-size: 16px; cursor: pointer;">★</button>
+                    </div>`;
+                }).join('');
             }
+        }
+        
+        function loadBookmarkedSentences() {
+            // 북마크 목록이 이미 sentences에서 필터링되므로 updateBookmarkedList 호출
+            updateBookmarkedList();
         }
         
         function repeatCurrent() {
@@ -4941,8 +5502,36 @@
             btn.textContent = '추출중...';
             btn.disabled = true;
             
+            // 사이드바에서 자막 옵션 가져오기
+            const englishChecked = document.getElementById('englishSub')?.checked || true;
+            const koreanChecked = document.getElementById('koreanSub')?.checked || false;
+            const englishFontSize = document.querySelector('input[name="sideEnglishFontSize"]:checked')?.value || '32';
+            const koreanFontSize = document.querySelector('input[name="sideKoreanFontSize"]:checked')?.value || '24';
+            const commentaryChecked = document.getElementById('commentarySub')?.checked || false;
+            const commentaryStyle = document.querySelector('input[name="commentaryStyle"]:checked')?.value || 'orange';
+            
+            // 디버깅: 실제 전송되는 값들 확인
+            console.log('=== MP4 추출 옵션 디버깅 ===');
+            console.log('englishChecked:', englishChecked);
+            console.log('koreanChecked:', koreanChecked);
+            console.log('englishFontSize:', englishFontSize);
+            console.log('koreanFontSize:', koreanFontSize);
+            console.log('commentaryChecked:', commentaryChecked);
+            console.log('commentaryStyle:', commentaryStyle);
+            
             fetch(`/api/sentence/${currentMedia}/${sentence.id}/extract-mp4`, {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subtitle_english: englishChecked,
+                    subtitle_korean: koreanChecked,
+                    english_font_size: parseInt(englishFontSize),
+                    korean_font_size: parseInt(koreanFontSize),
+                    include_commentary: commentaryChecked,
+                    commentary_style: commentaryStyle
+                })
             })
             .then(response => response.json())
             .then(data => {
@@ -5022,14 +5611,16 @@
         
         function extractSingleMP4() {
             if (!currentSentence || !currentMedia) {
-                alert('재생 중인 문장이 없습니다.');
+                showMessage('재생 중인 문장이 없습니다.');
                 return;
             }
             
             const englishChecked = document.getElementById('englishSub').checked;
             const koreanChecked = document.getElementById('koreanSub').checked;
+            const englishFontSize = document.querySelector('input[name="sideEnglishFontSize"]:checked')?.value || '32';
+            const koreanFontSize = document.querySelector('input[name="sideKoreanFontSize"]:checked')?.value || '24';
             
-            console.log('Extracting current sentence as MP4', {englishChecked, koreanChecked});
+            console.log('Extracting current sentence as MP4', {englishChecked, koreanChecked, englishFontSize, koreanFontSize});
             
             fetch(`/api/sentence/${currentMedia}/${currentSentence.id}/extract-mp4`, {
                 method: 'POST',
@@ -5037,8 +5628,10 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    english_subtitle: englishChecked,
-                    korean_subtitle: koreanChecked
+                    subtitle_english: englishChecked,
+                    subtitle_korean: koreanChecked,
+                    english_font_size: parseInt(englishFontSize),
+                    korean_font_size: parseInt(koreanFontSize)
                 })
             })
             .then(response => response.json())
@@ -5059,14 +5652,27 @@
         
         function extractBookmarkedMP4() {
             if (!currentMedia) {
-                alert('미디어 파일이 선택되지 않았습니다.');
+                showMessage('미디어 파일이 선택되지 않았습니다.');
                 return;
             }
             
             const englishChecked = document.getElementById('englishSub').checked;
             const koreanChecked = document.getElementById('koreanSub').checked;
+            const englishFontSize = document.querySelector('input[name="sideEnglishFontSize"]:checked')?.value || '32';
+            const koreanFontSize = document.querySelector('input[name="sideKoreanFontSize"]:checked')?.value || '24';
             
-            console.log('Extracting bookmarked sentences as MP4', {englishChecked, koreanChecked});
+            // Get commentary settings (assuming there are UI elements for these)
+            const includeCommentary = document.getElementById('includeCommentary')?.checked || false;
+            const commentaryStyle = document.querySelector('input[name="commentaryStyle"]:checked')?.value || 'orange';
+            
+            console.log('Extracting bookmarked sentences as MP4', {
+                englishChecked, 
+                koreanChecked, 
+                englishFontSize, 
+                koreanFontSize, 
+                includeCommentary, 
+                commentaryStyle
+            });
             
             fetch(`/api/media/${currentMedia}/extract-bookmarked-mp4`, {
                 method: 'POST',
@@ -5074,8 +5680,12 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    english_subtitle: englishChecked,
-                    korean_subtitle: koreanChecked
+                    subtitle_english: englishChecked,
+                    subtitle_korean: koreanChecked,
+                    english_font_size: parseInt(englishFontSize),
+                    korean_font_size: parseInt(koreanFontSize),
+                    include_commentary: includeCommentary,
+                    commentary_style: commentaryStyle
                 })
             })
             .then(response => response.json())
@@ -5096,23 +5706,27 @@
         
         function extractAllMP4() {
             if (!currentMedia) {
-                alert('미디어 파일이 선택되지 않았습니다.');
+                showMessage('미디어 파일이 선택되지 않았습니다.');
                 return;
             }
             
             const englishChecked = document.getElementById('englishSub').checked;
             const koreanChecked = document.getElementById('koreanSub').checked;
+            const englishFontSize = document.querySelector('input[name="sideEnglishFontSize"]:checked')?.value || '32';
+            const koreanFontSize = document.querySelector('input[name="sideKoreanFontSize"]:checked')?.value || '24';
             
-            let outputDir = 'all_nosub';
-            if (englishChecked && koreanChecked) {
-                outputDir = 'all_engkor';
-            } else if (englishChecked) {
-                outputDir = 'all_eng';
-            } else if (koreanChecked) {
-                outputDir = 'all_kor';
-            }
+            // Get commentary settings (assuming there are UI elements for these)
+            const includeCommentary = document.getElementById('includeCommentary')?.checked || false;
+            const commentaryStyle = document.querySelector('input[name="commentaryStyle"]:checked')?.value || 'orange';
             
-            console.log('Extracting all sentences as MP4', {englishChecked, koreanChecked, outputDir});
+            console.log('Extracting all sentences as MP4', {
+                englishChecked, 
+                koreanChecked, 
+                englishFontSize, 
+                koreanFontSize, 
+                includeCommentary, 
+                commentaryStyle
+            });
             
             fetch(`/api/media/${currentMedia}/extract-all-sentences-mp4`, {
                 method: 'POST',
@@ -5120,9 +5734,12 @@
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    english_subtitle: englishChecked,
-                    korean_subtitle: koreanChecked,
-                    output_dir: outputDir
+                    subtitle_english: englishChecked,
+                    subtitle_korean: koreanChecked,
+                    english_font_size: parseInt(englishFontSize),
+                    korean_font_size: parseInt(koreanFontSize),
+                    include_commentary: includeCommentary,
+                    commentary_style: commentaryStyle
                 })
             })
             .then(response => response.json())
@@ -5337,7 +5954,34 @@
                 console.error('Delete error:', error);
             });
         }
+        
+        // 사이드바 탭 전환 함수
+        function switchSidebarTab(tabName) {
+            // 모든 탭 버튼에서 active 클래스 제거
+            document.querySelectorAll('.sidebar-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 모든 탭 컨텐츠 숨기기
+            document.querySelectorAll('.sidebar-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 선택된 탭 버튼 활성화
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // 선택된 탭 컨텐츠 표시
+            document.getElementById(tabName + 'TabContent').classList.add('active');
+            
+            // 북마크 탭일 때 북마크 목록 새로고침
+            if (tabName === 'bookmarks') {
+                loadBookmarkedSentences();
+            }
+        }
     </script>
+    
+    <!-- External JavaScript Files -->
+    <script src="/static/js/app.js"></script>
     
     <!-- Video.js JavaScript -->
 </body>

@@ -213,6 +213,203 @@ def upload_file():
         logger.error(f"Error uploading file: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/sync-directory', methods=['GET'])
+def list_sync_directory():
+    """List files in sync_directory for selection"""
+    try:
+        sync_dir = Path('sync_directory')
+        if not sync_dir.exists():
+            return jsonify({'files': []})
+        
+        files = []
+        media_extensions = {'.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm', '.m4v', '.mp3', '.wav', '.m4a', '.aac', '.flac', '.ogg', '.wma'}
+        subtitle_extensions = {'.srt', '.ass', '.vtt'}
+        
+        for file_path in sync_dir.iterdir():
+            if file_path.is_file():
+                file_ext = file_path.suffix.lower()
+                if file_ext in media_extensions or file_ext in subtitle_extensions:
+                    file_info = {
+                        'name': file_path.name,
+                        'size': file_path.stat().st_size,
+                        'type': 'media' if file_ext in media_extensions else 'subtitle',
+                        'extension': file_ext
+                    }
+                    files.append(file_info)
+        
+        # Group files by base name for media-subtitle pairing
+        paired_files = {}
+        
+        for file_info in files:
+            base_name = Path(file_info['name']).stem
+            
+            if base_name not in paired_files:
+                paired_files[base_name] = {
+                    'baseName': base_name,
+                    'mediaFile': None,
+                    'subtitleFile': None
+                }
+            
+            if file_info['type'] == 'media':
+                paired_files[base_name]['mediaFile'] = file_info
+            elif file_info['type'] == 'subtitle':
+                paired_files[base_name]['subtitleFile'] = file_info
+        
+        # Convert to list and filter out entries without media files
+        paired_files = [pair for pair in paired_files.values() if pair['mediaFile'] is not None]
+        
+        return jsonify({'files': paired_files})
+        
+    except Exception as e:
+        logger.error(f"Error listing sync directory: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/sync-directory/import', methods=['POST'])
+def import_from_sync_directory():
+    """Import selected files from sync_directory to upload folder"""
+    try:
+        data = request.get_json()
+        selected_files = data.get('selectedFiles', [])
+        
+        if not selected_files:
+            return jsonify({'error': 'No files selected'}), 400
+        
+        sync_dir = Path('sync_directory')
+        upload_dir = Path('upload')
+        results = []
+        
+        for base_name in selected_files:
+            result = {'baseName': base_name, 'success': False, 'mediaId': None, 'error': None}
+            
+            try:
+                # Find media and subtitle files
+                media_file = None
+                subtitle_file = None
+                
+                for file_path in sync_dir.iterdir():
+                    if file_path.is_file():
+                        file_base_name = file_path.stem
+                        if file_base_name == base_name:
+                            file_ext = file_path.suffix.lower()
+                            media_extensions = {'.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm', '.m4v', '.mp3', '.wav', '.m4a', '.aac', '.flac', '.ogg', '.wma'}
+                            
+                            if file_ext in media_extensions:
+                                media_file = file_path
+                            elif file_ext == '.srt':
+                                subtitle_file = file_path
+                
+                if media_file is None:
+                    result['error'] = 'No media file found'
+                    results.append(result)
+                    continue
+                
+                # Generate unique media ID
+                media_id = str(uuid.uuid4())
+                
+                # Move media file to upload folder
+                media_filename = f"{media_id}_{media_file.name}"
+                media_dest = upload_dir / media_filename
+                
+                import shutil
+                shutil.move(str(media_file), str(media_dest))
+                
+                # Move subtitle file if exists
+                subtitle_filename = None
+                if subtitle_file and subtitle_file.exists():
+                    subtitle_filename = f"{media_id}_{subtitle_file.name}"
+                    subtitle_dest = upload_dir / subtitle_filename
+                    shutil.move(str(subtitle_file), str(subtitle_dest))
+                
+                # Process file like in upload_file function
+                file_ext = media_file.suffix.lower()
+                file_type = 'video' if file_ext in {'.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm', '.m4v'} else 'audio'
+                
+                file_info = {
+                    'id': media_id,
+                    'originalFilename': media_file.name,
+                    'filename': media_filename,
+                    'fileType': file_type,
+                    'fileSize': media_dest.stat().st_size,
+                    'status': 'uploaded'
+                }
+                
+                # Extract audio if video file
+                if file_type == 'video':
+                    audio_filename = f"{media_id}.mp3"
+                    audio_path = upload_dir / audio_filename
+                    
+                    if ffmpeg_processor.extract_audio_from_video(str(media_dest), str(audio_path)):
+                        file_info['audio_filename'] = audio_filename
+                
+                # Get duration
+                duration = ffmpeg_processor.get_media_duration(str(media_dest))
+                if duration:
+                    file_info['duration'] = duration
+                
+                # Save to database
+                media_repo.create(file_info)
+                
+                # Process subtitle file if exists
+                if subtitle_filename:
+                    subtitle_path = upload_dir / subtitle_filename
+                    if subtitle_path.exists():
+                        # Import subtitle sentences
+                        try:
+                            # Create default chapter for subtitles
+                            chapter_data = {
+                                'mediaId': media_id,
+                                'title': 'Subtitles',
+                                'startTime': 0.0,
+                                'endTime': duration or 7200.0,  # Default 2 hours if no duration
+                                'order': 1
+                            }
+                            chapter_id = chapter_repo.create(chapter_data)
+                            
+                            # Create default scene for subtitles
+                            scene_data = {
+                                'chapterId': chapter_id,
+                                'title': 'Main Scene',
+                                'startTime': 0.0,
+                                'endTime': duration or 7200.0,
+                                'order': 1
+                            }
+                            scene_id = scene_repo.create(scene_data)
+                            
+                            # Parse and import subtitle sentences
+                            sentences = subtitle_processor.parse_srt_file(str(subtitle_path))
+                            if sentences:
+                                sentence_ids = []
+                                for i, sentence_data in enumerate(sentences):
+                                    sentence_data['sceneId'] = scene_id
+                                    sentence_data['order'] = i + 1
+                                    sentence_id = sentence_repo.create(sentence_data)
+                                    sentence_ids.append(sentence_id)
+                                
+                                # Auto-trigger SpaCy analysis
+                                import threading
+                                threading.Thread(target=auto_spacy_analysis, args=(media_id, sentence_ids)).start()
+                                    
+                        except Exception as subtitle_error:
+                            logger.warning(f"Failed to process subtitle file {subtitle_filename}: {subtitle_error}")
+                
+                result['success'] = True
+                result['mediaId'] = media_id
+                
+            except Exception as file_error:
+                logger.error(f"Error processing file {base_name}: {file_error}")
+                result['error'] = str(file_error)
+            
+            results.append(result)
+        
+        return jsonify({
+            'success': True,
+            'results': results
+        })
+        
+    except Exception as e:
+        logger.error(f"Error importing from sync directory: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/media/<media_id>/status', methods=['GET'])
 def get_processing_status(media_id):
     """Get processing status for media"""
@@ -392,6 +589,17 @@ def extract_sentence_mp3(media_id, sentence_id):
 def extract_sentence_mp4(media_id, sentence_id):
     """Extract single sentence as MP4 with subtitles"""
     try:
+        # Get request data
+        data = request.get_json() or {}
+        english_subtitle = data.get('english_subtitle', True)
+        korean_subtitle = data.get('korean_subtitle', False)
+        english_font_size = data.get('english_font_size', 32)
+        korean_font_size = data.get('korean_font_size', 24)
+        
+        # 디버깅: 실제 받은 데이터 로그
+        logger.info(f"단일 문장 MP4 추출 요청 데이터: {data}")
+        logger.info(f"korean_subtitle 값: {korean_subtitle} (타입: {type(korean_subtitle)})")
+        
         # Get sentence data
         sentences = sentence_repo.get_by_media_id(media_id)
         sentence = next((s for s in sentences if s['id'] == sentence_id), None)
@@ -413,11 +621,22 @@ def extract_sentence_mp4(media_id, sentence_id):
         
         # Create output directory
         output_dir = file_manager.create_output_directory(media_id, media['filename'])
-        output_filename = f'sentence_{sentence_id}_{sentence["startTime"]:.1f}s-{sentence["endTime"]:.1f}s.mp4'
+        
+        # Generate filename with subtitle suffix
+        subtitle_suffix = file_manager._get_subtitle_suffix({
+            'english': english_subtitle,
+            'korean': korean_subtitle
+        })
+        output_filename = f'sentence_{sentence_id}_{sentence["startTime"]:.1f}s-{sentence["endTime"]:.1f}s{subtitle_suffix}.mp4'
         output_file = os.path.join(output_dir, output_filename)
         
-        # Extract with subtitles (always include English for single sentence)
-        subtitle_options = {'english': True, 'korean': False}
+        # Extract with subtitles
+        subtitle_options = {
+            'english': english_subtitle,
+            'korean': korean_subtitle,
+            'english_font_size': english_font_size,
+            'korean_font_size': korean_font_size
+        }
         success = media_extractor.extract_sentence_with_subtitles(
             input_file, output_file, sentence, subtitle_options, is_video
         )
@@ -869,6 +1088,14 @@ def extract_bookmarked_mp4(media_id):
         data = request.get_json() or {}
         subtitle_english = data.get('subtitle_english', True)
         subtitle_korean = data.get('subtitle_korean', False)
+        include_commentary = data.get('include_commentary', False)
+        commentary_style = data.get('commentary_style', 'orange')
+        english_font_size = data.get('english_font_size', 32)
+        korean_font_size = data.get('korean_font_size', 24)
+        
+        # 디버깅: 실제 받은 데이터 로그
+        logger.info(f"북마크 MP4 추출 요청 데이터: {data}")
+        logger.info(f"subtitle_korean 값: {subtitle_korean} (타입: {type(subtitle_korean)})")
         
         # Get bookmarked sentences
         bookmarked_sentences = sentence_repo.get_bookmarked_by_media_id(media_id)
@@ -878,7 +1105,7 @@ def extract_bookmarked_mp4(media_id):
         # Start background processing
         thread = threading.Thread(
             target=extract_bulk_mp4_background,
-            args=(media_id, bookmarked_sentences, 'bookmarked', subtitle_english, subtitle_korean)
+            args=(media_id, bookmarked_sentences, 'bookmarked', subtitle_english, subtitle_korean, english_font_size, korean_font_size, include_commentary, commentary_style)
         )
         thread.daemon = True
         thread.start()
@@ -896,6 +1123,14 @@ def extract_all_sentences_mp4(media_id):
         data = request.get_json() or {}
         subtitle_english = data.get('subtitle_english', True)
         subtitle_korean = data.get('subtitle_korean', False)
+        include_commentary = data.get('include_commentary', False)
+        commentary_style = data.get('commentary_style', 'orange')
+        english_font_size = data.get('english_font_size', 32)
+        korean_font_size = data.get('korean_font_size', 24)
+        
+        # 디버깅: 실제 받은 데이터 로그
+        logger.info(f"전체 문장 MP4 추출 요청 데이터: {data}")
+        logger.info(f"subtitle_korean 값: {subtitle_korean} (타입: {type(subtitle_korean)})")
         
         # Get all sentences
         all_sentences = sentence_repo.get_by_media_id(media_id)
@@ -905,7 +1140,7 @@ def extract_all_sentences_mp4(media_id):
         # Start background processing
         thread = threading.Thread(
             target=extract_bulk_mp4_background,
-            args=(media_id, all_sentences, 'all', subtitle_english, subtitle_korean)
+            args=(media_id, all_sentences, 'all', subtitle_english, subtitle_korean, english_font_size, korean_font_size, include_commentary, commentary_style)
         )
         thread.daemon = True
         thread.start()
@@ -945,7 +1180,7 @@ def extract_all_mp4(media_id):
         logger.error(f"Error starting full media MP4 extraction for media {media_id}: {e}")
         return jsonify({'error': str(e)}), 500
 
-def extract_bulk_mp4_background(media_id, sentences, extraction_type, subtitle_english, subtitle_korean):
+def extract_bulk_mp4_background(media_id, sentences, extraction_type, subtitle_english, subtitle_korean, english_font_size=32, korean_font_size=24, include_commentary=False, commentary_style='orange'):
     """Background processing for bulk MP4 extraction"""
     try:
         processing_status[f"{media_id}_{extraction_type}"] = {
@@ -962,7 +1197,14 @@ def extract_bulk_mp4_background(media_id, sentences, extraction_type, subtitle_e
         input_file = file_manager.get_media_path(media['filename'])
         
         # Create output directory with subtitle suffix
-        subtitle_options = {'english': subtitle_english, 'korean': subtitle_korean}
+        subtitle_options = {
+            'english': subtitle_english, 
+            'korean': subtitle_korean,
+            'english_font_size': english_font_size,
+            'korean_font_size': korean_font_size,
+            'include_commentary': include_commentary,
+            'commentary_style': commentary_style
+        }
         base_dir = file_manager.create_output_directory(media_id, media['filename'])
         output_dir = file_manager.create_extraction_directory(base_dir, extraction_type, subtitle_options)
         
@@ -977,11 +1219,10 @@ def extract_bulk_mp4_background(media_id, sentences, extraction_type, subtitle_e
                     'message': f'추출 중... ({i+1}/{total_sentences})'
                 }
                 
-                # Generate output filename
-                if extraction_type == 'bookmarked':
-                    output_filename = f'bookmarked_{sentence["order"]:04d}_{extraction_type}.mp4'
-                else:
-                    output_filename = f'{sentence["order"]:04d}_{extraction_type}.mp4'
+                # Generate output filename with subtitle suffix
+                subtitle_suffix = file_manager._get_subtitle_suffix(subtitle_options)
+                base_filename = f'{sentence["order"]:04d}'
+                output_filename = f'{base_filename}{subtitle_suffix}.mp4'
                 
                 output_file = os.path.join(output_dir, output_filename)
                 
@@ -2013,6 +2254,96 @@ def get_word_difficulty_batch():
     except Exception as e:
         logger.error(f"Batch word difficulty error: {e}")
         return jsonify({'error': str(e)}), 500
+
+def auto_spacy_analysis(media_id, sentence_ids):
+    """Auto SpaCy analysis after subtitle import"""
+    try:
+        logger.info(f"Starting auto SpaCy analysis for media {media_id}")
+        time.sleep(2)  # Brief delay
+        
+        for sentence_id in sentence_ids:
+            sentence = sentence_repo.get_by_id(sentence_id)
+            if not sentence or not sentence.get('english'):
+                continue
+                
+            if SPACY_AVAILABLE:
+                doc = nlp(sentence['english'])
+                verbs = []
+                
+                for token in doc:
+                    if token.pos_ == 'VERB' and not token.is_stop and len(token.text) > 2:
+                        verbs.append(token.text)
+                
+                unique_verbs = list(set(verbs))[:3]
+                verbs_json = json.dumps(unique_verbs)
+                sentence_repo.update_verbs(sentence_id, verbs_json)
+        
+        logger.info(f"Completed auto SpaCy analysis for media {media_id}")
+        
+        # Auto-trigger translation
+        threading.Thread(target=auto_translation, args=(media_id, sentence_ids)).start()
+        
+    except Exception as e:
+        logger.error(f"Error in auto SpaCy analysis: {e}")
+
+def auto_translation(media_id, sentence_ids):
+    """Auto translation after SpaCy analysis"""
+    try:
+        logger.info(f"Starting auto translation for media {media_id}")
+        time.sleep(5)  # Wait for SpaCy to complete
+        
+        for sentence_id in sentence_ids:
+            sentence = sentence_repo.get_by_id(sentence_id)
+            if not sentence or not sentence.get('english') or sentence.get('korean'):
+                continue
+            
+            # Simple mock translation for now
+            english_text = sentence['english']
+            korean_text = f"[번역] {english_text}"
+            sentence_repo.update_korean(sentence_id, korean_text)
+        
+        logger.info(f"Completed auto translation for media {media_id}")
+        
+        # Auto-trigger vocabulary analysis
+        threading.Thread(target=auto_vocabulary_analysis, args=(media_id, sentence_ids)).start()
+        
+    except Exception as e:
+        logger.error(f"Error in auto translation: {e}")
+
+def auto_vocabulary_analysis(media_id, sentence_ids):
+    """Auto vocabulary analysis after translation"""
+    try:
+        logger.info(f"Starting auto vocabulary analysis for media {media_id}")
+        time.sleep(3)  # Wait for translation to complete
+        
+        for sentence_id in sentence_ids:
+            sentence = sentence_repo.get_by_id(sentence_id)
+            if not sentence or not sentence.get('english'):
+                continue
+            
+            # Extract words from sentence
+            words = re.findall(r'\b[a-zA-Z]+\b', sentence['english'].lower())
+            
+            for word in set(words):
+                if len(word) < 3:
+                    continue
+                    
+                if word_difficulty_repo.get_word_difficulty(word):
+                    continue
+                
+                # Simple difficulty assignment
+                if word in CEFR_WORD_LEVELS:
+                    difficulty = CEFR_WORD_LEVELS[word]
+                else:
+                    difficulty = 'normal'
+                    
+                level = 'C1/C2' if difficulty == 'hard' else 'A1-B2'
+                word_difficulty_repo.cache_word_difficulty(word, difficulty, level)
+        
+        logger.info(f"Completed auto vocabulary analysis for media {media_id}")
+        
+    except Exception as e:
+        logger.error(f"Error in auto vocabulary analysis: {e}")
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8000)

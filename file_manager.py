@@ -107,12 +107,14 @@ class FileManager:
     def create_extraction_directory(self, base_dir: str, extraction_type: str, 
                                   subtitle_options: Optional[dict] = None) -> str:
         """Create directory for specific extraction type"""
-        if subtitle_options:
-            suffix = self._get_subtitle_suffix(subtitle_options)
-            dir_name = f"{extraction_type}_{suffix}" if suffix else extraction_type
-        else:
-            dir_name = extraction_type
+        # Map extraction types to directory names
+        type_mapping = {
+            'all': 'all',
+            'bookmarked': 'bookmark', 
+            'clips': 'clips'
+        }
         
+        dir_name = type_mapping.get(extraction_type, extraction_type)
         extraction_dir = Path(base_dir) / dir_name
         extraction_dir.mkdir(exist_ok=True)
         
@@ -123,14 +125,25 @@ class FileManager:
         english = subtitle_options.get('english', False)
         korean = subtitle_options.get('korean', False)
         
+        # 디버깅 로그 추가
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"_get_subtitle_suffix 호출됨")
+        logger.info(f"subtitle_options: {subtitle_options}")
+        logger.info(f"english: {english}, korean: {korean}")
+        
         if english and korean:
-            return 'engkor'
+            logger.info("반환값: _eng_kor")
+            return '_eng_kor'
         elif english:
-            return 'eng'
+            logger.info("반환값: _eng")
+            return '_eng'
         elif korean:
-            return 'kor'
+            logger.info("반환값: _kor")
+            return '_kor'
         else:
-            return 'nosub'
+            logger.info("반환값: '' (빈 문자열)")
+            return ''  # No suffix for no subtitles
     
     @staticmethod
     def get_clean_media_name(filename: str) -> str:
