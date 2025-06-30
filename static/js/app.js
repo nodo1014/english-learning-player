@@ -144,17 +144,193 @@ function formatDuration(seconds) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-// Temporary global functions for backward compatibility
+// Global functions for HTML onclick handlers
 window.loadMediaList = loadMediaList;
 window.selectMedia = selectMedia;
 window.handleFileUpload = handleFileUpload;
 window.showUploadSection = showUploadSection;
 window.generateSubtitles = generateSubtitles;
+window.playSentence = playSentence;
+window.toggleBookmark = toggleBookmark;
+window.extractSentenceMP3 = extractSentenceMP3;
 
-// Placeholder functions (to be implemented in modules)
-function selectMedia(mediaId) {
+// Media selection function
+async function selectMedia(mediaId) {
     console.log('Selecting media:', mediaId);
-    // TODO: Implement in media-player module
+    
+    try {
+        // Update current media
+        currentMedia = mediaId;
+        setCurrentMedia(mediaId);
+        
+        // Update UI to show selected media
+        document.querySelectorAll('.media-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.target.closest('.media-item')?.classList.add('active');
+        
+        // Get media info and sentences
+        const [media, sentencesData] = await Promise.all([
+            apiClient.getMediaById(mediaId),
+            apiClient.getSentences(mediaId)
+        ]);
+        
+        sentences = sentencesData;
+        setSentences(sentencesData);
+        
+        console.log('Media loaded:', media);
+        console.log('Sentences loaded:', sentences.length);
+        
+        // Setup media player
+        setupMediaPlayer(media);
+        
+        // Display sentences
+        displaySentences(sentencesData);
+        
+        // Update UI sections
+        const uploadSection = document.getElementById('uploadSection');
+        const processingOptions = document.getElementById('processingOptions');
+        
+        if (sentencesData.length > 0) {
+            if (uploadSection) uploadSection.style.display = 'none';
+            if (processingOptions) processingOptions.style.display = 'none';
+        } else {
+            if (uploadSection) uploadSection.style.display = 'none';
+            if (processingOptions) processingOptions.style.display = 'block';
+        }
+        
+        uiManager.showMessage(`미디어 "${media.originalFilename || media.filename}" 로드 완료`, 'success');
+        
+    } catch (error) {
+        console.error('Error selecting media:', error);
+        uiManager.showMessage('미디어 로드 실패', 'error');
+    }
+}
+
+function setupMediaPlayer(media) {
+    const mediaPlayerDiv = document.getElementById('mediaPlayerDiv');
+    
+    if (!mediaPlayerDiv) return;
+    
+    mediaPlayerDiv.style.display = 'block';
+    
+    const mediaPath = `/uploads/${media.filename}`;
+    
+    if (media.fileType === 'video') {
+        videoPlayer.src = mediaPath;
+        videoPlayer.style.display = 'block';
+        audioPlayer.style.display = 'none';
+        currentPlayer = videoPlayer;
+        
+        setTimeout(() => uiManager.updateVideoSize(), 100);
+    } else {
+        audioPlayer.src = mediaPath;
+        audioPlayer.style.display = 'block';
+        videoPlayer.style.display = 'none';
+        currentPlayer = audioPlayer;
+    }
+    
+    console.log(`${media.fileType} player setup:`, mediaPath);
+}
+
+function displaySentences(sentences) {
+    const sentencesDisplay = document.getElementById('sentencesDisplay');
+    const sentenceList = document.getElementById('sentenceList');
+    
+    if (!sentences || sentences.length === 0) {
+        if (sentencesDisplay) {
+            sentencesDisplay.innerHTML = '<div style="text-align: center; color: #858585; padding: 20px;">문장이 없습니다. 자막을 생성해주세요.</div>';
+        }
+        if (sentenceList) {
+            sentenceList.innerHTML = '<div style="color: #858585; padding: 10px;">문장이 없습니다.</div>';
+        }
+        return;
+    }
+    
+    // Group by chapter/scene for main display
+    const grouped = groupSentences(sentences);
+    
+    if (sentencesDisplay) {
+        sentencesDisplay.innerHTML = renderGroupedSentences(grouped);
+    }
+    
+    if (sentenceList) {
+        sentenceList.innerHTML = sentences.map(s => `
+            <div class="sentence-item" onclick="playSentence(${s.id})">
+                <span class="sentence-number">${s.order}.</span>
+                <div class="sentence-text">${s.english}</div>
+                ${s.korean ? `<div class="sentence-korean">${s.korean}</div>` : ''}
+            </div>
+        `).join('');
+    }
+}
+
+function groupSentences(sentences) {
+    // Simple grouping by chapter/scene
+    return sentences.reduce((acc, sentence) => {
+        const chapter = sentence.chapterTitle || 'Chapter 1';
+        const scene = sentence.sceneTitle || 'Scene 1';
+        
+        if (!acc[chapter]) acc[chapter] = {};
+        if (!acc[chapter][scene]) acc[chapter][scene] = [];
+        
+        acc[chapter][scene].push(sentence);
+        return acc;
+    }, {});
+}
+
+function renderGroupedSentences(grouped) {
+    return Object.entries(grouped).map(([chapterName, scenes]) => `
+        <div class="chapter-section">
+            <div class="chapter-header">
+                <div class="chapter-title">${chapterName}</div>
+            </div>
+            <div class="chapter-content">
+                ${Object.entries(scenes).map(([sceneName, sentences]) => `
+                    <div class="scene-section">
+                        <div class="scene-header">
+                            <div class="scene-title">${sceneName}</div>
+                        </div>
+                        <div class="scene-content">
+                            ${sentences.map(s => `
+                                <div class="sentence-item" onclick="playSentence(${s.id})">
+                                    <span class="sentence-number">${s.order}.</span>
+                                    <div class="sentence-text">${s.english}</div>
+                                    ${s.korean ? `<div class="sentence-korean">${s.korean}</div>` : ''}
+                                    <button class="bookmark-btn" onclick="toggleBookmark(${s.id}, event)">⭐</button>
+                                    <button class="extract-btn" onclick="extractSentenceMP3(${s.id}, event)">MP3</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Helper functions
+function playSentence(sentenceId) {
+    const sentence = sentences.find(s => s.id === sentenceId);
+    if (sentence && currentPlayer) {
+        currentPlayer.currentTime = sentence.startTime;
+        currentPlayer.play();
+        currentSentenceIndex = sentences.indexOf(sentence);
+        currentSubtitleSentence = sentence;
+        console.log('Playing sentence:', sentence.english);
+    }
+}
+
+function toggleBookmark(sentenceId, event) {
+    event.stopPropagation();
+    console.log('Toggle bookmark:', sentenceId);
+    // TODO: Implement bookmark API call
+}
+
+function extractSentenceMP3(sentenceId, event) {
+    event.stopPropagation();
+    console.log('Extract MP3:', sentenceId);
+    // TODO: Implement MP3 extraction
 }
 
 function handleFileUpload(event) {
