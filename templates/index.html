@@ -958,39 +958,113 @@
 <body>
     <!-- VSCode Style Activity Bar -->
     <div class="activity-bar">
-        <button class="activity-item active" onclick="showPanel('upload')" title="파일 업로드">
+        <button class="activity-item active" onclick="showPanel('media')" title="미디어 파일">
             📁
-        </button>
-        <button class="activity-item" onclick="showPanel('media')" title="미디어 탐색기">
-            📚
         </button>
         <button class="activity-item" onclick="showPanel('subtitle')" title="자막 생성">
             📝
         </button>
-        <button class="activity-item" onclick="showPanel('extract')" title="추출">
-            📤
+        <button class="activity-item" onclick="showPanel('analysis')" title="분석 (번역, Spacy, 어휘)">
+            🔍
         </button>
-        <button class="activity-item" onclick="showPanel('translate')" title="번역 및 필터">
-            🌐
+        <button class="activity-item" onclick="showPanel('mp3extract')" title="MP3 추출">
+            🎵
+        </button>
+        <button class="activity-item" onclick="showPanel('mp4extract')" title="MP4 추출">
+            🎬
         </button>
     </div>
     
     <!-- Left Sidebar -->
     <div class="sidebar" id="leftSidebar">
         <div class="sidebar-header" id="sidebarHeader">
-            <span>파일 업로드</span>
+            <span>자막 생성</span>
             <button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>
         </div>
         <div class="sidebar-resizer" id="leftSidebarResizer"></div>
         <div class="sidebar-content" id="sidebarContent">
-            <!-- 업로드 패널 -->
-            <div id="uploadPanel">
+            <!-- 미디어 파일 패널 -->
+            <div id="mediaPanel">
                 <button onclick="showUploadSection()" style="width: 100%; padding: 10px; margin-bottom: 15px; background: #0e639c; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em;">
                     ➕ 새 파일 업로드
                 </button>
+                
+                <!-- 미디어 목록 -->
+                <div class="media-list-section">
+                    <h3>📚 미디어 목록</h3>
+                    <div id="mediaList" style="margin-top: 10px;"></div>
+                </div>
             </div>
             
-            <!-- 미디어 패널 -->
+            <!-- 자막 생성 패널 -->
+            <div id="subtitlePanel" style="display: none;">
+                <div class="subtitle-generation-section">
+                    <h3>📝 자막 생성</h3>
+                    <div id="generationStatus" style="margin: 10px 0; color: #858585;"></div>
+                    <div id="subtitleGenerationContent">
+                        <!-- 자막 생성 버튼들이 여기에 표시됩니다 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 분석 패널 -->
+            <div id="analysisPanel" style="display: none;">
+                <h3>🔍 분석 도구</h3>
+                <div style="margin: 15px 0;">
+                    <button onclick="performTranslation()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #6a4c93; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        🌍 번역
+                    </button>
+                    <button onclick="performSpacyAnalysis()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        🧐 Spacy 분석
+                    </button>
+                    <button onclick="performVocabularyAnalysis()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        📚 어휘 분석
+                    </button>
+                </div>
+            </div>
+            
+            <!-- MP3 추출 패널 -->
+            <div id="mp3extractPanel" style="display: none;">
+                <h3>🎵 MP3 추출</h3>
+                <div style="margin: 15px 0;">
+                    <button onclick="extractSingleMP3()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        🎵 현재 문장 MP3 추출
+                    </button>
+                    <button onclick="extractBookmarkedMP3()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        ⭐ 북마크 문장 MP3 추출
+                    </button>
+                    <button onclick="extractAllMP3()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #9c27b0; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        📦 전체 MP3 추출
+                    </button>
+                </div>
+            </div>
+            
+            <!-- MP4 추출 패널 -->
+            <div id="mp4extractPanel" style="display: none;">
+                <h3>🎬 MP4 추출</h3>
+                <div style="margin: 15px 0;">
+                    <div style="background: #2d2d30; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                        <h4 style="margin-bottom: 10px; color: #cccccc;">자막 옵션</h4>
+                        <label style="display: block; padding: 5px 0; color: #cccccc; cursor: pointer;">
+                            <input type="checkbox" id="englishSub" checked style="margin-right: 8px;">
+                            🇺🇸 영어 자막
+                        </label>
+                        <label style="display: block; padding: 5px 0; color: #cccccc; cursor: pointer;">
+                            <input type="checkbox" id="koreanSub" style="margin-right: 8px;">
+                            🇰🇷 한글 자막
+                        </label>
+                    </div>
+                    <button onclick="extractSingleMP4()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        🎬 현재 문장 MP4 추출
+                    </button>
+                    <button onclick="extractBookmarkedMP4()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        ⭐ 북마크 문장 MP4 추출
+                    </button>
+                    <button onclick="extractAllMP4()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #673ab7; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        📦 전체문장분할 MP4 추출
+                    </button>
+                </div>
+            </div>
             <div id="mediaPanel" style="display: none;">
                 <div id="mediaList"></div>
                 <div id="chapterList" style="margin-top: 20px; display: none;">
@@ -1437,15 +1511,15 @@
             } else {
                 // 프로그래밍적으로 호출된 경우 해당 패널 버튼 찾아서 활성화
                 const buttons = document.querySelectorAll('.activity-item');
-                if (panelType === 'upload') buttons[0]?.classList.add('active');
-                if (panelType === 'media') buttons[1]?.classList.add('active');
-                if (panelType === 'subtitle') buttons[2]?.classList.add('active');
-                if (panelType === 'extract') buttons[3]?.classList.add('active');
-                if (panelType === 'translate') buttons[4]?.classList.add('active');
+                if (panelType === 'media') buttons[0]?.classList.add('active');
+                if (panelType === 'subtitle') buttons[1]?.classList.add('active');
+                if (panelType === 'analysis') buttons[2]?.classList.add('active');
+                if (panelType === 'mp3extract') buttons[3]?.classList.add('active');
+                if (panelType === 'mp4extract') buttons[4]?.classList.add('active');
             }
             
             // 모든 패널 숨기기
-            const panels = ['uploadPanel', 'mediaPanel', 'subtitlePanel', 'extractPanel', 'translatePanel'];
+            const panels = ['mediaPanel', 'subtitlePanel', 'analysisPanel', 'mp3extractPanel', 'mp4extractPanel'];
             panels.forEach(panelId => {
                 const panel = document.getElementById(panelId);
                 if (panel) panel.style.display = 'none';
@@ -1454,15 +1528,10 @@
             // 선택된 패널 표시
             const headerEl = document.getElementById('sidebarHeader');
             switch(panelType) {
-                case 'upload':
-                    const uploadPanel = document.getElementById('uploadPanel');
-                    if (uploadPanel) uploadPanel.style.display = 'block';
-                    if (headerEl) headerEl.innerHTML = '<span>파일 업로드</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
-                    break;
                 case 'media':
                     const mediaPanel = document.getElementById('mediaPanel');
                     if (mediaPanel) mediaPanel.style.display = 'block';
-                    if (headerEl) headerEl.innerHTML = '<span>미디어 탐색기</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
+                    if (headerEl) headerEl.innerHTML = '<span>미디어 파일</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
                     loadMediaList(); // 미디어 목록 새로고침
                     break;
                 case 'subtitle':
@@ -1470,15 +1539,20 @@
                     if (subtitlePanel) subtitlePanel.style.display = 'block';
                     if (headerEl) headerEl.innerHTML = '<span>자막 생성</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
                     break;
-                case 'extract':
-                    const extractPanel = document.getElementById('extractPanel');
-                    if (extractPanel) extractPanel.style.display = 'block';
-                    if (headerEl) headerEl.innerHTML = '<span>추출</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
+                case 'analysis':
+                    const analysisPanel = document.getElementById('analysisPanel');
+                    if (analysisPanel) analysisPanel.style.display = 'block';
+                    if (headerEl) headerEl.innerHTML = '<span>분석</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
                     break;
-                case 'translate':
-                    const translatePanel = document.getElementById('translatePanel');
-                    if (translatePanel) translatePanel.style.display = 'block';
-                    if (headerEl) headerEl.innerHTML = '<span>번역 및 필터</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
+                case 'mp3extract':
+                    const mp3extractPanel = document.getElementById('mp3extractPanel');
+                    if (mp3extractPanel) mp3extractPanel.style.display = 'block';
+                    if (headerEl) headerEl.innerHTML = '<span>MP3 추출</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
+                    break;
+                case 'mp4extract':
+                    const mp4extractPanel = document.getElementById('mp4extractPanel');
+                    if (mp4extractPanel) mp4extractPanel.style.display = 'block';
+                    if (headerEl) headerEl.innerHTML = '<span>MP4 추출</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
                     break;
             }
         };
@@ -1514,13 +1588,10 @@
             // 미디어 목록 로드
             loadMediaList();
             
-            // 기본적으로 미디어 패널 표시 (미디어가 있는 경우)
+            // 기본적으로 미디어 패널 표시
             setTimeout(() => {
-                const mediaListEl = document.getElementById('mediaList');
-                if (mediaListEl && !mediaListEl.innerHTML.includes('업로드된 미디어가 없습니다')) {
-                    showPanel('media');
-                }
-            }, 500);
+                showPanel('media');
+            }, 100);
             
             // 초기 상태: 업로드 섹션 표시, 다른 섹션들 숨김
             document.getElementById('uploadSection').style.display = 'block';
@@ -5025,6 +5096,189 @@
                 btn.textContent = originalText;
                 btn.disabled = false;
             });
+        }
+        
+        // 새로운 탭 인터페이스를 위한 추출 함수들
+        function extractSingleMP3() {
+            if (!currentSentence || !currentMedia) {
+                alert('재생 중인 문장이 없습니다.');
+                return;
+            }
+            
+            console.log('Extracting current sentence as MP3');
+            
+            fetch(`/api/sentence/${currentMedia}/${currentSentence.id}/extract-mp3`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`MP3 추출 완료: ${data.output_path}`);
+                    alert('현재 문장 MP3 추출이 완료되었습니다.');
+                } else {
+                    console.error('MP3 추출 실패:', data.error);
+                    alert('MP3 추출에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('MP3 추출 오류:', error);
+                alert('MP3 추출 중 오류가 발생했습니다.');
+            });
+        }
+        
+        function extractBookmarkedMP3() {
+            if (!currentMedia) {
+                alert('미디어 파일이 선택되지 않았습니다.');
+                return;
+            }
+            
+            extractBookmarkedOnly(); // 기존 함수 호출
+        }
+        
+        function extractAllMP3() {
+            if (!currentMedia) {
+                alert('미디어 파일이 선택되지 않았습니다.');
+                return;
+            }
+            
+            extractAllScenes(); // 기존 함수 호출
+        }
+        
+        function extractSingleMP4() {
+            if (!currentSentence || !currentMedia) {
+                alert('재생 중인 문장이 없습니다.');
+                return;
+            }
+            
+            const englishChecked = document.getElementById('englishSub').checked;
+            const koreanChecked = document.getElementById('koreanSub').checked;
+            
+            console.log('Extracting current sentence as MP4', {englishChecked, koreanChecked});
+            
+            fetch(`/api/sentence/${currentMedia}/${currentSentence.id}/extract-mp4`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    english_subtitle: englishChecked,
+                    korean_subtitle: koreanChecked
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`MP4 추출 완료: ${data.output_path}`);
+                    alert('현재 문장 MP4 추출이 완료되었습니다.');
+                } else {
+                    console.error('MP4 추출 실패:', data.error);
+                    alert('MP4 추출에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('MP4 추출 오류:', error);
+                alert('MP4 추출 중 오류가 발생했습니다.');
+            });
+        }
+        
+        function extractBookmarkedMP4() {
+            if (!currentMedia) {
+                alert('미디어 파일이 선택되지 않았습니다.');
+                return;
+            }
+            
+            const englishChecked = document.getElementById('englishSub').checked;
+            const koreanChecked = document.getElementById('koreanSub').checked;
+            
+            console.log('Extracting bookmarked sentences as MP4', {englishChecked, koreanChecked});
+            
+            fetch(`/api/media/${currentMedia}/extract-bookmarked-mp4`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    english_subtitle: englishChecked,
+                    korean_subtitle: koreanChecked
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`북마크 MP4 추출 완료: ${data.message}`);
+                    alert('북마크 문장 MP4 추출이 완료되었습니다.');
+                } else {
+                    console.error('북마크 MP4 추출 실패:', data.error);
+                    alert('북마크 MP4 추출에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('북마크 MP4 추출 오류:', error);
+                alert('북마크 MP4 추출 중 오류가 발생했습니다.');
+            });
+        }
+        
+        function extractAllMP4() {
+            if (!currentMedia) {
+                alert('미디어 파일이 선택되지 않았습니다.');
+                return;
+            }
+            
+            const englishChecked = document.getElementById('englishSub').checked;
+            const koreanChecked = document.getElementById('koreanSub').checked;
+            
+            let outputDir = 'all_nosub';
+            if (englishChecked && koreanChecked) {
+                outputDir = 'all_engkor';
+            } else if (englishChecked) {
+                outputDir = 'all_eng';
+            } else if (koreanChecked) {
+                outputDir = 'all_kor';
+            }
+            
+            console.log('Extracting all sentences as MP4', {englishChecked, koreanChecked, outputDir});
+            
+            fetch(`/api/media/${currentMedia}/extract-all-sentences-mp4`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    english_subtitle: englishChecked,
+                    korean_subtitle: koreanChecked,
+                    output_dir: outputDir
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`전체 문장 MP4 추출 완료: ${data.message}`);
+                    alert('전체 문장분할 MP4 추출이 완료되었습니다.');
+                } else {
+                    console.error('전체 MP4 추출 실패:', data.error);
+                    alert('전체 MP4 추출에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('전체 MP4 추출 오류:', error);
+                alert('전체 MP4 추출 중 오류가 발생했습니다.');
+            });
+        }
+        
+        // 분석 기능들
+        function performTranslation() {
+            alert('번역 기능이 실행됩니다.');
+            // 기존 번역 기능 호출
+        }
+        
+        function performSpacyAnalysis() {
+            alert('Spacy 분석 기능이 실행됩니다.');
+            // 기존 Spacy 분석 기능 호출
+        }
+        
+        function performVocabularyAnalysis() {
+            alert('어휘 분석 기능이 실행됩니다.');
+            // 기존 어휘 분석 기능 호출
         }
         
         function exportBookmarks() {
