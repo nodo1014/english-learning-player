@@ -1061,6 +1061,9 @@
         <button class="activity-item active" onclick="showPanel('media')" title="미디어 파일">
             📁
         </button>
+        <button class="activity-item" onclick="showPanel('upload')" title="파일 업로드">
+            ⬆️
+        </button>
         <button class="activity-item" onclick="showPanel('subtitle')" title="자막 생성">
             📝
         </button>
@@ -1487,8 +1490,6 @@
                         <span style="color: #cccccc; font-size: 0.9em; min-width: 60px;">🗣️ 자막:</span>
                         <button id="subtitleEngBtn" onclick="toggleEnglishSubtitle()" style="padding: 4px 8px; background: #0e639c; color: #ffffff; border: 1px solid #0e639c; border-radius: 4px; cursor: pointer; font-size: 0.9em;">EN</button>
                         <button id="subtitleKorBtn" onclick="toggleKoreanSubtitle()" style="padding: 4px 8px; background: #333333; color: #cccccc; border: 1px solid #555555; border-radius: 4px; cursor: pointer; font-size: 0.9em;">한</button>
-                        <button id="verbHighlightBtn" onclick="toggleVerbHighlight()" style="padding: 4px 8px; background: #ffeb3b; color: #333; border: 1px solid #ffeb3b; border-radius: 4px; cursor: pointer; font-size: 0.9em; margin-left: 8px;">💛ON</button>
-                        <button id="verbModeBtn" onclick="toggleVerbMode()" style="padding: 4px 8px; background: #333333; color: #cccccc; border: 1px solid #555555; border-radius: 4px; cursor: pointer; font-size: 0.9em;" title="하이라이트 모드 (클릭하면 빈칸 모드)">🔆</button>
                     </div>
                     
                     <!-- 크기 조절 -->
@@ -1563,8 +1564,8 @@
                 <button class="btn" onclick="startTranslation()" style="background: #17a2b8; border: 1px solid #17a2b8;">
                     🌐 번역
                 </button>
-                <button class="btn" onclick="startVerbAnalysisManual()" style="background: #ffc107; color: #333; border: 1px solid #ffc107;">
-                    🔍 SpaCy 분석
+                <button class="btn" disabled style="background: #666666; color: #cccccc; border: 1px solid #666666; cursor: not-allowed;" title="SpaCy 제거로 인해 비활성화됨">
+                    📝 단어 패턴 매칭 (비활성화)
                 </button>
                 <button class="btn" onclick="startVocabularyCacheManual()" style="background: #6f42c1; border: 1px solid #6f42c1;">
                     📚 어휘 분석 DB 저장
@@ -1766,8 +1767,7 @@
             audioPlayer.addEventListener('timeupdate', updateAudioSubtitles);
             
             // 버튼 초기화
-            updateVerbHighlightButton();
-            updateVerbModeButton();
+            // SpaCy 관련 버튼 업데이트 호출 제거됨
             
             // 키보드 이벤트 리스너 추가
             document.addEventListener('keydown', handleKeyboardControls);
@@ -2610,7 +2610,7 @@
                                     badges.push(`<span class="status-badge translation" title="번역 ${percentage}%">${stageText}${percentage}%</span>`);
                                 }
                                 if (m.spacyPercentage > 0) {
-                                    badges.push(`<span class="status-badge spacy" title="SpaCy 분석 ${m.spacyPercentage}%">동사${m.spacyPercentage}%</span>`);
+                                    // SpaCy 상태 배지 제거됨
                                 }
                                 if (m.vocabularyPercentage > 0) {
                                     badges.push(`<span class="status-badge vocabulary" title="어휘 분석 ${m.vocabularyPercentage}%">어휘${m.vocabularyPercentage}%</span>`);
@@ -3015,9 +3015,7 @@
                 currentSubtitleDiv.innerHTML = formatSpeakerText(currentSentence.english, currentSentence.id);
                 
                 // 동사 하이라이트를 나중에 적용 (비동기로)
-                if (highlightVerbs) {
-                    applyVerbHighlightToElement(currentSubtitleDiv, currentSentence.english, currentSentence.id);
-                }
+                // SpaCy 동사 하이라이트 호출 제거됨
                 
                 // 현재 자막 번역
                 if (currentSentence.korean && currentSentence.korean.trim() !== '') {
@@ -3095,9 +3093,7 @@
                 currentSubtitleDiv.innerHTML = formatSpeakerText(currentSentence.english, currentSentence.id);
                 
                 // 동사 하이라이트를 나중에 적용 (비동기로)
-                if (highlightVerbs) {
-                    applyVerbHighlightToElement(currentSubtitleDiv, currentSentence.english, currentSentence.id);
-                }
+                // SpaCy 동사 하이라이트 호출 제거됨
                 
                 // 현재 자막 번역
                 if (currentSentence.korean && currentSentence.korean.trim() !== '') {
@@ -3198,9 +3194,7 @@
                     currentOverlayText = subtitleText;
                     
                     // 동사 하이라이트를 나중에 적용 (영어 자막이 있을 때만)
-                    if (highlightVerbs && showEnglishSubtitle && currentSentence.english) {
-                        applyVerbHighlightToElement(overlaySubtitle, currentSentence.english, currentSentence.id);
-                    }
+                    // SpaCy 동사 하이라이트 조건문 제거됨
                 } else {
                     overlaySubtitle.style.display = 'none';
                 }
@@ -3217,150 +3211,13 @@
         let overlayPosition = 'center'; // 기본 위치 (중앙)
         let showEnglishSubtitle = true; // 영어 자막 표시 여부
         let showKoreanSubtitle = false; // 한국어 자막 표시 여부
-        let highlightVerbs = true; // 동사 하이라이트 기본값
-        let verbHighlightMode = 'highlight'; // 'highlight' or 'blank'
-        let verbCache = new Map(); // 동사 감지 결과 캐시
-        let showBlanks = true; // 빈칸 표시 여부 (C키로 토글)
+        // SpaCy 관련 변수들 제거됨
         
-        // spaCy API를 통한 정확한 동사 감지 (DB 캐시 우선)
-        async function detectVerbs(text, sentenceId = null) {
-            if (!text) return [];
-            
-            // 로컬 캐시 확인
-            if (verbCache.has(text)) {
-                return verbCache.get(text);
-            }
-            
-            try {
-                const requestBody = { text: text };
-                if (sentenceId) {
-                    requestBody.sentence_id = sentenceId;
-                }
-                
-                const response = await fetch('/api/detect-verbs', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-                
-                const data = await response.json();
-                const verbs = data.verbs || [];
-                
-                // 캐시에 저장 (DB 캐시든 실시간이든)
-                verbCache.set(text, verbs);
-                
-                if (data.cached) {
-                    console.log('Using cached verbs from DB:', verbs);
-                } else {
-                    console.log('Real-time verb analysis:', verbs);
-                }
-                
-                return verbs;
-            } catch (error) {
-                console.warn('spaCy API 호출 실패, 폴백 사용:', error);
-                
-                // 폴백: 간단한 패턴 매칭
-                const fallbackVerbs = _detectVerbsFallback(text);
-                verbCache.set(text, fallbackVerbs);
-                return fallbackVerbs;
-            }
-        }
+        // SpaCy detectVerbs 함수 제거됨
         
-        // 폴백 동사 감지 (API 실패시)
-        function _detectVerbsFallback(text) {
-            const commonVerbs = ['am', 'is', 'are', 'was', 'were', 'have', 'has', 'had', 'do', 'does', 'did', 
-                               'go', 'went', 'come', 'came', 'get', 'got', 'make', 'made', 'take', 'took', 
-                               'work', 'works', 'play', 'plays', 'run', 'runs', 'walk', 'walks', 'talk', 'talks'];
-            
-            const words = text.toLowerCase().match(/\b\w+\b/g) || [];
-            const found = words.filter(word => commonVerbs.includes(word));
-            
-            return [...new Set(found)].slice(0, 3);
-        }
+        // SpaCy 폴백 함수 제거됨
         
-        // 동사 하이라이트 적용 함수 (비동기)
-        async function applyVerbHighlight(text, sentenceId = null) {
-            if (!text || !highlightVerbs) return text;
-            
-            const verbs = await detectVerbs(text, sentenceId);
-            let processedText = text;
-            
-            verbs.forEach(verb => {
-                const regex = new RegExp(`\\b(${verb})\\b`, 'gi');
-                
-                if (verbHighlightMode === 'highlight') {
-                    // 단순 컬러 변경 (배경 제거)
-                    processedText = processedText.replace(regex, 
-                        '<span style="color: #ff6b35; font-weight: 600;">$1</span>'
-                    );
-                } else if (verbHighlightMode === 'blank') {
-                    if (showBlanks) {
-                        // 빈칸으로 대체 (흰색 밑줄)
-                        processedText = processedText.replace(regex, 
-                            '<span style="color: #ffffff; border-bottom: 1px solid #ffffff; display: inline-block; min-width: ' + (verb.length * 8) + 'px; text-align: center;">' + '_'.repeat(verb.length) + '</span>'
-                        );
-                    } else {
-                        // 빈칸 숨김 (원래 단어 표시하지만 투명하게)
-                        processedText = processedText.replace(regex, 
-                            '<span style="color: transparent; background: none;">$1</span>'
-                        );
-                    }
-                }
-            });
-            
-            return processedText;
-        }
-        
-        // 동사 하이라이트 토글 함수
-        function toggleVerbHighlight() {
-            highlightVerbs = !highlightVerbs;
-            updateVerbHighlightButton();
-            updateCurrentSubtitles();
-        }
-        
-        // 동사 하이라이트 모드 전환 함수
-        function toggleVerbMode() {
-            verbHighlightMode = verbHighlightMode === 'highlight' ? 'blank' : 'highlight';
-            updateVerbModeButton();
-            updateCurrentSubtitles();
-        }
-        
-        // 버튼 스타일 업데이트
-        function updateVerbHighlightButton() {
-            const btn = document.getElementById('verbHighlightBtn');
-            if (highlightVerbs) {
-                btn.innerHTML = '💛ON';
-                btn.style.background = '#ffeb3b';
-                btn.style.borderColor = '#ffeb3b';
-                btn.style.color = '#333';
-            } else {
-                btn.innerHTML = '⚪OFF';
-                btn.style.background = '#333333';
-                btn.style.borderColor = '#555555';
-                btn.style.color = '#cccccc';
-            }
-        }
-        
-        function updateVerbModeButton() {
-            const btn = document.getElementById('verbModeBtn');
-            if (verbHighlightMode === 'highlight') {
-                btn.innerHTML = '🔆';
-                btn.title = '하이라이트 모드 (클릭하면 빈칸 모드)';
-            } else {
-                btn.innerHTML = '📝';
-                btn.title = '빈칸 모드 (클릭하면 하이라이트 모드)';
-            }
-        }
-        
-        // 현재 자막 업데이트
-        function updateCurrentSubtitles() {
-            if (currentSubtitleSentence) {
-                updateVideoSubtitles();
-                updateOverlaySubtitles(currentSubtitleSentence);
-            }
-        }
+        // SpaCy 동사 하이라이트 관련 함수들 모두 제거됨
         
         // 키보드 컨트롤 핸들러
         function handleKeyboardControls(event) {
@@ -3405,10 +3262,7 @@
                     toggleCurrentSubtitleBookmark();
                     break;
                     
-                case 'KeyC':
-                    event.preventDefault();
-                    toggleBlankVisibility();
-                    break;
+                // KeyC - SpaCy 빈칸 토글 제거됨
             }
         }
         
@@ -3528,51 +3382,9 @@
         }
         
         // 빈칸 표시/숨김 토글 (C키)
-        function toggleBlankVisibility() {
-            showBlanks = !showBlanks;
-            
-            // 빈칸 상태 표시
-            showBlankToggleIndicator(showBlanks);
-            
-            // 현재 표시된 자막들을 다시 업데이트
-            updateCurrentSubtitles();
-        }
+        // SpaCy toggleBlankVisibility 함수 제거됨
         
-        // 빈칸 토글 상태 표시기
-        function showBlankToggleIndicator(isVisible) {
-            // 기존 인디케이터 제거
-            const existingIndicator = document.getElementById('blankToggleIndicator');
-            if (existingIndicator) {
-                existingIndicator.remove();
-            }
-            
-            // 새 상태 인디케이터 생성
-            const indicator = document.createElement('div');
-            indicator.id = 'blankToggleIndicator';
-            indicator.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: rgba(0, 0, 0, 0.8);
-                color: white;
-                padding: 10px 20px;
-                border-radius: 5px;
-                font-size: 18px;
-                z-index: 10000;
-                pointer-events: none;
-            `;
-            indicator.innerHTML = isVisible ? '👁️ 빈칸 보이기' : '🙈 빈칸 숨기기';
-            
-            document.body.appendChild(indicator);
-            
-            // 2초 후 제거
-            setTimeout(() => {
-                if (indicator.parentNode) {
-                    indicator.remove();
-                }
-            }, 2000);
-        }
+        // SpaCy 빈칸 토글 인디케이터 함수 제거됨
         
         // 화자 구분을 위한 텍스트 처리 함수 (동기)
         async function formatSpeakerText(text, sentenceId = null, isOverlay = false) {
@@ -3715,19 +3527,7 @@
         
         // 단어장 추가 기능 제거됨 - 더 이상 사용하지 않음
         
-        // 동사 하이라이트를 나중에 적용하는 함수
-        async function applyVerbHighlightToElement(element, text, sentenceId = null) {
-            if (!text || !highlightVerbs) return;
-            
-            try {
-                const highlightedText = await applyVerbHighlight(text, sentenceId);
-                if (element && element.innerHTML !== highlightedText) {
-                    element.innerHTML = highlightedText;
-                }
-            } catch (error) {
-                console.warn('Error applying verb highlight:', error);
-            }
-        }
+        // SpaCy 동사 하이라이트 함수 제거됨
         
         // 영어 자막 토글 함수
         function toggleEnglishSubtitle() {

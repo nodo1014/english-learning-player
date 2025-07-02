@@ -113,51 +113,23 @@ async function loadMediaList() {
             return;
         }
         
-        // 각 미디어의 상태 정보를 병렬로 가져오기
-        const mediaPromises = media.map(async (m) => {
-            try {
-                // 문장 개수 확인 (자막 상태)
-                const sentencesResponse = await fetch(`/api/media/${m.id}/sentences-grouped`);
-                const sentences = await sentencesResponse.json();
-                const hasSentences = sentences && sentences.length > 0 && 
-                    sentences.some(chapter => chapter.scenes && chapter.scenes.length > 0 && 
-                        chapter.scenes.some(scene => scene.sentences && scene.sentences.length > 0));
-                
-                // 번역 상태 확인
-                const translationResponse = await fetch(`/api/media/${m.id}/translation-status`);
-                const translationData = await translationResponse.json();
-                const hasTranslation = translationData.progress > 0;
-                
-                // 분석 상태 확인 (SpaCy, 어휘)
-                let analysisData = { spacy: { percentage: 0 }, vocabulary: { percentage: 0 } };
-                try {
-                    const analysisResponse = await fetch(`/api/media/${m.id}/analysis-status`);
-                    if (analysisResponse.ok) {
-                        analysisData = await analysisResponse.json();
-                    }
-                } catch (error) {
-                    console.warn(`Failed to get analysis status for media ${m.id}:`, error);
-                }
-                
-                return {
-                    ...m,
-                    hasSentences,
-                    hasTranslation,
-                    translationProgress: translationData.progress || 0,
-                    translationStage: translationData.stage || 'idle',
-                    spacyPercentage: analysisData.spacy.percentage || 0,
-                    vocabularyPercentage: analysisData.vocabulary.percentage || 0
-                };
-            } catch (error) {
-                console.warn(`Failed to get status for media ${m.id}:`, error);
-                return { ...m, hasSentences: false, hasTranslation: false };
-            }
-        });
+        // 빠른 표시를 위해 기본 미디어 목록을 먼저 표시
+        const mediaWithStatus = media.map(m => ({
+            ...m,
+            hasSentences: false,
+            hasTranslation: false,
+            translationProgress: 0,
+            translationStage: 'idle',
+            spacyPercentage: 0,
+            vocabularyPercentage: 0,
+            statusLoading: true
+        }));
         
-        const mediaWithStatus = await Promise.all(mediaPromises);
-        
-        // 상태 배지 함수
+        // 상태 배지 함수 (간소화)
         function createStatusBadges(media) {
+            if (media.statusLoading) {
+                return '<span class="status-badge" style="background: #666; color: #ccc;" title="상태 확인 중">...</span>';
+            }
             let badges = [];
             if (media.hasSentences) badges.push('<span class="status-badge subtitle" title="자막 생성됨">SUB</span>');
             if (media.hasTranslation) badges.push('<span class="status-badge translation" title="번역 완료">KOR</span>');
@@ -188,11 +160,44 @@ async function loadMediaList() {
             </div>
         `).join('');
         
+        // 백그라운드에서 상태 정보 로딩 (점진적)
+        loadMediaStatusInBackground(media);
+        
     } catch (error) {
         console.error('Error loading media list:', error);
         const listEl = document.getElementById('mediaList');
         if (listEl) {
             listEl.innerHTML = '<div style="color: #ff6b6b;">미디어 목록 로딩 실패</div>';
+        }
+    }
+}
+
+// 백그라운드에서 미디어 상태 정보를 점진적으로 로딩
+async function loadMediaStatusInBackground(mediaList) {
+    // 한 번에 하나씩 상태를 확인하여 UI 업데이트
+    for (const media of mediaList) {
+        try {
+            // 문장 개수만 간단히 확인 (가장 빠른 체크)
+            const sentencesResponse = await fetch(`/api/media/${media.id}/sentences-grouped`);
+            const sentences = await sentencesResponse.json();
+            const hasSentences = sentences && sentences.length > 0;
+            
+            // 해당 미디어 아이템 찾아서 업데이트
+            const mediaItem = document.querySelector(`[data-media-id="${media.id}"]`);
+            if (mediaItem) {
+                const statusBadgesDiv = mediaItem.querySelector('.status-badges');
+                if (statusBadgesDiv) {
+                    let badges = [];
+                    if (hasSentences) badges.push('<span class="status-badge subtitle" title="자막 생성됨">SUB</span>');
+                    statusBadgesDiv.innerHTML = badges.join('');
+                }
+            }
+            
+            // 각 미디어 사이 짧은 지연으로 부드러운 업데이트
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+        } catch (error) {
+            console.warn(`Failed to load status for media ${media.id}:`, error);
         }
     }
 }
@@ -239,14 +244,15 @@ window.showPanel = function(panelType) {
         // 프로그래밍적으로 호출된 경우 해당 패널 버튼 찾아서 활성화
         const buttons = document.querySelectorAll('.activity-item');
         if (panelType === 'media') buttons[0]?.classList.add('active');
-        if (panelType === 'subtitle') buttons[1]?.classList.add('active');
-        if (panelType === 'analysis') buttons[2]?.classList.add('active');
-        if (panelType === 'mp3extract') buttons[3]?.classList.add('active');
-        if (panelType === 'mp4extract') buttons[4]?.classList.add('active');
+        if (panelType === 'upload') buttons[1]?.classList.add('active');
+        if (panelType === 'subtitle') buttons[2]?.classList.add('active');
+        if (panelType === 'analysis') buttons[3]?.classList.add('active');
+        if (panelType === 'mp3extract') buttons[4]?.classList.add('active');
+        if (panelType === 'mp4extract') buttons[5]?.classList.add('active');
     }
     
     // 모든 패널 숨기기
-    const panels = ['mediaPanel', 'subtitlePanel', 'analysisPanel', 'mp3extractPanel', 'mp4extractPanel'];
+    const panels = ['mediaPanel', 'uploadPanel', 'subtitlePanel', 'analysisPanel', 'mp3extractPanel', 'mp4extractPanel'];
     panels.forEach(panelId => {
         const panel = document.getElementById(panelId);
         if (panel) panel.style.display = 'none';
@@ -260,6 +266,11 @@ window.showPanel = function(panelType) {
             if (mediaPanel) mediaPanel.style.display = 'block';
             if (headerEl) headerEl.innerHTML = '<span>미디어 파일</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
             loadMediaList(); // 미디어 목록 새로고침
+            break;
+        case 'upload':
+            const uploadPanel = document.getElementById('uploadPanel');
+            if (uploadPanel) uploadPanel.style.display = 'block';
+            if (headerEl) headerEl.innerHTML = '<span>파일 업로드</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
             break;
         case 'subtitle':
             const subtitlePanel = document.getElementById('subtitlePanel');
@@ -287,6 +298,34 @@ window.showPanel = function(panelType) {
 // Media functions
 window.loadMediaSentences = function(mediaId) {
     console.log('loadMediaSentences called with mediaId:', mediaId);
+    
+    currentMedia = mediaId;
+    
+    // 업로드 섹션 숨기기
+    const uploadSection = document.getElementById('uploadSection');
+    if (uploadSection) uploadSection.style.display = 'none';
+    
+    // 미디어 플레이어와 자막 컨테이너가 보이도록 확인
+    const mediaPlayerDiv = document.querySelector('.media-player');
+    if (mediaPlayerDiv) {
+        mediaPlayerDiv.style.display = 'block';
+    }
+    
+    // 자막 컨테이너도 항상 보이도록 설정
+    const videoSubtitlesContainer = document.getElementById('videoSubtitlesContainer');
+    if (videoSubtitlesContainer) {
+        videoSubtitlesContainer.style.display = 'block';
+    }
+    
+    // 현재 선택된 미디어 강조
+    document.querySelectorAll('.media-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.mediaId == mediaId) {
+            item.classList.add('active');
+        }
+    });
+    
+    // selectMedia 함수 호출하여 실제 미디어 로딩
     selectMedia(mediaId);
 };
 
