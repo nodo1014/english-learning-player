@@ -156,6 +156,16 @@ class DatabaseManager:
                 )
             ''')
             
+            # Create Words database table for phrase matching
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS Words (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    phrase TEXT NOT NULL UNIQUE,
+                    meaning TEXT NOT NULL,
+                    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
             # Create performance indexes
             self._create_indexes(cursor)
             
@@ -179,6 +189,9 @@ class DatabaseManager:
             
             # Word difficulty lookup optimization
             "CREATE INDEX IF NOT EXISTS idx_word_difficulty_lookup ON WordDifficulty(word)",
+            
+            # Words phrase lookup optimization
+            "CREATE INDEX IF NOT EXISTS idx_words_phrase ON Words(phrase)",
             
             # Chapter and Scene ordering
             "CREATE INDEX IF NOT EXISTS idx_chapter_order ON Chapter(mediaId, `order`)",
@@ -481,33 +494,111 @@ class SentenceRepository:
             ''', (media_id,))
             conn.commit()
             return cursor.rowcount > 0
+    
+    def update_highlighted_english(self, sentence_id: int, highlighted_english: str) -> bool:
+        """Update highlighted_english for a sentence"""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE Sentence SET highlighted_english = ? WHERE id = ?",
+                (highlighted_english, sentence_id)
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+    
+    def get_sentences_without_highlights(self, media_id: str) -> List[Dict]:
+        """Get sentences that don't have highlighted_english yet"""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT s.*, sc.chapterId, sc.title as sceneTitle, c.title as chapterTitle
+                FROM Sentence s
+                JOIN Scene sc ON s.sceneId = sc.id
+                JOIN Chapter c ON sc.chapterId = c.id
+                WHERE c.mediaId = ? AND (s.highlighted_english IS NULL OR s.highlighted_english = '')
+                ORDER BY s.`order`
+            ''', (media_id,))
+            return [dict(row) for row in cursor.fetchall()]
 
-class WordDifficultyRepository:
-    """Repository for WordDifficulty operations"""
+class WordsRepository:
+    """Repository for Words operations"""
     
     def __init__(self, db_manager: DatabaseManager):
         self.db = db_manager
     
-    def get_word_difficulty(self, word: str) -> Dict:
-        """Get cached word difficulty"""
+    def get_all_phrases(self) -> List[Dict]:
+        """Get all phrases for matching"""
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT difficulty, level FROM WordDifficulty WHERE word = ?", (word.lower(),))
-            row = cursor.fetchone()
-            if row:
-                return {'difficulty': row[0], 'level': row[1]}
-            return None
+            cursor.execute("SELECT phrase, meaning FROM Words ORDER BY LENGTH(phrase) DESC")
+            return [{'phrase': row[0], 'meaning': row[1]} for row in cursor.fetchall()]
     
-    def cache_word_difficulty(self, word: str, difficulty: str, level: str) -> bool:
-        """Cache word difficulty result"""
+    def find_matching_phrases(self, text: str, limit: int = 10) -> List[Dict]:
+        """Find phrases that might match the given text using database search"""
         with self.db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                "INSERT OR REPLACE INTO WordDifficulty (word, difficulty, level) VALUES (?, ?, ?)",
-                (word.lower(), difficulty, level)
-            )
-            conn.commit()
-            return True
+            
+            # Split text into words for better matching
+            words = text.lower().split()
+            matching_phrases = []
+            
+            # Search for phrases containing key words from the text
+            for word in words[:5]:  # Limit to first 5 words to avoid too many queries
+                if len(word) >= 3:  # Skip very short words
+                    cursor.execute(
+                        "SELECT phrase, meaning FROM Words WHERE phrase LIKE ? ORDER BY LENGTH(phrase) DESC LIMIT ?",
+                        (f'%{word}%', limit)
+                    )
+                    results = cursor.fetchall()
+                    for row in results:
+                        phrase_data = {'phrase': row[0], 'meaning': row[1]}
+                        if phrase_data not in matching_phrases:
+                            matching_phrases.append(phrase_data)
+            
+            return matching_phrases[:limit]
+    
+    def add_phrase(self, phrase: str, meaning: str) -> bool:
+        """Add new phrase to database"""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute("INSERT INTO Words (phrase, meaning) VALUES (?, ?)", (phrase.strip(), meaning.strip()))
+                conn.commit()
+                return True
+            except Exception as e:
+                logger.error(f"Failed to add phrase: {e}")
+                return False
+    
+    def load_from_file(self, file_path: str) -> int:
+        """Load phrases from words_db.txt file"""
+        count = 0
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or ';' not in line:
+                        continue
+                    
+                    parts = line.split(';', 1)
+                    if len(parts) == 2:
+                        phrase = parts[0].strip()
+                        meaning = parts[1].strip()
+                        if phrase and meaning:
+                            if self.add_phrase(phrase, meaning):
+                                count += 1
+            
+            logger.info(f"Loaded {count} phrases from {file_path}")
+            return count
+        except Exception as e:
+            logger.error(f"Failed to load phrases from file: {e}")
+            return 0
+    
+    def get_phrase_count(self) -> int:
+        """Get total phrase count"""
+        with self.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM Words")
+            return cursor.fetchone()[0]
 
 # Singleton instances
 db_manager = DatabaseManager()
@@ -515,4 +606,4 @@ media_repo = MediaRepository(db_manager)
 chapter_repo = ChapterRepository(db_manager)
 scene_repo = SceneRepository(db_manager)
 sentence_repo = SentenceRepository(db_manager)
-word_difficulty_repo = WordDifficultyRepository(db_manager)
+words_repo = WordsRepository(db_manager)

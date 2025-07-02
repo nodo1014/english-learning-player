@@ -83,8 +83,8 @@ function initializeUI() {
 
 async function loadInitialData() {
     try {
-        // Load media list
-        await loadMediaList();
+        // Media list loading is handled by HTML template's loadMediaList function
+        console.log('Initial data loading - media list handled by HTML template');
     } catch (error) {
         console.error('Failed to load initial data:', error);
         uiManager.showMessage('초기 데이터 로드 실패', 'error');
@@ -94,40 +94,8 @@ async function loadInitialData() {
 // Essential functions that need to remain in main app for now
 // (These will be gradually moved to appropriate modules)
 
-async function loadMediaList() {
-    console.log('Loading media list...');
-    try {
-        const media = await apiClient.getMediaList();
-        console.log('Media data:', media);
-        
-        const listEl = document.getElementById('mediaList');
-        if (!listEl) {
-            console.warn('Media list element not found');
-            return;
-        }
-
-        if (media.length === 0) {
-            listEl.innerHTML = '<div style="color: #858585; font-size: 0.9em; padding: 10px;">업로드된 미디어가 없습니다.</div>';
-            return;
-        }
-
-        listEl.innerHTML = media.map(item => `
-            <div class="media-item" onclick="selectMedia('${item.id}')" title="${item.originalFilename || item.filename}">
-                <div style="font-weight: bold; margin-bottom: 3px;">${item.originalFilename || item.filename}</div>
-                <div style="font-size: 0.8em; color: #858585;">
-                    ${item.fileType} • ${formatFileSize(item.fileSize)} • ${formatDuration(item.duration)}
-                </div>
-            </div>
-        `).join('');
-        
-    } catch (error) {
-        console.error('Error loading media list:', error);
-        const listEl = document.getElementById('mediaList');
-        if (listEl) {
-            listEl.innerHTML = '<div style="color: #f44336; font-size: 0.9em; padding: 10px;">미디어 목록 로드 실패</div>';
-        }
-    }
-}
+// loadMediaList 함수는 HTML 템플릿에 더 완전한 버전이 구현되어 있음
+// async function loadMediaList() { ... }
 
 function formatFileSize(bytes) {
     if (!bytes) return '0 B';
@@ -145,7 +113,7 @@ function formatDuration(seconds) {
 }
 
 // Global functions for HTML onclick handlers
-window.loadMediaList = loadMediaList;
+// window.loadMediaList = loadMediaList; // HTML에 더 완전한 버전이 있음
 window.selectMedia = selectMedia;
 window.handleFileUpload = handleFileUpload;
 window.showUploadSection = showUploadSection;
@@ -153,6 +121,9 @@ window.generateSubtitles = generateSubtitles;
 window.playSentence = playSentence;
 window.toggleBookmark = toggleBookmark;
 window.extractSentenceMP3 = extractSentenceMP3;
+window.toggleBlankMode = toggleBlankMode;
+window.reloadWordsDatabase = reloadWordsDatabase;
+window.loadWordsStats = loadWordsStats;
 
 // Media selection function
 async function selectMedia(mediaId) {
@@ -210,16 +181,21 @@ async function selectMedia(mediaId) {
 function setupMediaPlayer(media) {
     const mediaPlayerDiv = document.getElementById('mediaPlayerDiv');
     
-    if (!mediaPlayerDiv) return;
+    if (!mediaPlayerDiv) {
+        console.error('mediaPlayerDiv not found');
+        return;
+    }
     
     mediaPlayerDiv.style.display = 'block';
     
     const mediaPath = `/uploads/${media.filename}`;
+    const videoContainer = document.getElementById('videoContainer');
     
     if (media.fileType === 'video') {
         videoPlayer.src = mediaPath;
         videoPlayer.style.display = 'block';
         audioPlayer.style.display = 'none';
+        if (videoContainer) videoContainer.style.display = 'block';
         currentPlayer = videoPlayer;
         
         setTimeout(() => uiManager.updateVideoSize(), 100);
@@ -227,6 +203,7 @@ function setupMediaPlayer(media) {
         audioPlayer.src = mediaPath;
         audioPlayer.style.display = 'block';
         videoPlayer.style.display = 'none';
+        if (videoContainer) videoContainer.style.display = 'none';
         currentPlayer = audioPlayer;
     }
     
@@ -258,7 +235,7 @@ function displaySentences(sentences) {
         sentenceList.innerHTML = sentences.map(s => `
             <div class="sentence-item" onclick="playSentence(${s.id})">
                 <span class="sentence-number">${s.order}.</span>
-                <div class="sentence-text">${s.english}</div>
+                <div class="sentence-text">${s.highlighted_english || s.english}</div>
                 ${s.korean ? `<div class="sentence-korean">${s.korean}</div>` : ''}
             </div>
         `).join('');
@@ -295,7 +272,7 @@ function renderGroupedSentences(grouped) {
                             ${sentences.map(s => `
                                 <div class="sentence-item" onclick="playSentence(${s.id})">
                                     <span class="sentence-number">${s.order}.</span>
-                                    <div class="sentence-text">${s.english}</div>
+                                    <div class="sentence-text">${s.highlighted_english || s.english}</div>
                                     ${s.korean ? `<div class="sentence-korean">${s.korean}</div>` : ''}
                                     <button class="bookmark-btn" onclick="toggleBookmark(${s.id}, event)">⭐</button>
                                     <button class="extract-btn" onclick="extractSentenceMP3(${s.id}, event)">MP3</button>
@@ -635,11 +612,143 @@ function handleKeyboardControls() {
 }
 
 function updateVideoSubtitles() {
-    // TODO: Implement in subtitle-display module
+    updateOverlaySubtitles(videoPlayer);
 }
 
 function updateAudioSubtitles() {
-    // TODO: Implement in subtitle-display module
+    updateOverlaySubtitles(audioPlayer);
 }
+
+function updateOverlaySubtitles(player) {
+    if (!player || !sentences || sentences.length === 0) return;
+    
+    const currentTime = player.currentTime;
+    const currentSentence = sentences.find(s => 
+        currentTime >= s.startTime && currentTime <= s.endTime
+    );
+    
+    const englishSubtitle = document.getElementById('englishSubtitle');
+    const koreanSubtitle = document.getElementById('koreanSubtitle');
+    const overlayContainer = document.getElementById('videoOverlaySubtitles');
+    
+    if (currentSentence) {
+        // 패턴 매칭이 적용된 텍스트 사용 (하이라이트 포함)
+        if (englishSubtitle) {
+            englishSubtitle.innerHTML = currentSentence.highlighted_english || currentSentence.english || '';
+        }
+        if (koreanSubtitle) {
+            koreanSubtitle.textContent = currentSentence.korean || '';
+        }
+        
+        // Show overlay container
+        if (overlayContainer) {
+            overlayContainer.style.display = 'block';
+        }
+        
+        currentSubtitleSentence = currentSentence;
+    } else {
+        // 자막 숨기기
+        if (englishSubtitle) englishSubtitle.innerHTML = '';
+        if (koreanSubtitle) koreanSubtitle.textContent = '';
+        
+        // Hide overlay container
+        if (overlayContainer) {
+            overlayContainer.style.display = 'none';
+        }
+        
+        currentSubtitleSentence = null;
+    }
+}
+
+// 빈칸 만들기 기능
+function createBlankFromPhrase(text, phraseText) {
+    const blankLength = phraseText.length;
+    const underline = '_'.repeat(Math.max(blankLength, 3));
+    return text.replace(
+        new RegExp(phraseText, 'gi'),
+        `<span class="blank-space">${underline}</span>`
+    );
+}
+
+// 빈칸 모드 토글
+let blankMode = false;
+function toggleBlankMode() {
+    blankMode = !blankMode;
+    const button = document.getElementById('blankModeBtn');
+    if (button) {
+        button.textContent = blankMode ? '빈칸 해제' : '빈칸 만들기';
+        button.style.background = blankMode ? '#ff6b35' : '#007acc';
+    }
+    
+    // 현재 표시된 모든 문장을 업데이트
+    refreshSentenceDisplay();
+}
+
+function refreshSentenceDisplay() {
+    // 현재 미디어의 문장들을 다시 로드하여 표시 업데이트
+    if (currentMedia) {
+        selectMedia(currentMedia);
+    }
+}
+
+// 단어 DB 새로고침 함수
+async function reloadWordsDatabase() {
+    try {
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = '🔄 로딩 중...';
+        button.disabled = true;
+        
+        const response = await fetch('/api/words/reload', {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`단어 DB 새로고침 완료: ${data.message}`);
+            loadWordsStats(); // 통계 업데이트
+            refreshSentenceDisplay(); // 문장 표시 업데이트
+        } else {
+            alert('단어 DB 새로고침 실패');
+        }
+    } catch (error) {
+        console.error('Error reloading words:', error);
+        alert('단어 DB 새로고침 중 오류 발생');
+    } finally {
+        const button = event.target;
+        button.textContent = '🔄 단어 DB 새로고침';
+        button.disabled = false;
+    }
+}
+
+// 단어 통계 로드 함수
+async function loadWordsStats() {
+    try {
+        const response = await fetch('/api/words/stats');
+        const data = await response.json();
+        
+        if (data.success) {
+            const statsDiv = document.getElementById('wordsStats');
+            if (statsDiv) {
+                statsDiv.innerHTML = `
+                    <div>📚 등록된 단어/구문: ${data.phrase_count}개</div>
+                    <div>🎯 매칭 활성화: ${blankMode ? '빈칸 모드' : '하이라이트 모드'}</div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading words stats:', error);
+        const statsDiv = document.getElementById('wordsStats');
+        if (statsDiv) {
+            statsDiv.textContent = '통계 로드 실패';
+        }
+    }
+}
+
+// 페이지 로드시 통계 로드
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(loadWordsStats, 1000); // 1초 후 로드
+});
 
 console.log('✅ Main application initialized');

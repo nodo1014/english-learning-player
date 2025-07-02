@@ -1,3 +1,974 @@
+check A for B;A를 B로 확인하다
+ask A for B;A에게 B를 요청하다
+tell A about B;A에게 B에 대해 말하다
+You got this!;넌 잘할 거야! 충분히 할 수 있어!
+That's so sweet of you.;너 정말 감동이야, 고마워.
+Make a wish.;소원 빌어.
+It's in the fridge.;냉장고에 있어.
+I'm getting hungry.;배고파진다.
+Huddle up.;얼른 모여봐!
+I'm on board.;나도 동의해, 동참해.
+You rock.;너 끝내준다. 짱이야.
+I got goosebumps.;소름.. 닭살 돋았어.
+Make it quick.;짧게 빨리 끝내.
+Believe in yourself.;너 자신을 믿어.
+I'm in the zone.;나 초집중 상태야. 무아지경이야.
+Let's get real.;현실적으로 생각해보자.
+Suit yourself.;맘대로 해.
+Let's give him a hand.;그에게 박수를 보냅시다.
+I'm on your side.;난 네 편이야.
+It's better safe than sorry.;조심해서 나쁠 거 없지. 유비무환!
+Write this down.;이거 받아 적어.
+When does it end?;언제 끝나?
+Why didn't you tell me?;왜 말 안했어?
+Don't rub it in.;불난 집에 부채질 마.
+Don't try to talk.;말하려고 애쓰지마.
+Easy does it.;천천히 살살해.
+I don't like you, either.;나도 너 싫어.
+I'm broke.;난 빈털터리야
+Behave yourself.;바르게 행동해. 얌전히 굴어.
+Good talk.;얘기 즐거웠어.
+I'm stuffed.;완전 배불러.
+It's now or never.;지금 아니면 안돼.
+It can't hurt to try.;해봐서 나쁠 건 없지.
+Who wants to start?;누가 시작할래?
+This is the life.;이게 인생이지.
+We'll get through this.;우린 이 고비를 넘길 거야.
+You're over-thinking this.;너 생각을 너무 많이 하고 있어.
+I got this covered.;내가 알아서 할게.
+I will find a way.;방법을 찾을게.
+We have a situation.;우리 문제가 생겼어.
+It's worth the wait.;그건 기다릴만한 가치가 있어.
+Case closed.;사건 종결. 다 끝난 일이야.
+What choice do I have?;난 선택의 여지가 없어.
+(It's) Such a beautiful day.;날이 진짜 좋다.
+I don't mind at all.;난 완전 상관 없어.
+Then it's settled.;그럼 다 결정 났네. 해결 됐네.
+I'm putting you on speaker.;스피커폰 켠다.
+That didn't take long.;오래 안 걸렸네.
+I must have dozed off.;나 깜빡 졸았나봐.
+You saved the day.;덕분에 살았어.
+Would that be okay?;그래도 괜찮을까?
+I used to live here.;전에 여기 살았었어.
+Hit the lights!;불 좀 꺼줘!
+It's hard to tell.;정확히 분간하기 어려워.
+I think we're good.;우리 문제는 해결된 것 같아. 괜찮아.(정중한 거절)
+I did something bad.;나 나쁜 짓 했어.
+I'm watching my weight.;체중 관리 중이야.
+I don't get you at all.;널 전혀 이해 못하겠어.
+Let me help you with that.;내가 도와줄게.
+Wake up and smell the coffee.;정신차리고 현실을 직시해.(=냉수 먹고 속차려)
+Why are you taking her side?;왜 그녀의 편을 드는 거야?
+Stay strong.;힘내. 잘 버텨내! 약해지지마!
+Why don't you shut up?;그 입 좀 다무는 게 어때?
+I feel you.;네 심정 이해해.
+Are you spying on me?;너 날 감시하는 거야?
+Over my dead body.;내 눈에 흙이 들어가기 전엔 안돼.
+Let's take it from the top.;처음부터 다시 해보자.
+How's it look?;그거 어때 보여?
+Nothing lasts forever.;아무것도 영원하지 않아.
+I don't want to get involved.;나 엮이고 싶지 않아.
+Break's over.;쉬는 시간 끝났어.
+Suck it up!;참고 견뎌!
+I'm down.;난 좋아! 콜!
+It goes without saying.;당연해. 두 말 할 필요도 없어.
+He is funny.;그는 웃기고 재밌어.
+It doesn't really matter.;별 상관 없어.
+That is so lame.;완전 별로야.
+It's unbelievable.;대단해. 믿을 수가 없어.
+I'll see you in a minute.;좀 있다 봐.
+I'm not feeling well.;나 몸이 안좋아.
+I'm sorry about earlier.;아까는(저번 일은) 미안해.
+Would you like to come in?;들어 올래요?
+I can relate to that.;나도 공감이 가.
+Back off.;물러서.
+Why would we do that?;우리가 왜 그러겠어?
+Who's with me?;나랑 같이 할 사람?
+It always does.;그건 항상 그래.
+Do the math.;잘 생각해봐. 따져봐.
+By all means.;물론이지.
+Diet starts tomorrow.;다이어트는 내일부터.
+I'd say so.;그렇다고 봐야지. 그런 것 같아.
+This is fun.;이거 재밌다.
+That's too much information.;그건 굳이 말 안해도 돼.
+I don't see why not.;안 될 것도 없지.
+I'm outta here.;나 간다.
+She's a good person.;그녀는 좋은 애야.
+Let me know if you change your mind.;맘 바뀌면 알려줘.
+That's messed up.;완전 잘못 됐네. 미친 거 아냐?
+This is me.;이게 바로 나야.
+That's a given.;그건 당연한 거야.
+This has been fun.;재밌었어.
+What is it about?;그게 뭐에 관한 건데?
+We all chipped in.;우리가 다 조금씩 모았어.
+I live next door.;난 옆집에 살아.
+I'm doing okay.;난 잘 지내.
+He's all alone.;그는 혼자야.
+I invited him.;내가 그를 초대했어.
+Is this fun for you?;넌 이게 재밌어?
+Let me bring you up to speed.;어떤 상황인지 내가 알려줄게.
+I never stood a chance.;난 기회가 전혀 없었어.
+He's right there.;그가 바로 저기 있어.
+Mind your own business!;네 일이나 신경써.
+I know where this is going.;나 이거 어떻게 될지 알아.
+It's driving me crazy.;그게 아주 미치게 해.
+You'll thank me later.;나중에 나한테 고마워할걸.
+Don't be so sure.;너무 그렇게 확신하지마.
+That can't be right.;뭔가 이상한데.
+You were right about everything.;네 말이 다 맞았어.
+You should have seen his face.;네가 그의 얼굴을 봤어야해.
+That's all I'm asking.;그게 내가 부탁하는 전부야.
+Let's not jump to conclusions.;속단하지 말자.
+I knew this would happen.;이럴 줄 알았어.
+Is that a thing?;그런 게 있어? 존재해?
+I paid for it.;대가를 치뤘어.
+I'm having the time of my life.;내 인생 최고의 시간을 보내고 있어.
+I was drunk.;나 취했었어.
+That feels good.;느낌(기분) 좋다.
+Be normal.;평소대로 해.
+I won't be late.;늦지 않을게.
+What did I tell you?;거봐 내가 뭐랬어!
+Hold still.;가만히 있어봐.
+I want details.;자세히 알고 싶어.
+That's out of the blue.;갑자기 뜬금없네.
+It doesn't change anything;달라지는 건 없어.
+Can you call me a cab?;택시 좀 불러줄 수 있어?
+I can't compete with that.;난 그거랑 경쟁도 안돼.
+I don't have a type.;난 이상형이 없어.
+I'm torn.;반반이야. 고민 중이야.
+It was traumatic.;정신적 충격이었어.
+I owe you big time.;큰 신세를 졌어.
+I don't have a choice.;난 선택권이 없어.
+I can be very persuasive.;난 설득을 잘해.
+It's a long shot.;가능성이 별로 없어.
+Don't get your hopes up.;큰 기대는 하지마.
+Have a good day at work.;회사 잘다녀와.
+I'm gonna get out of your hair.;그만 귀찮게 할게.
+You're so bossy.;너 너무 이래라저래라해.
+I was so close.;거의 성공할 뻔 했어.
+Allow me.;내가 할게.
+I can't let that happen.;그 일이 일어나게 둘 수 없어.
+Listen to yourself.;말이 되는 소리를해.
+I'm not taking no for an answer.;거절은 사양할게.
+Slow down.;천천히 해.
+I was being sarcastic.;내가 빈정거린 거야. 비꼰 거야.
+Don't get me started.;말도 마.(내가 시작하게 하지마.)
+I'm pathetic!;내가 한심하다!
+I was in a bad place.;힘든 시간을 겪었어.
+Are you ashamed of me?;너 내가 부끄러워?
+Let's make this quick.;이거 빨리 해치우자.
+I had a doctor's appointment.;병원 예약이 있었어.
+That's obvious.;명백하지. 뻔해.
+I'm sorry if I offended you.;기분 나빴다면 미안해.
+You got a minute?;잠깐 시간 있어?
+Flag on the play.;뭔가 잘못 됐어.
+Isn't this exciting?;이거 신나지 않아?
+I don't even know what to say.;뭐라 말할지 모르겠어.
+Shall we begin?;우리 시작할까?
+My lips are sealed.;절대 말 안할게.
+Go easy on me.;나한테 살살 대해줘.
+People change.;사람은 변해.
+I'm in no rush.;난 급할 거 없어.
+I didn't even notice.;눈치도 못챘어.
+It's gonna be a while.;시간이 좀 걸릴 거야.
+I just wanna make sure you're okay.;네가 괜찮은지 확실히 하고 싶어.
+Let's go shopping!;쇼핑 가자!
+I want to know why.;이유를 알고 싶어.
+Enjoy being single.;솔로인 걸 즐겨.
+Don't play dumb.;시치미 떼지 마.
+Put the phone down.;전화 끊어. 전화기 내려놔.
+He is harmless.;걘 누굴 해치진 않아. 악의는 없어.
+That's not necessary.;그럴 필요 없어.
+Scooch over.;옆으로 좀 땡겨봐.
+It's been a long time.;오래 됐어. 오랜만이야.
+What are your symptoms?;증상이 뭐야?
+That means a lot to me.;그건 나에게 큰 의미가 있어.
+Do I have a fever?;나 열 나나?
+Don't be a hero.;함부로 행동하지마.
+It's the right thing to do.;그건 옳은 일이야.
+Be gentle.;살살해.
+Is this man bothering you?;이 남자가 귀찮게 해요?
+Can it wait?;그거 나중에 해도 돼?
+Have you learned nothing?;아무 것도 배운 게 없는 거야?
+Mark my words.;내 말 명심해.
+Excuse you.;뭐야, 예의 없게.
+Let's roll.;시작하자. 출발하자.
+What's the point?;요점이 뭐야?
+It's tricky.;그게 애매해.
+And then it hit me.;그리고나서 깨달았어.
+I'm way ahead of you.;내가 훨씬 앞서있어. 다 준비 해뒀지.
+Look alive.;서둘러.
+Get over here.;이리 와.
+There are other options.;다른 선택지도 있어.
+There's no other option.;다른 방법이 없어.
+Don't mind me.;나 신경 쓰지마.
+I'm going after him.;내가 그를 쫓아 갈게.
+I have faith in you.;난 널 믿어.
+Let me take you home.;집에 데려다 줄게.
+You would love it.;너도 좋아할 거야.
+I still can't believe it.;아직도 난 못 믿겠어.
+I'd like to go home.;집에 가고 싶어.
+Be on time.;제 시간에 와.
+I barely remember it.;난 거의 기억이 안나.
+I turned it down.;그거 거절했어.
+I'll keep that in mind.;명심할게.
+You went behind my back.;너 날 속였어.
+That's a prop.;그건 소품이야.
+Do your worst.;맘껏 덤벼봐. 최악으로 굴어봐.
+You've never said that before.;그런 말 한 적 없잖아.
+Let's cut the crap.;쓸데 없는 소리 그만 하자.
+I don't wanna hurt your feelings.;네 기분을 상하게 하고 싶진 않아.
+Your hands are shaking.;너 손 떨고 있어.
+We may have a problem.;우리 아무래도 문제가 있는 것 같아.
+Don't sneak up on me like that.;그렇게 몰래 다가오지마.
+What am I supposed to think?;내가 무슨 생각을 해야하는데?
+I blew it.;내가 망쳤어.
+Not on my watch.;내가 지켜보는 한 어림 없지.
+This is outrageous.;충격이야. 말도 안돼.
+I'll make it right.;내가 바로 잡을게.
+I fell hard.;심하게 넘어졌어.
+We're meant to be together.;우린 천생연분이야.
+I'm terrified.;무서워. 난 겁에 질렸어.
+End of story.;얘기 끝!
+I fell for it.;난 그것에 속았어.
+There's nothing there.;거긴 아무 것도 없어.
+You disappeared.;너 가버렸더라.
+Don't be ridiculous.;어이없는 소리 좀 하지마.
+What's your deal today?;너 오늘 왜 그러는 건데?
+That's not appropriate.;그건 부적절해.
+This could get ugly.;이게 (상황이) 추해질 수도 있어.
+I'll be brief.;간단히 말할게.
+How would you know?;네가 어찌 알아?
+My leg is stuck!;다리가 꼈어!
+The door is stuck.;문이 꽉 껴서 꿈쩍을 안해.
+I'll get you out of here.;내가 널 여기서 꺼내줄게.
+Thanks for covering for me.;날 대신해줘서 고마워. / 실수를 감싸줘서 고마워.
+I'll prove it to you.;너에게 증명해 보일게.
+I hope you understand.;이해해주길 바라.
+I had a good reason.;충분한 이유가 있었어.
+Off you go.;이제 가보렴.
+I've tried everything.;전부 다 해봤어.
+She won't talk to me.;그녀는 나랑 대화하려 하지 않아.
+That is untrue.;그건 사실이 아냐.
+I'm not hiding anything.;난 숨기는 거 없어.
+Are you aware of it?;그걸 알고 있었어?
+Don't turn your back on me!;날 외면하지마.
+I have a reputation to uphold.;나도 지켜야할 체면이 있어.
+You ambushed me.;네가 날 갑자기 공격했잖아.
+Don't be coy.;내숭 떨지마.
+Not a chance.;어림 없어.
+I'm a hugger!;난 포옹을 좋아하는 사람이야.
+I can't argue with that.;물론이지. 반박의 여지도 없어.
+You're excused.;가보셔도 돼요.
+I'm angry at you.;난 너한테 화난 거야.
+She's still alive.;그녀가 아직 살아있어.
+The house is on fire.;불타고 있어.
+You can't go wrong.;틀리는 법이 없어. 항상 옳아.
+Show some respect.;예를 좀 갖춰.
+I need you to do something for me.;날 위해 네가 뭐 좀 해줘야겠어.(부탁이 있어.)
+Stop making excuses.;변명 그만해.
+I'm fed up.;지긋지긋해. 질렸어.
+I'm terrible at this.;쥐약이야. 정말 못해.
+Spare me.;그만해. 듣고 싶지 않아.
+I am a little peckish.;나 좀 출출해.
+I know it by heart.;나 그거 완전 달달 외워.
+My hands are full.;손에 든 게 많아. 내가 좀 바빠.
+You're a star!;네가 최고야!
+Family comes first.;가족이 우선이지.
+It's a piece of cake.;식은 죽 먹기야.
+Are you trying to get rid of me?;날 떼내려고 하는 거야?
+I'm going for a walk.;나 산책 나간다.
+I'm struggling.;나 애쓰고 있어.
+I'm so touched.;감동 받았어.
+Sue me.;맘대로 해. 배째!
+Nothing has changed.;하나도 바뀐게 없어.
+My stomach hurts.;나 배 아파.
+Just sit back and relax.;뒤로 기대 앉아서 좀 쉬어.
+Lower your voice.;목소리 낮춰.
+How's married life treating you?;결혼 생활은 어때?
+I made it worse.;내가 상황을 더 나쁘게 만들었어.
+I'm not gonna say that.;그 말은 안 할래.
+You're a perfectionist.;완벽주의자야.
+You're uptight.;너무 긴장했어. 예민해.
+It took me forever.;너무 오래 걸렸어.
+Which do you prefer?;어떤 게 더 좋아?
+Surprise me.;알아서 해줘. 날 놀래켜 봐.
+It just felt right.;그냥 그게 맞는 것 같았어.
+You know what you should do?;뭘 해야 좋은지 알아?
+You wouldn't like it.;넌 안 좋아할텐데.
+I never get tired of it.;절대 질리지가 않아.
+Hand to God.;하늘에 맹세해.
+Are you wearing makeup?;너 화장 했어?
+It's right behind you.;그건 네 바로 뒤에 있어.
+It's go time.;작전 개시!
+I'm trapped.;난 갇혔어, 덫에 걸렸어.
+Put some clothes on!;옷 좀 입어!
+Don't beat yourself up.;너무 자책하지마.
+How hard can it be?;그게 얼마나 어렵겠어?
+Is that what you're saying?;지금 네가 하는 말이 그거야?
+I'm happy to help.;도울 수 있어서 좋아.
+I'll swing by later.;다음에 들를게.
+This belongs to you.;이건 너한테 속해. 네 거야.
+Drive safe.;운전 조심해.
+You twisted my arm.;내가 졌다. 내가 설득 당했어.
+Don't go too far.;너무 멀리 가지마.
+I almost forgot.;까먹을 뻔 했네.
+Would you relax?;진정 좀 해주겠니?
+Stay alert.;경계를 늦추지마.
+Look what I found.;내가 뭘 찾아냈는지 봐봐!
+Nothing is going to happen.;아무 일도 없을 거야.
+I'm not like you.;난 너랑은 달라.
+Don't feel bad.;속상해 하지마.
+It's like riding a bike.;자전거 타기 같은 거야.
+Let's just take five.;잠깐 쉬자.
+Fill it up.;주유 가득이요.
+I made a commitment.;난 약속했어.
+Everything has to be perfect!;모든 게 완벽해야 돼!
+I'll do it myself.;내가 직접 할게.
+I'll lend you some money.;내가 돈 빌려줄게.
+I rented a car.;차를 한 대 빌렸어.
+I told you to stop.;내가 그만하라고 했잖아.
+That would be nice.;그거 좋죠.
+Back me up.;내 편 좀 들어줘.
+Just to be safe.;혹시 모르니까.
+You'd better hurry.;너 서두르는게 좋을텐데.
+It's just common sense.;그건 그냥 상식이야.
+It’s my treat.;내가 살게.
+Are we on the same page?;이해해? 같은 생각이야?
+Watch my stuff.;내 물건 좀 봐줘.
+I'm totally lost.;뭐가 뭔지 모르겠어.
+I don't want any trouble.;난 어떤 문제도 원하지 않아.
+Should I come back?;내가 다시 오는 게 좋을까?
+Speak of the devil.;호랑이도 제 말하면 온다더니.
+It's the least I can do.;할 수 있는 최소한의 도리야.
+I wasn't planning on it.;그건 계획에 없었는데.
+Am I talking too much?;내가 말이 많지?
+I'm heading home.;나 집에 가.
+He's expecting your call.;그가 네 전화 기다리고 있어.
+Are you gonna call him?;그한테 전화하려고?
+It's no biggie.;별 거 아냐.
+I'm gonna take off.;나 가려고. 떠나려고 해.
+I'm losing my mind.;난 미쳐가고 있어.
+I doubt it.;그럴리가.
+You seem tense.;너 경직돼 보여.
+I just got chills.;방금 소름 돋았어.
+Am I in trouble?;나 큰 일 난건가?
+Give me a chance.;나한테 기회를 줘.
+Wipe your feet.;발을 닦아내. 신발에 먼지 털어.
+Did you have fun?;재밌었어?
+I want you to have this.;네가 이걸 가졌으면해.
+Now is not a good time.;지금은 곤란해.
+Do you have a receipt?;영수증 있어?
+I'm just doing my job.;그냥 내 일을 하고있을 뿐이야.
+It's all coming together.;완성되가고 있어.
+It's not for sale.;그건 파는 거 아니야.
+Your credit card's been declined.;카드가 승인거절 됐어.
+You guys know each other?;너희들 서로 알아?
+This is the best day ever.;지금까지 중 최고의 날이야.
+I looked it up online.;인터넷에 찾아 봤지.
+Don't rush me.;재촉하지마.
+Better luck next time.;다음엔 더 나을거야.
+Get to the point.;요점만 말해.
+You know what I'm saying?;내가 하는 말 알지?
+That's very swanky.;엄청 부내난다.
+I am sober.;나 안취했어. 말짱해.
+I'm not joking.;나 농담하는 거 아냐.
+I am dead serious.;나 완전 진지해.
+This is your time.;이제 너의 시간, 너의 날이야.
+You nailed it!;너 해냈구나!
+Take it down a notch.;진정좀해.
+I don't have all day.;나 시간 없어.
+I can help you with that.;그건 내가 도와줄 수 있어.
+Let's hope for the best.;잘되길, 최선을 바라보자.
+I have no clue.;전혀 모르겠어.
+Follow your heart.;마음가는대로 해.
+I'm wide awake.;잠이 확 깼어.
+That's offensive.;거 모욕적인데.
+Don't drink and drive.;음주운전 하지마.
+Can I say something?;내가 한 마디 해도 돼?
+This is unreal.;헐, 말도 안돼.
+This is unacceptable.;이건 용납할 수 없어.
+We can still pull this off.;우리 아직 해낼 수 있어.
+We need a plan.;우리 작전이 필요해.
+You've gotta be kidding me.;농담하는 거지.
+Let's get out of here.;여기서 나가자.
+Here's the thing.;실은 말이야, 근데 있잖아.
+Do you mind if I join you?;내가 같이 해도 괜찮아?
+Stick around.;진득허니 좀 기다려봐.
+I lost my temper.;이성을 잃었어 내가.
+I owe you an apology.;너한테 사과할 게 있어.
+We used to work together.;전에 우리 같이 일했었어.
+I got a flat tire.;타이어 펑크났어.
+I was meditating.;명상하고 있었어.
+I was distracted.;집중이 안됐어, 방해받았어.
+I wouldn't be surprised.;놀랍지도 않을 것 같아.
+Keep your fingers crossed.;행운을 빌어줘.
+You never mentioned that.;그런 말 한 번도 안했잖아.
+Should I go talk to him?;가서 그한테 말걸어볼까?
+Actions speak louder than words.;말보단 행동이 중요해.
+Did you get my text?;내 문자 받았어?
+I got into a fight.;난 싸움에 휘말렸어.
+I'll never forgive myself.;내스스로를 절대 용서 안할거야.
+There's no need to apologize.;사과할 필요 없어.
+I was being selfish.;내가 이기적이게 굴었어.
+I should've told you.;너한테 말했어야 했어.
+I regret nothing.;난 아무것도 후회 안해.
+You dropped something.;너 뭐 떨어뜨렸어.
+I'm very disappointed in you.;너한테 진짜 실망이야.
+I haven't eaten all day.;하루 종일 굶었어.
+Are we there yet?;우리 아직 멀었어?
+What's your major?;전공이 뭐야?
+What do you wanna know?;뭘 알고 싶어?
+I can assure you.;내가 장담할 수 있어.
+Tell him to stop.;그한테 멈추라고 해줘.
+I've gotta go.;가봐야겠다.
+Do you speak english?;영어하세요?
+Why else would I be here?;아님 내가 왜 여기 있겠어?
+That's not what I meant.;내 뜻은 그게 아니었어.
+Do you want my help or not?;도와줘, 말아?
+I don't know for sure.;확실히는 모르겠어.
+Bon appetit.;맛있게 드세요.
+I got to run some errands.;볼 일을 좀 봐야해.
+Tell me what to do.;할 일을 말해줘.
+I'm getting used to it.;익숙해지고 있어.
+That is not it at all.;전혀 그렇지 않아.
+Something must be wrong.;뭔가 잘못된 게 분명해.
+Nobody tells me anything.;아무도 내게 아무 말도 안해줘.
+Who could that be?;저거 누굴까?
+Why would you say that?;왜 그렇게 말해?
+Anybody need anything?;누구 뭐 필요한 사람?
+I'm with you.;나도 같은 맘이야.
+Nothing's working.;아무것도 안 돼.
+By any chance?;혹시?
+There's a lot to do.;할 게 많아.
+Be prepared.;준비하도록 해.
+Put it away!;그거 저리 치워!
+That's the most important thing.;그게 가장 중요한 거야.
+It didn't end well.;끝이 좋진 않았어.
+Is something wrong?;뭐 잘못됐어?
+Why would you even think that?;대체 왜 그렇게 생각하는 거야?
+Can I take a look?;내가 한 번 봐도 될까?
+I'm new at this.;나 이건 처음이야.
+You're a natural.;넌 타고났어.
+Don't give me that look!;그렇게 날 쳐다보지 마.
+First things first.;중요한 것부터 먼저!
+Can we reschedule?;우리 약속날짜 바꿔도 돼?
+Don't give me that.;변명(헛소리) 하지마.
+We're doing the right thing.;우린 옳은 일을 하고 있어.
+That's nonsense.;그건 말도 안돼.
+I'll go change.;가서 옷 갈아입을게.
+I love you no matter what.;무슨 일이 있어도 널 사랑해.
+Can I see you again?;나 너 다시 볼 수 있어?
+How are you feeling?;컨디션 어때?
+You are doing great.;넌 아주 잘하고 있어.
+I wanted you to hear it from me.;너가 그걸 나한테서 듣길 원했어.
+Don't sweat it.;걱정마.
+You'll do better next time.;다음엔 더 잘할 거야.
+That's a typo.;그거 오타야.
+It's non-negotiable.;그건 타협할 수 없어.
+Give it time.;시간을 갖고 기다려봐.
+Is this a bad time?;지금 시간 곤란해?
+It depends.;그때 그때 달라.
+Be my guest.;얼마든지요.
+Pop the hood.;본네트 좀 열어봐.
+You're all grown up.;다 컸네. 어른이 다 됐네.
+I'm just thinking out loud;그냥 혼잣말하는 거야.
+What's that for?;그건 뭐에 쓰는 거야?
+Here goes nothing.;밑져야 본전이지.에라 모르겠다.
+Dinner is ready.;저녁 준비 다 됐어.
+Read the room.;분위기 파악 좀 해. 눈치 챙겨.
+Talk is cheap.;말이야 쉽지.
+Catch your breath.;숨 좀 돌려.
+You don't need to do that.;안 그래도 돼.
+That was close.;거의 될 뻔 했어(아슬아슬 했어.)
+Will that be all?;그게 전부예요?(더 주문할 건 없나요?)
+What did you just say?;너 방금 뭐라고 했어?
+Watch your mouth.;말 조심해.
+You don't have to apologize.;사과 안해도 돼.
+Let's focus on that.;그거에 집중하자.
+I totally get it.;충분히 이해해, 알겠어.
+What are you looking at?;뭘 쳐다보고 있어?
+What happened to you?;너 무슨 일이 있었던 거야?
+It doesn't exist.;그건 존재하지 않아.
+Get off of me.;나한테서 떨어져. 저리가.
+I'm in.;나도 낄래.
+I didn't do anything wrong.;난 잘못한 게 없어.
+I better get going.;가보는 게 좋겠다.
+I gotta get back to work.;다시 일하러 가야해.
+I'm sorry to bother you.;귀찮게 해서 미안.
+It feels weird.;느낌이 이상해.
+Forget about it.;신경쓰지마, 잊어버려.
+Just leave me out of it.;그일에서 난 빼 줘.
+What's in it for me?;나한텐 득이 뭔데?
+You know what I want.;내가 뭘 원하는지 알잖아.
+It's locked.;잠겨져 있어.
+It's worth it.;그럴만한 가치가 있어.
+He dumped me.;그가 날 찼어.
+I'm miserable.;나 비참하고 우울해.
+What's that noise?;저거 무슨 소리야?
+Wrap it up.;마무리 해.
+Go get'em, tiger!;힘내라 화이팅!
+Let's dig in!;자, 이제 먹자!
+It's nice to meet you.;처음 만나 반가워.
+It's nice to see you again.;다시 보니 반갑다.
+This is so not fair.;이거 너무 불공평해.
+I'm in the middle of something.;나 한창 뭐 하는 중이야.
+Give it a rest;적당히 좀 해.
+That's rude.;거 무례하구만.
+I underestimated you.;내가 널 과소평가했어.
+What made you change your mind?;뭐 땜에 맘이 바뀌었어?
+I can't risk it.;모험(도박)을 할 순 없어.
+You'll get over it.;넌 극복해낼 거야.
+There's not much to say.;할 말이 별로 없어.
+Save it.;그 얘긴 그만해.
+I'm confused.;혼란스럽네, 헷갈려.
+Meet me halfway.;적당선에서 나랑 타협해.
+I'm just double-checking.;그냥 한 번 더 확인 하는 거야.
+What do you want from me?;나한테 뭘 원하는 거야?
+Let me get this straight.;내가 명확히 정리를 해볼게.
+Stay close to me.;나한테 가까이 있어.
+Don't count on it.;기대하진 마.
+You can be whatever you want to be.;너가 원하는 뭐든 될 수 있어.
+Keep it moving.;그걸 계속 움직여, 진행시켜.
+What'd you do last night?;어젯밤에 뭐했어?
+I'm impressed.;인상적인걸, 감동이야.
+I won't keep you.;더 붙들지 않을게요.
+The plan is working.;계획이 먹히고 있어.
+I own a restaurant.;식당을 가지고 있어.
+Let me in.;날 들여보내 줘.
+You're in danger.;너 지금 위험해.
+It's 6:00 sharp. 6;시 딱 정각이야.
+It's not about money.;돈 때문이 아냐.
+Leave this to me.;이건 나한테 맡겨.
+We just grew apart.;우린 그냥 멀어졌어.
+It's an hour away.;한 시간 거리야.
+I got something in my eye.;눈에 뭐가 들어갔어.
+That's all I need.;그게 내가 필요한 전부야.
+Do as I say.;내가 말한대로 해.
+I hate to admit it.;인정하기 싫어.
+I have a lot on my mind.;머리가 복잡해.
+Could you be more specific?;더 자세히 설명해주실 수 있어요?
+Grow up!;철 좀 들어라!
+Don't judge me.;날 판단하지마.
+I could care less.;전혀 신경 안써.
+I'm not gonna quit!;안 때려칠 거야.
+Are you jealous?;부러운 거야?
+You have beautiful eyes.;너 눈이 참 예쁘다.
+She's adorable.;애기가 넘 예뻐요.
+How can I put this?;이걸 어떻게 말하지?
+Good to go?;다 됐어?
+I can read your mind.;네 속을 읽을 수 있어.
+What does the sign say?;표지판에 뭐라 써져있어?
+I'm running late.;나 늦을 것 같아.
+That's who you are.;그게 바로 진짜 너야.
+He was right behind me.;그가 바로 내 뒤에 있었어.
+I love your shirt.;셔츠 멋지다.
+I like your haircut.;머리 자른 거 예쁘다!
+Knock yourself out.;네 마음대로 해.
+Are you for real?;정말 진심이야?
+That's overrated.;과대평가 됐어.
+What are you waiting for?;뭘 기다리고 있어? 뭘 망설여?
+It's not the end of the world.;세상이 끝나버린 건 아니야.
+Finders keepers!;찾은 사람이 임자야!
+Feel free to look around.;편하게 둘러봐.
+Don't mention it.;별말씀을요!
+That's my specialty.;그게 내 주특기야.
+Keep it real.;진정성있게 행동해.
+How many times do I have to tell you?;몇 번이나 말해야 돼?
+You look gorgeous.;너 유난히 더 멋져 보여.
+He's good looking.;걔 잘 생겼어.
+Why are you hesitating?;왜 망설이고 있어?
+The night is still young.;아직 초저녁이야.
+We could take turns.;우리 돌아가면서 해도 돼.
+Thanks for the heads-up.;귀띔해줘서 고마워.
+I'm not cut out for this.;난 이거에 소질이 없나봐.
+That will do.;그거면 될 거야.
+I'd appreciate that.;그렇게 해주시면 감사하죠.
+You should get dressed.;너 옷 입어야겠다.
+My alarm didn't go off.;알람이 안 울렸어.
+He's about your age.;그는 니 나이 또래야.
+I'll drop you off.;가다가 내려 줄게.
+Where'd he go?;그가 어디 갔어?
+Is there something on your mind?;너 무슨 고민 있어?
+I wasn't born yesterday.;나도 알 건 다 알아.
+That's a bummer.;아쉽다, 안타까워.
+I'll pay you back.;내가 갚을게.
+I'll have the same.;같은 걸로 주문할게요.
+Brace yourself.;마음 단단히 먹어.
+I'm on vacation.;나 휴가 중이야.
+Is this seat taken?;여기 자리 있나요?
+Do you mind if I sit here?;나 앉아도 될까?
+Can you help me out?;나 좀 도와줄 수 있어?
+Don't hold your breath.;너무 기대하진 마.
+You'll get the hang of it.;요령이 생길 거야, 감잡을 거야.
+How are you holding up? (;힘들텐데) 어찌 잘 버텨내고 있어?
+I wanna hear everything.;전부 다 말해줘, 듣고 싶어.
+You gotta see this.;너 이거 좀 봐봐야겠는데.
+Go for it!;도전해봐, 화이팅!
+How did this happen?;어쩌다 이렇게 됐지?
+It's never gonna happen.;그런 일은 절대 없어.
+There is a silver lining.;상황이 안좋지만 희망은 있어.
+You know what I’m thinking?;내가 무슨 생각하는지 알아?
+When is the baby due?;출산 예정일이 언제야?
+I'm good. Thanks.;난 됐어. 고마워.
+Do you have a reservation?;예약 하셨어요?
+I screwed up.;내가 다 망쳤어.
+I should just go.;난 그냥 가는 게 좋겠어.
+It's due tomorrow.;내일이 마감이야.
+I can't let you do this.;너가 이걸 하게 둘 수 없어.
+Don't take it out on me.;나한테 화풀이 하지마.
+Where did you get it?;너 그거 어디서 났어?
+Make it two.;같은 걸로 주세요.
+I'm into it.;난 그거에 푹 빠졌어.
+It's growing on me.;나 그게 점점 좋아져.
+It's kind of pricey.;그건 좀 비싸.
+What a rip off!;완전 바가지야!
+I'm not picky.;난 까다롭지 않아.
+It hurts so bad.;너무 아퍼.
+I just made it up.;내가 그냥 지어낸 거야.
+I sprained my ankle.;나 발목 삐었어.
+I owe you one.;내가 신세를 졌네.
+I'm happy for you.;너가 잘돼서 나도 좋아.
+Will you go out with me?;나랑 사귈래?
+He asked me out.;그가 나한테 데이트 신청했어.
+Did you say yes?;너 수락했어?
+I'm super excited.;완전 신난다!
+We should hang out sometime.;언제 같이 좀 놀자.
+You're not supposed to say that!;넌 그런 말 하면 안되지!
+Is there a problem?;문제 있어?
+He came out of nowhere.;그가 갑자기 나타났어.
+Do your homework.;숙제하렴.
+He moved out.;그는 이사 갔어.
+Did I say that out loud?;내가 너무 크게 말했나?
+I'm freaking out!;나 환장하겠네!
+I don't know where else to go.;달리 갈 곳을 모르겠어.
+It matters to me.;나한텐 중요한 문제야.
+What if it doesn't work?;그게 잘 안되면 어쩌지?
+Can we just drop it?;그 얘기 좀 그만할 수 있을까?
+You're not the only one.;너만 그런 건 아냐.
+Are you expecting someone?;누구 더 오기로 한 사람 있어?
+That was epic!;완전 대애박!
+It makes no difference.;별 차이 없어.
+It's awkward.;뻘쭘하네.
+You're busted!;너 딱 걸렸어!
+This too shall pass.;이 또한 지나가겠지.
+Don't give up on me.;날 포기하지 말아줘.
+I taught myself.;난 독학했어.
+You ruined everything.;너가 다 망쳤어.
+I used to be like you.;나도 예전엔 너같았어.
+I broke up with him.;그랑 헤어졌어.
+When did you get here?;너 여기 언제 왔어?
+Can I be honest with you?;솔직히 말해도 돼?
+I'm not hungry anymore.;나 이제 배안고파.
+This has nothing to do with me.;이건 나랑 아무 상관 없어.
+Shame on you.;부끄러운줄 알아.
+Things change.;모든 건 변해.
+It's a real page-turner.;재밌는 책이야, 술술 읽혀.
+I'm so stressed out.;나 너무 스트레스 받아.
+I didn't do it on purpose.;일부러 그러지 않았어.
+I can't afford it.;난 그거 감당 못해.
+It’s on the house.;서비스예요.
+I’m not myself today.;나 오늘 제정신 아냐.
+How are you so good at this?;너 이거 어떻게 그렇게 잘해?
+It's not an issue.;그건 문제거리가 아냐.
+I'm out of control.;나 자제가 안돼.
+My car won't start.;차 시동이 안걸려.
+What was she wearing?;그녀가 뭘 입고 있었어?
+I'll take a rain check.;다음 기회로 미룰게.
+I want my money back.;내 돈 돌려받고 싶어.
+You never know.;사람 일 모르는거야.
+Take it back.;그 말 취소해.
+That's why I love you.;그게 내가 널 사랑하는 이유야.698 I would've done the same thing. 나도 똑같이 했을거야.
+I ran into her.;우연히 그녀를 마주쳤어.
+Let's take a selfie.;셀카 찍자.
+It's better this way.;이렇게 하는 게 더 나아.
+I don't regret it.;난 그걸 후회하지 않아.
+Let's move on.;다음으로 넘어가자.
+I'm gonna fix it.;내가 고쳐놓을게.
+He stood me up.;그가 날 바람맞혔어.
+It runs in the family.;집안 내력이야.
+You are so naive.;너 참 순진하다.
+Something is missing.;뭔가 빠진 것 같아.
+Now we're even.;이제 쌤쌤이야.
+Enjoy your lunch.;점심 맛있게 먹어.
+I don't understand what's going on.;무슨 상황인지 모르겠어.
+I wish I could.;나도 그러고 싶은데 불가능.
+I can't complain.;나쁘지 않아, 갠춘.
+I wasn't gonna say anything.;아무 말도 안하려고 했는데.
+I think I get it.;알 것 같아.
+Deal with it.;견뎌, 받아들여.
+I'm just frustrated.;나 넘 답답하고 짜증나.
+This is so frustrating.;이거 아주 짜증나게하네.
+We'll see.;곧 알게 되겠지.
+Sleep on it.;시간을 갖고 생각해봐.
+What are you talking about?;무슨 얘기하는거야?
+I Googled it.;내가 검색해봤어.
+It's chilly in here.;여기 안은 쌀쌀해.
+My phone's dead.;폰 배터리 나갔어.
+I should've been there.;거기 내가 갔어야했어.
+You're up early.;일찍 일어났네.
+This is my favorite part.;내가 제일 좋아하는 부분이야.
+It's more expensive.;그게 더 비싸.
+Sure. That sounds great.;좋아!
+Pay attention.;주목해 봐.
+That's ridiculous.;어이가 없네.
+You can say that again.;완전 맞는 말이야. 지당하신 말씀.
+Now you're talking.;이제야 말이 통하네.
+Sleep tight.;푹 잘자.
+I'm feeling a little under the weather.;컨디션이 별로야.
+Don't make me cry.;날 울리지마.
+I don't buy it.;안 믿어 난.
+I didn't see that coming.;그럴 줄은 몰랐네.
+That's way too much.;거 너무 지나친데.
+You're so mean.;너 참 못됐다.
+How tall are you?;너 키가 몇이야?
+How much do you weigh?;몸무게 얼마나 나가?
+I lost my voice.;나 목이 쉬었어.
+I have nothing to wear.;입을 게 없어.
+I slept in.;나 늦잠 푹 잤어.
+What's it called?;그거 뭐라고 부르지?
+I don't blame you.;그럴 수 있지, 널 탓하지 않아.
+It went well.;그 일은 잘 풀렸어.
+Pass the salt.;소금 좀 건내줘.
+What makes you think that?;뭐때문에 그렇게 생각해?
+You're acting really weird.;너 진짜 이상하게 군다.
+I smell something burning.;뭐 타는 냄새 나는데.
+It feels like home.;집처럼 편해.
+I just don't feel like it.;그냥 그럴 기분이 아냐.
+I'm gonna take a nap.;나 낮잠 자려고.
+Look who's talking.;누가 할 소릴, 사돈남말하네.
+Why are you staring at me?;날 왜케 빤히 쳐다봐?
+We need to talk.;우리 얘기 좀 해.
+Don’t be silly.;바보같은 소리마.
+That was unexpected.;예상 밖인걸.
+That's a relief.;안심이야.
+I'm good with that.;그렇게 해도 난 괜찮아.
+I don't play golf.;난 골프 안쳐.
+It could've been worse.;천만다행이야.
+(It's) buy one, get one free.;원플러스원이야.
+I won’t let you down.;널 실망시키지 않을 거야.
+I can handle it.;내가 처리할 수 있어.
+That’s the spirit!;바로 그런 자세지!
+You just made my day!;덕분에 오늘 기분 넘 좋다!
+I couldn’t help it.;어쩔 수 없었어.
+I messed up.;내가 다 망쳤어.
+I’m all set.;난 다 준비됐어.
+You saved my life.;넌 내 생명의 은인이야.
+How did it go?;그거 어떻게 됐어?
+I’ll go get it.;내가 가서 가져올게.
+I lost track of time.;시간가는 줄 몰랐어.
+I’m coming through.;저 지나갈게요.
+It changed my life.;그게 내 인생을 바꿨어.
+That's hilarious.;거 진짜 웃긴다.
+What day is it?;오늘 무슨 요일이야?
+Hang in there.;좀 더 버텨봐.
+Get in the car.;차에 타.
+It’s about time.;이제 그럴 때도 됐지.
+I don’t like it here.;난 여기 맘에 안 들어.
+Take a deep breath.;숨을 깊게 들이켜봐.
+I’m sorry to interrupt.;방해해서 미안해.
+Don’t wait for me.;나 기다리지 마.
+It’s not your fault.;네 잘못이 아니야.
+Do you wanna grab a bite?;간단히 뭐 좀 먹을까?
+What's your type?;이상형이 어떻게 돼?
+Why are you avoiding me?;너 왜 나 피해?
+I’m proud of you.;난 네가 자랑스러워.
+What does that mean?;그게 무슨 뜻이야?
+Thanks for the ride.;태워줘서 고마워.
+I'm between jobs.;이직 준비중이야.
+This is so typical.;늘 이렇다니까.
+Count me in.;나도 껴줘.
+I mean it.;진심이야.
+Hear me out.;내 말 끝까지 들어.
+We have a lot in common.;우린 공통점이 많아.
+I’m starving.;배고파 죽겠어.
+Time is up.;시간 다 됐어.
+Let’s be clear.;확실히 하자고.
+It’s not really my thing.;별로 내 취향 아냐.
+Can you give me a hand?;좀 도와줄 수 있어?
+I get that a lot.;그런 말 많이 들어.
+Let’s call it a day.;오늘은 여기까지 하죠.
+I’ll give it a shot.;한 번 해볼게.
+What's bothering you?;고민거리 있어?
+I have to use the restroom.;화장실 갔다 올게.
+You have talent.;너 소질있다.
+What took you so long?;왜케 오래걸렸어?
+I didn’t mean it.;그런 뜻이 아니었어.
+I’ll catch you later.;다음에 봐.
+It's between you and me.;우리 둘만의 비밀이야.
+This is new for me.;이건 나한테 새로운거야.
+That is so you.;참 너 답다.
+What a coincidence!;이런 우연이!
+I'm all ears.;들을 준비 됐어.
+I have to study.;나 공부해야 돼.
+The movie is about to start.;영화가 막 시작하려고해.
+Are you seeing someone?;너 만나는 사람 있어?
+I haven’t decided yet.;아직 결정 못했어.
+There was an accident.;사고가 있었어.
+Do you work out?;너 운동해?
+I'm going to the gym.;나 헬스장 갈게.
+You don’t have to do that.;안 그래도 돼.
+Is this your first time?;이번이 처음이야?
+I stayed up all night.;나 밤샜어.
+Who said that?;누가 그러던가요?
+Everyone knows that.;그건 모두가 다 알아.
+I won the lottery!;나 로또맞았어!
+What are you doing this weekend?;이번 주말에 뭐해?
+Come again?;뭐라고요?
+No big deal.;별 거 아냐.
+I didn't have time.;시간이 없었어.
+What did you have for lunch?;점심 뭐 먹었어?
+Do you know where it is?;그거 어딨는지 알아?
+He's taking advantage of her.;걘 사람을 이용하고 있어.
+Outstanding.;대단해, 너무 잘했어!
+Let's get started.;시작하자.
+What's your name again?;이름이 뭐라고 했지?
+I got a job.;나 취직했어.
+Let me check my schedule.;일정 확인해 볼게.
+You should see a doctor.;병원에 좀 가봐.
+Not even close.;택도 없어 헛짚었어.
+Hang up the phone.;전화 끊어.
+I’m off duty.;나 쉬는 날이야.
+You deserve it.;받아 마땅해.
+He seems like a good guy.;그는 좋은 사람 같아.
+Pull over.;차 좀 세워봐.
+Let's figure this out.;같이 답을 생각해보자.
+Fill out this form.;이 양식을 작성하세요.
+It’s up to you.;너한테 달려있어, 너가 정해.
+It doesn't make sense.;그건 말이 안돼.
+Where am I?;여기가 어디죠?
+Smile for the camera.;카메라보고 웃으세요.
+What have you done to me?;너 나한테 무슨 짓 했어?
+It doesn't work for me.;그건 나한테 안 통해.
+I'm late for work.;나 회사 늦겠다.
+What do you say?;너 생각은 어때?
+It's insane.;미쳤는데?
+I'm at work.;나 지금 회사야.
+I'm waiting for you.;널 기다리고 있어.
+I'll tell you one thing.;내가 뭐 하나 말해줄게.
+Get out of my office!;내 사무실에서 나가!
+Keep me posted.;진행상황 계속 알려줘.
+She's in the hospital.;그녀는 입원했어.
+Did I fall asleep?;나 잠들었었어?
+I brought you some coffee.;너 줄 커피 좀 가져왔어.
+Enough is enough.;그만하면 충분하다니까!
+Exactly the same.;완전 똑같아.
+It's easier said than done.;말이야 쉽지.
+What's wrong with you?;너 왜 그러는 거야?
+Cut it out!;그만 좀 해!
+What are we gonna do?;우리 어떡하지?
+I'm not ready yet.;난 아직 준비가 안됐어.
+How much is this gonna cost?;이거 돈이 얼마나 들까?
+What can I do for you?;뭘 도와드릴까요?
+You're gonna be fine.;넌 괜찮을 거야.
+He's not really my type.;걘 내 스타일 아냐.
+Same thing happened to me.;나도 똑같은 일 있었어.
+I feel the same way.;나도 같은 마음이야.
+Make yourself comfortable.;편하게 있어요.
+Are you getting married?;너 결혼해?
+What brought you here?;여긴 어쩐 일이야?
+Whose car is this?;이거 누구 차야?
+I'm sick of it.;지긋지긋해 질렸어.
+I'm taking care of it.;그건 내가 처리중이야.
+I can't help it.;어쩔 수 없어.
+Knock it off.;그만 좀 해!
+I'm on a diet.;나 다이어트 중이야.
+I'm taking a break.;난 잠깐 쉬려고 해.
+I have no idea.;전혀 모르겠어.
+Don't even think about it.;꿈도 꾸지 마.
+It's time to get up.;일어날 시간이야.
+It's been a long day.;힘든 하루였어.
+I called in sick.;나 병가냈어.
+My car broke down.;내 차가 고장났어.
+How do you spell that?;스펠링이 어떻게 돼?
+I hope you feel better soon.;빨리 낫기를 바랍니다.
+Where have you been?;야, 너 어디 있었어?
+This will be fun.;이거 재밌을 거야.
+Do you have any plans?;너 약속 있어?
+It's the same.;똑같아.
+We were both wrong.;우리 둘 다 틀렸어.
+Make yourself useful.;뭐라도 좀 해.
+You are not alone.;넌 혼자가 아냐.
+I'm on my way.;난 가는 길이야.
+Stay out of my way.;비켜, 방해하지마.
+Can we start over?;우리 다시 시작할 수 있어?
+been there done that.;나도 다 겪어봤어.
+I've done that.;나 그런 적 있어.
+I've never done that.;난 그런 적 없어.
+I agree with you.;나도 너랑 같은 생각이야.
+You wanted to see me?;저 부르셨어요?
+Let me put it this way.;이렇게 내가 설명해볼게.
+That explains it.;그래서 그랬구나.
+Can you hear me?;내 말 들려?
+Don’t get me wrong.;내 말 오해하지 말고 들어.
+What are you doing here?;여긴 웬일이야?
+Can I come in?;들어가도 돼?
+Have a seat.;좀 앉아.
+That's a good call.;좋은 결정이야.
+I better go.;가보는게 낫겠어. 이만 가봐야겠어.
+How should I know?;내가 어떻게 알겠냐?
+Why am I doing this?;내가 이걸 왜 하고 있지?
+Don't do that again.;다신 그러지 마.
+That'd be good.;그게 좋겠어.
+I didn't catch your name.;이름을 잘 못들었어.
+I'll take that as a yes.;그 말 긍정으로 받아들일게.
+Turn around.;돌아서.
+We had a deal.;이 얘긴 다 끝난거잖아.
+I'll be there.;금방 갈게.
+Leave me alone.;나 좀 내버려둬.
+I have to do something.;나 할 일 있어.
+Give me your hand.;네 손을 줘.
+That's a really good question.;진짜 좋은 질문이야.
+I've never thought about that.;그거에 대해 생각해본 적 없어.
+Let me ask you a question.;내가 질문 하나 할게.
+What are you afraid of?;넌 뭐가 두려운거야?
+I want you to know.;난 너가 알았으면 해.
+What do you want me to do?;너 내가 뭘 하길 원해?
+There you go.;그렇지, 잘했어.
+Keep going.;계속 해.
+Stop saying that.;그 말 좀 그만해.
+Don't do this to me.;나한테 이러지 마.
+That's too bad.;너무 안됐다, 아쉬워.
+Listen to me.;내 말 좀 들어봐.
+After you.;먼저 하세요.
+What are you up to tonight?;너 오늘밤 뭐해?
+Thank you for coming.;와줘서 고마워.
+I'll see you around.;조만간 또 보자.
+I'm sorry I'm late.;늦어서 미안해.
+I can’t stand this.;이건 진짜 못참겠어.
+Make yourself at home.;내 집이다 생각하고 편하게 있어.
+I have something to say.;나 할 말 있어.
+What should I do?;나 어떡하지?
+Can I try this on?;저 이거 입어봐도 되나요?
+I'm looking forward to it.;그거 정말 기대된다.
+What do you think?;어떻게 생각해?
+We're running out of time;우리 시간이 없어.
+Let's go get some coffee.;커피 마시러 가자.
+What do you want to do?;뭐하고 싶어?
+I don't think so.;아닌 것 같은데.
+I'm used to it.;난 익숙해 그거.
+This is a big day.;오늘 엄청 중요한 날이야.
+Don't take it personally.;기분 나쁘게 생각 마.
+Who cares?;누가 신경이나 쓴대?
+I just need some fresh air.;그냥 바람 좀 쐬야했어.
+You know what I mean?;내 말 무슨 말인지 알지?
+What do you do for a living?;무슨 일 하세요?
+You don’t have to explain.;설명할 필요 없어.
+I brought you something.;너 주려고 뭐 좀 가져왔어.
+You just don't know it yet.;너 아직 모르는구나.
+I'm gonna take a shower.;나 샤워할게.
+Get some rest.;좀 쉬도록 해.
+This can't be happening.;이런 일은 있을 수 없어.
+How long have you been here?;너 여기 얼마나 있었어?
+Can I talk to you for a second?;잠깐 얘기 좀 할 수 있어?
+I can't wait to see this.;이거 빨리 보고 싶어서 못참겠어.
+I haven't seen her.;난 그녀를 본 적 없어.
+What's that supposed to mean?;무슨 뜻으로 그러는 거야?
+Don't waste your time.;시간 낭비하지 마.
+I can't thank you enough.;더할 나위 없이 감사해요.
+Let's go for a walk.;산책 가자.
+Dinner's on me.;저녁은 내가 살게.
+I'll be right back.;내가 바로 돌아 올게.
 accommodate only private planes;개인 비행기만 수용하다
 address the audience;청중에게 연설하다
 adjust a wire;전선을 조절하다
@@ -3433,9 +4404,7 @@ writing pad;편지지
 yearly maintenance fee;연간 관리비
 You can go via Boston;보스턴을 경유하여 갈 수 있습니다
 You can take our courtesy bus;우리전용버스를타시면됩니다
-(명령문) or else (명령문);하라
-(수치) or more;(수치) 이상
-(시간) during which time;그 (시간) 동안에
+during which time;그 (시간) 동안에
 15% off sale;15% 할인 행사
 200-room hotel;200개의 객실을 갖춘 호텔
 24 hours a day, 7 days a week;언제라도, 항상
@@ -4752,7 +5721,7 @@ wear safety glasses;보안경을 착용하다
 weather-related;날씨와 관계된
 web designer;웹 디자이너
 weekly radio show;주간(週刊) 라디오 쇼
-weigh (중량);(무게가) ~ 나가다
+weigh ;(무게가) ~ 나가다
 welcome A to B;A가 B에 온 것을 환영하다
 welcome suggestions for;~에대한질문들을환영하다
 welcome to;~에 오신 걸 환영합니다

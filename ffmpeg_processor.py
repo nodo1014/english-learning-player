@@ -462,18 +462,26 @@ class SubtitleProcessor:
             return f"{hours}:{minutes:02d}:{secs:05.2f}"
         
         # Calculate English marginV based on font size
-        def get_english_margin_v(font_size):
+        # 한글 자막이 선택 안돼있으면, marginV 10을 리턴한다.
+        def get_english_margin_v(font_size, has_korean=True):
+            # 한글 자막이 체크되지 않은 경우 marginV 10 리턴
+            if not has_korean:
+                return 10
+                
             if font_size == 24:
                 return 50
-            elif font_size == 32:
+            elif font_size == 28:
                 return 60
-            elif font_size == 48:
+            elif font_size == 36:
                 return 100
             else:
                 # Fallback for other sizes
                 return 60
         
-        english_margin_v = get_english_margin_v(english_font_size)
+        # 한글 자막 여부 체크 (korean_text가 있고 비어있지 않은 경우)
+        has_korean_subtitle = korean_text is not None and korean_text.strip()
+        
+        english_margin_v = get_english_margin_v(english_font_size, has_korean_subtitle)
         korean_margin_v = 30  # 한글은 고정값 유지
         
         # TOEIC 표현 해설 생성
@@ -736,7 +744,7 @@ class MediaExtractor:
         subtitle_path = os.path.join(os.path.dirname(sentence_data.get('output_dir', '.')), subtitle_filename)
         
         # Get font sizes and commentary option from options
-        english_font_size = subtitle_options.get('english_font_size', 32)
+        english_font_size = subtitle_options.get('english_font_size', 28)
         korean_font_size = subtitle_options.get('korean_font_size', 24)
         include_commentary = subtitle_options.get('include_commentary', False)
         commentary_style = subtitle_options.get('commentary_style', 'orange')

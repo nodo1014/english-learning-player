@@ -12,18 +12,10 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-# spaCy import (with fallback)
-try:
-    import spacy
-    # Load English model
-    nlp = spacy.load("en_core_web_sm")
-    SPACY_AVAILABLE = True
-except (ImportError, OSError):
-    SPACY_AVAILABLE = False
-    nlp = None
+# Simple phrase matching system (replacing spaCy, VAD, patterns)
 
 # Import our new modules
-from database import media_repo, chapter_repo, scene_repo, sentence_repo, db_manager, word_difficulty_repo
+from database import media_repo, chapter_repo, scene_repo, sentence_repo, db_manager, words_repo
 from file_manager import file_manager
 from ffmpeg_processor import ffmpeg_processor, media_extractor, subtitle_processor
 
@@ -41,35 +33,197 @@ app.config['MAX_CONTENT_LENGTH'] = None
 processing_status = {}
 translation_status = {}
 
-# Load CEFR-J word difficulty data
-CEFR_WORD_LEVELS = {}
-def load_cefr_data():
-    """Load CEFR-J vocabulary data from octanove C1/C2 dataset"""
-    global CEFR_WORD_LEVELS
+# Load words database on startup
+def load_words_database():
+    """Load words from static/data/words_db.txt into database"""
     try:
-        csv_path = '/home/kang/dev/english/data/olp-en-cefrj-master/octanove-vocabulary-profile-c1c2-1.0.csv'
-        import csv
-        with open(csv_path, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                word = row['headword'].lower().strip()
-                cefr_level = row['CEFR'].strip()
-                
-                # Only C1/C2 words are marked as difficult
-                if cefr_level in ['C1', 'C2']:
-                    CEFR_WORD_LEVELS[word] = 'hard'
+        # Check if words are already loaded
+        if words_repo.get_phrase_count() > 0:
+            logger.info(f"Words already loaded: {words_repo.get_phrase_count()} phrases")
+            return
         
-        logger.info(f"Loaded {len(CEFR_WORD_LEVELS)} C1/C2 words from CEFR-J data")
+        # Load from file
+        words_file = '/home/kang/dev/english/static/data/words_db.txt'
+        count = words_repo.load_from_file(words_file)
+        logger.info(f"Loaded {count} phrases into database")
     except Exception as e:
-        logger.error(f"Failed to load CEFR data: {e}")
+        logger.error(f"Failed to load words database: {e}")
 
-# Load data at startup
-load_cefr_data()
+# Load words data on startup
+load_words_database()
+
+# Word matching system
+def find_phrase_matches(text, blank_mode=False):
+    """Find matching phrases in text using optimized database search"""
+    try:
+        import re
+        
+        # Use database search to get only relevant phrases
+        candidate_phrases = words_repo.find_matching_phrases(text, limit=20)
+        
+        matches = []
+        highlighted_text = text
+        
+        # Sort by length (longest first) to match longer phrases first
+        sorted_phrases = sorted(candidate_phrases, key=lambda x: len(x['phrase']), reverse=True)
+        
+        for phrase_data in sorted_phrases:
+            phrase = phrase_data['phrase']
+            meaning = phrase_data['meaning']
+            
+            # Simple case-insensitive search first (faster than regex)
+            if phrase.lower() in text.lower():
+                # Use simple string replacement for exact matches
+                pattern = re.compile(re.escape(phrase), re.IGNORECASE)
+                match = pattern.search(highlighted_text)
+                
+                if match:
+                    matched_text = match.group(0)
+                    matches.append({
+                        'phrase': phrase,
+                        'meaning': meaning,
+                        'matched_text': matched_text
+                    })
+                    
+                    if blank_mode:
+                        # Create blank spaces (underlines)
+                        blank_length = len(matched_text)
+                        underline = '_' * max(blank_length, 3)
+                        highlighted_text = pattern.sub(
+                            f'<span class="blank-space" title="{meaning}">{underline}</span>',
+                            highlighted_text,
+                            count=1
+                        )
+                    else:
+                        # Highlight in text (billiard hall style: matched_text : meaning)
+                        highlighted_text = pattern.sub(
+                            f'<span class="phrase-match" title="{meaning}">{matched_text} : {meaning}</span>',
+                            highlighted_text,
+                            count=1
+                        )
+                    
+                    # Stop after finding first match to avoid overlapping
+                    break
+            
+            # Check for placeholder patterns (A, B, C) - only for patterns containing single capital letters
+            elif re.search(r'\b[A-Z]\b', phrase):
+                # Replace placeholder letters with regex patterns
+                flexible_phrase = phrase
+                flexible_phrase = re.sub(r'\b[A-Z]\b', r'\\w+', flexible_phrase)
+                
+                # Escape other special regex characters but keep our \w+ patterns
+                parts = flexible_phrase.split('\\w+')
+                escaped_parts = [re.escape(part) for part in parts]
+                regex_pattern = '\\w+'.join(escaped_parts)
+                
+                try:
+                    pattern = re.compile(regex_pattern, re.IGNORECASE)
+                    match = pattern.search(highlighted_text)
+                    
+                    if match:
+                        matched_text = match.group(0)
+                        matches.append({
+                            'phrase': phrase,
+                            'meaning': meaning,
+                            'matched_text': matched_text
+                        })
+                        
+                        if blank_mode:
+                            blank_length = len(matched_text)
+                            underline = '_' * max(blank_length, 3)
+                            highlighted_text = pattern.sub(
+                                f'<span class="blank-space" title="{meaning}">{underline}</span>',
+                                highlighted_text,
+                                count=1
+                            )
+                        else:
+                            highlighted_text = pattern.sub(
+                                f'<span class="phrase-match" title="{meaning}">{matched_text} : {meaning}</span>',
+                                highlighted_text,
+                                count=1
+                            )
+                        break
+                except re.error:
+                    # Skip invalid regex patterns
+                    continue
+        
+        return {
+            'highlighted_text': highlighted_text,
+            'matches': matches,
+            'blank_mode': blank_mode
+        }
+    except Exception as e:
+        logger.error(f"Error in phrase matching: {e}")
+        return {
+            'highlighted_text': text,
+            'matches': [],
+            'blank_mode': blank_mode
+        }
 
 @app.route('/')
 def index():
     """Main page"""
     return render_template('index.html')
+
+@app.route('/api/phrase-matching', methods=['POST'])
+def phrase_matching():
+    """API for phrase matching in text"""
+    try:
+        data = request.get_json()
+        text = data.get('text', '')
+        blank_mode = data.get('blank_mode', False)
+        
+        if not text:
+            return jsonify({'error': 'Text is required'}), 400
+        
+        result = find_phrase_matches(text, blank_mode)
+        return jsonify({
+            'success': True,
+            'highlighted_text': result['highlighted_text'],
+            'matches': result['matches'],
+            'blank_mode': result['blank_mode']
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in phrase matching API: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/words/reload', methods=['POST'])
+def reload_words():
+    """API to reload words database from file"""
+    try:
+        # Clear existing words
+        with words_repo.db.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM Words")
+            conn.commit()
+        
+        # Reload from file
+        words_file = '/home/kang/dev/english/static/data/words_db.txt'
+        count = words_repo.load_from_file(words_file)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Reloaded {count} phrases'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error reloading words: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/words/stats', methods=['GET'])
+def words_stats():
+    """Get words database statistics"""
+    try:
+        count = words_repo.get_phrase_count()
+        return jsonify({
+            'success': True,
+            'phrase_count': count
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting words stats: {e}")
+        return jsonify({'error': str(e)}), 500
 
 # =============================================================================
 # MEDIA MANAGEMENT ROUTES
@@ -102,14 +256,23 @@ def get_chapters(media_id):
 
 @app.route('/api/media/<media_id>/sentences-grouped', methods=['GET'])
 def get_sentences_grouped(media_id):
-    """Get sentences grouped by chapters and scenes"""
+    """Get sentences grouped by chapters and scenes with phrase matching"""
     try:
         chapters = chapter_repo.get_by_media_id(media_id)
         
         for chapter in chapters:
             scenes = scene_repo.get_by_chapter_id(chapter['id'])
             for scene in scenes:
-                scene['sentences'] = sentence_repo.get_by_scene_id(scene['id'])
+                sentences = sentence_repo.get_by_scene_id(scene['id'])
+                
+                # Apply phrase matching to each sentence
+                for sentence in sentences:
+                    if sentence.get('english'):
+                        match_result = find_phrase_matches(sentence['english'])
+                        sentence['highlighted_english'] = match_result['highlighted_text']
+                        sentence['phrase_matches'] = match_result['matches']
+                
+                scene['sentences'] = sentences
             chapter['scenes'] = scenes
         
         return jsonify(chapters)
@@ -119,9 +282,22 @@ def get_sentences_grouped(media_id):
 
 @app.route('/api/media/<media_id>/sentences', methods=['GET'])
 def get_sentences(media_id):
-    """Get flat list of sentences for a media"""
+    """Get flat list of sentences for a media with optimized phrase matching"""
     try:
         sentences = sentence_repo.get_by_media_id(media_id)
+        
+        # Apply fast phrase matching to each sentence
+        for sentence in sentences:
+            if sentence.get('english'):
+                # Use cached highlighted_english if available
+                if sentence.get('highlighted_english'):
+                    continue
+                
+                # Apply optimized phrase matching
+                match_result = find_phrase_matches(sentence['english'])
+                sentence['highlighted_english'] = match_result['highlighted_text']
+                sentence['phrase_matches'] = match_result['matches']
+        
         return jsonify(sentences)
     except Exception as e:
         logger.error(f"Error getting sentences for media {media_id}: {e}")
@@ -385,9 +561,7 @@ def import_from_sync_directory():
                                     sentence_id = sentence_repo.create(sentence_data)
                                     sentence_ids.append(sentence_id)
                                 
-                                # Auto-trigger SpaCy analysis
-                                import threading
-                                threading.Thread(target=auto_spacy_analysis, args=(media_id, sentence_ids)).start()
+                                # Auto analysis disabled - only using words_db matching
                                     
                         except Exception as subtitle_error:
                             logger.warning(f"Failed to process subtitle file {subtitle_filename}: {subtitle_error}")
@@ -1835,531 +2009,37 @@ def _create_scene_subtitle_file(scene, sentences, subtitle_options):
 
 
 # =============================================================================
-# PERSONAL VOCABULARY API
+# WORDS DATABASE API (words_db.txt based)
 # =============================================================================
 
-@app.route('/api/vocabulary/add', methods=['POST'])
-def add_word_to_vocabulary():
-    """Add word to personal vocabulary"""
+@app.route('/api/words/reload', methods=['POST'])
+def reload_words_database():
+    """Reload words database from file"""
     try:
-        data = request.get_json()
-        word = data.get('word', '').lower().strip()
-        
-        if not word:
-            return jsonify({'error': 'Word is required'}), 400
-        
-        # Prepare word data with defaults
-        word_data = {
-            'word': word,
-            'lemma': data.get('lemma', word),
-            'definition': data.get('definition', ''),
-            'pos': data.get('pos', ''),
-            'difficulty_level': data.get('difficulty_level', 'medium'),
-            'frequency_rank': data.get('frequency_rank', 5000),
-            'context_sentence': data.get('context_sentence', ''),
-            'sentence_id': data.get('sentence_id')
-        }
-        
-        success = vocab_repo.add_word(word_data)
-        
-        if success:
-            return jsonify({'success': True, 'message': 'Word added to vocabulary'})
-        else:
-            return jsonify({'error': 'Failed to add word'}), 500
-            
-    except Exception as e:
-        logger.error(f"Add vocabulary error: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/vocabulary', methods=['GET'])
-def get_vocabulary():
-    """Get personal vocabulary list"""
-    try:
-        difficulty = request.args.get('difficulty')
-        
-        if difficulty:
-            words = vocab_repo.get_words_by_difficulty(difficulty)
-        else:
-            words = vocab_repo.get_all_words()
-        
-        return jsonify({'words': words})
-        
-    except Exception as e:
-        logger.error(f"Get vocabulary error: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/vocabulary/statistics', methods=['GET'])
-def get_vocabulary_statistics():
-    """Get vocabulary learning statistics"""
-    try:
-        stats = vocab_repo.get_statistics()
-        return jsonify(stats)
-        
-    except Exception as e:
-        logger.error(f"Get vocabulary stats error: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/vocabulary/mark-known', methods=['POST'])
-def mark_word_known():
-    """Mark word as known"""
-    try:
-        data = request.get_json()
-        word = data.get('word', '').lower().strip()
-        lemma = data.get('lemma', word)
-        
-        if not word:
-            return jsonify({'error': 'Word is required'}), 400
-        
-        success = vocab_repo.mark_as_known(word, lemma)
-        
-        if success:
-            return jsonify({'success': True, 'message': 'Word marked as known'})
-        else:
-            return jsonify({'error': 'Failed to mark word as known'}), 500
-            
-    except Exception as e:
-        logger.error(f"Mark known error: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/vocabulary/mark-unknown', methods=['POST'])
-def mark_word_unknown():
-    """Mark word as unknown"""
-    try:
-        data = request.get_json()
-        word = data.get('word', '').lower().strip()
-        lemma = data.get('lemma', word)
-        
-        if not word:
-            return jsonify({'error': 'Word is required'}), 400
-        
-        success = vocab_repo.mark_as_unknown(word, lemma)
-        
-        if success:
-            return jsonify({'success': True, 'message': 'Word marked as unknown'})
-        else:
-            return jsonify({'error': 'Failed to mark word as unknown'}), 500
-            
-    except Exception as e:
-        logger.error(f"Mark unknown error: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/vocabulary/check-known', methods=['POST'])
-def check_word_known():
-    """Check if word is known"""
-    try:
-        data = request.get_json()
-        word = data.get('word', '').lower().strip()
-        lemma = data.get('lemma', word)
-        
-        if not word:
-            return jsonify({'error': 'Word is required'}), 400
-        
-        is_known = vocab_repo.is_word_known(word, lemma)
-        
-        return jsonify({'word': word, 'is_known': is_known})
-        
-    except Exception as e:
-        logger.error(f"Check known error: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/word/difficulty/<word>', methods=['GET'])
-def get_word_difficulty(word):
-    """Get word difficulty level based on CEFR data with database cache"""
-    try:
-        word_lower = word.lower().strip()
-        
-        # Check database cache first
-        cached_result = word_difficulty_repo.get_word_difficulty(word_lower)
-        if cached_result:
-            return jsonify({
-                'word': word,
-                'difficulty': cached_result['difficulty'],
-                'level': cached_result['level'],
-                'cached': True
-            })
-        
-        # Check if word is in C1/C2 (hard) category
-        if word_lower in CEFR_WORD_LEVELS:
-            difficulty = CEFR_WORD_LEVELS[word_lower]
-        else:
-            difficulty = 'normal'  # Not in C1/C2 list
-            
-        level = 'C1/C2' if difficulty == 'hard' else 'A1-B2'
-        
-        # Cache the result
-        word_difficulty_repo.cache_word_difficulty(word_lower, difficulty, level)
-        
-        return jsonify({
-            'word': word,
-            'difficulty': difficulty,
-            'level': level,
-            'cached': False
-        })
-        
-    except Exception as e:
-        logger.error(f"Word difficulty error: {e}")
-        return jsonify({'error': str(e)}), 500
-
-# =============================================================================
-# VERB DETECTION API (spaCy-based)
-# =============================================================================
-
-@app.route('/api/detect-verbs', methods=['POST'])
-def detect_verbs():
-    """Detect verbs in text - now returns cached results instantly"""
-    try:
-        data = request.get_json()
-        text = data.get('text', '')
-        sentence_id = data.get('sentence_id')
-        
-        if not text:
-            return jsonify({'verbs': []})
-        
-        # Try to get from DB first if sentence_id provided
-        if sentence_id:
-            try:
-                sentence = sentence_repo.get_by_id(sentence_id)
-                if sentence and sentence.get('detectedVerbs'):
-                    import json
-                    cached_verbs = json.loads(sentence['detectedVerbs'])
-                    return jsonify({'verbs': cached_verbs, 'cached': True})
-            except Exception as e:
-                logger.warning(f"Could not load cached verbs for sentence {sentence_id}: {e}")
-        
-        # Fallback to real-time analysis (should be rare now)
-        if not SPACY_AVAILABLE:
-            return jsonify({'verbs': _detect_verbs_fallback(text)})
-        
-        # Use spaCy for accurate POS tagging
-        doc = nlp(text)
-        verbs = []
-        
-        for token in doc:
-            if token.pos_ == 'VERB' and not token.is_stop and len(token.text) > 2:
-                verbs.append(token.text)
-        
-        # Remove duplicates and limit to top 3
-        unique_verbs = list(set(verbs))[:3]
-        
-        return jsonify({'verbs': unique_verbs, 'cached': False})
-        
-    except Exception as e:
-        logger.error(f"Error detecting verbs: {e}")
-        return jsonify({'verbs': _detect_verbs_fallback(text)})
-
-def _detect_verbs_fallback(text):
-    """Fallback verb detection using simple patterns"""
-    # Basic patterns for common verbs
-    common_verbs = ['am', 'is', 'are', 'was', 'were', 'have', 'has', 'had', 'do', 'does', 'did', 
-                   'will', 'would', 'can', 'could', 'should', 'go', 'went', 'come', 'came', 
-                   'get', 'got', 'make', 'made', 'take', 'took', 'give', 'gave', 'see', 'saw',
-                   'work', 'works', 'working', 'worked', 'play', 'plays', 'playing', 'played',
-                   'run', 'runs', 'running', 'ran', 'walk', 'walks', 'walking', 'walked',
-                   'talk', 'talks', 'talking', 'talked', 'eat', 'eats', 'eating', 'ate',
-                   'think', 'thinks', 'thinking', 'thought', 'say', 'says', 'saying', 'said']
-    
-    words = re.findall(r'\b\w+\b', text.lower())
-    found_verbs = [word for word in words if word in common_verbs]
-    
-    return list(set(found_verbs))[:3]
-
-@app.route('/api/media/<media_id>/analyze-verbs', methods=['POST'])
-def analyze_verbs_background(media_id):
-    """Start background verb analysis for all sentences"""
-    try:
-        def analyze_verbs_task():
-            """Background task to analyze verbs"""
-            sentences = sentence_repo.get_sentences_without_verbs(media_id)
-            
-            if not sentences:
-                logger.info(f"No sentences need verb analysis for media {media_id}")
-                return
-            
-            logger.info(f"Starting verb analysis for {len(sentences)} sentences")
-            
-            for sentence in sentences:
-                try:
-                    if not sentence.get('english'):
-                        continue
-                        
-                    # Detect verbs using spaCy
-                    if SPACY_AVAILABLE:
-                        doc = nlp(sentence['english'])
-                        verbs = []
-                        
-                        for token in doc:
-                            if token.pos_ == 'VERB' and not token.is_stop and len(token.text) > 2:
-                                verbs.append(token.text)
-                        
-                        # Remove duplicates and limit to top 3
-                        unique_verbs = list(set(verbs))[:3]
-                    else:
-                        # Fallback
-                        unique_verbs = _detect_verbs_fallback(sentence['english'])
-                    
-                    # Store as JSON
-                    import json
-                    verbs_json = json.dumps(unique_verbs)
-                    sentence_repo.update_verbs(sentence['id'], verbs_json)
-                    
-                except Exception as e:
-                    logger.error(f"Error analyzing sentence {sentence['id']}: {e}")
-                    continue
-            
-            logger.info(f"Completed verb analysis for media {media_id}")
-        
-        # Start background thread
-        thread = threading.Thread(target=analyze_verbs_task)
-        thread.daemon = True
-        thread.start()
+        words_file = '/home/kang/dev/english/static/data/words_db.txt'
+        count = words_repo.load_from_file(words_file)
         
         return jsonify({
             'success': True,
-            'message': '동사 분석이 백그라운드에서 시작되었습니다.'
+            'message': f'{count}개의 구문을 다시 로드했습니다.'
         })
-        
     except Exception as e:
-        logger.error(f"Error starting verb analysis: {e}")
+        logger.error(f"Error reloading words database: {e}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/media/<media_id>/cache-vocabulary', methods=['POST'])
-def cache_vocabulary_background(media_id):
-    """Cache vocabulary difficulty for all sentences in a media"""
+@app.route('/api/words/stats', methods=['GET'])
+def get_words_stats():
+    """Get words database statistics"""
     try:
-        def cache_vocabulary_task():
-            """Background task to cache vocabulary"""
-            sentences = sentence_repo.get_by_media_id(media_id)
-            
-            if not sentences:
-                logger.info(f"No sentences found for media {media_id}")
-                return
-            
-            logger.info(f"Starting vocabulary caching for {len(sentences)} sentences")
-            
-            cached_count = 0
-            for sentence in sentences:
-                try:
-                    if not sentence.get('english'):
-                        continue
-                    
-                    # Extract words from sentence
-                    import re
-                    words = re.findall(r'\b[a-zA-Z]+\b', sentence['english'].lower())
-                    
-                    for word in set(words):  # Remove duplicates
-                        if len(word) < 3:  # Skip very short words
-                            continue
-                            
-                        # Check if already cached
-                        if word_difficulty_repo.get_word_difficulty(word):
-                            continue
-                        
-                        # Cache word difficulty
-                        if word in CEFR_WORD_LEVELS:
-                            difficulty = CEFR_WORD_LEVELS[word]
-                        else:
-                            difficulty = 'normal'
-                            
-                        level = 'C1/C2' if difficulty == 'hard' else 'A1-B2'
-                        word_difficulty_repo.cache_word_difficulty(word, difficulty, level)
-                        cached_count += 1
-                        
-                except Exception as e:
-                    logger.error(f"Error caching vocabulary for sentence {sentence['id']}: {e}")
-                    continue
-            
-            logger.info(f"Completed vocabulary caching for media {media_id}: {cached_count} words cached")
-        
-        # Start background thread
-        thread = threading.Thread(target=cache_vocabulary_task)
-        thread.daemon = True
-        thread.start()
+        phrase_count = words_repo.get_phrase_count()
         
         return jsonify({
             'success': True,
-            'message': '어휘 분석 DB 저장이 백그라운드에서 시작되었습니다.'
+            'phrase_count': phrase_count
         })
-        
     except Exception as e:
-        logger.error(f"Error starting vocabulary caching: {e}")
+        logger.error(f"Error getting words stats: {e}")
         return jsonify({'error': str(e)}), 500
-
-@app.route('/api/media/<media_id>/analysis-status', methods=['GET'])
-def get_analysis_status(media_id):
-    """Get analysis status for a media (SpaCy and vocabulary cache)"""
-    try:
-        # Check SpaCy analysis status (sentences with detected verbs)
-        sentences = sentence_repo.get_by_media_id(media_id)
-        spacy_analyzed = 0
-        total_sentences = len(sentences)
-        
-        for sentence in sentences:
-            if sentence.get('detectedVerbs'):
-                spacy_analyzed += 1
-        
-        # Check vocabulary cache status
-        # Get all unique words from sentences
-        all_words = set()
-        for sentence in sentences:
-            if sentence.get('english'):
-                import re
-                words = re.findall(r'\b[a-zA-Z]+\b', sentence['english'].lower())
-                all_words.update(word for word in words if len(word) >= 3)
-        
-        # Check how many are cached
-        cached_words = 0
-        for word in all_words:
-            if word_difficulty_repo.get_word_difficulty(word):
-                cached_words += 1
-        
-        return jsonify({
-            'spacy': {
-                'analyzed': spacy_analyzed,
-                'total': total_sentences,
-                'percentage': round((spacy_analyzed / total_sentences * 100) if total_sentences > 0 else 0)
-            },
-            'vocabulary': {
-                'cached': cached_words,
-                'total': len(all_words),
-                'percentage': round((cached_words / len(all_words) * 100) if len(all_words) > 0 else 0)
-            }
-        })
-        
-    except Exception as e:
-        logger.error(f"Error getting analysis status: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/word/difficulty/batch', methods=['POST'])
-def get_word_difficulty_batch():
-    """Get word difficulty levels for multiple words at once"""
-    try:
-        data = request.get_json()
-        words = data.get('words', [])
-        
-        if not words:
-            return jsonify({'results': {}})
-        
-        # Process all words at once
-        results = {}
-        for word in words:
-            word_lower = word.lower().strip()
-            
-            # Check database cache first
-            cached_result = word_difficulty_repo.get_word_difficulty(word_lower)
-            if cached_result:
-                results[word] = {
-                    'difficulty': cached_result['difficulty'],
-                    'level': cached_result['level'],
-                    'cached': True
-                }
-            else:
-                # Check CEFR levels
-                if word_lower in CEFR_WORD_LEVELS:
-                    difficulty = CEFR_WORD_LEVELS[word_lower]
-                else:
-                    difficulty = 'normal'
-                    
-                level = 'C1/C2' if difficulty == 'hard' else 'A1-B2'
-                
-                # Cache the result
-                word_difficulty_repo.cache_word_difficulty(word_lower, difficulty, level)
-                
-                results[word] = {
-                    'difficulty': difficulty,
-                    'level': level,
-                    'cached': False
-                }
-        
-        return jsonify({'results': results})
-        
-    except Exception as e:
-        logger.error(f"Batch word difficulty error: {e}")
-        return jsonify({'error': str(e)}), 500
-
-def auto_spacy_analysis(media_id, sentence_ids):
-    """Auto SpaCy analysis after subtitle import"""
-    try:
-        logger.info(f"Starting auto SpaCy analysis for media {media_id}")
-        time.sleep(2)  # Brief delay
-        
-        for sentence_id in sentence_ids:
-            sentence = sentence_repo.get_by_id(sentence_id)
-            if not sentence or not sentence.get('english'):
-                continue
-                
-            if SPACY_AVAILABLE:
-                doc = nlp(sentence['english'])
-                verbs = []
-                
-                for token in doc:
-                    if token.pos_ == 'VERB' and not token.is_stop and len(token.text) > 2:
-                        verbs.append(token.text)
-                
-                unique_verbs = list(set(verbs))[:3]
-                verbs_json = json.dumps(unique_verbs)
-                sentence_repo.update_verbs(sentence_id, verbs_json)
-        
-        logger.info(f"Completed auto SpaCy analysis for media {media_id}")
-        
-        # Auto-trigger translation
-        threading.Thread(target=auto_translation, args=(media_id, sentence_ids)).start()
-        
-    except Exception as e:
-        logger.error(f"Error in auto SpaCy analysis: {e}")
-
-def auto_translation(media_id, sentence_ids):
-    """Auto translation after SpaCy analysis"""
-    try:
-        logger.info(f"Starting auto translation for media {media_id}")
-        time.sleep(5)  # Wait for SpaCy to complete
-        
-        for sentence_id in sentence_ids:
-            sentence = sentence_repo.get_by_id(sentence_id)
-            if not sentence or not sentence.get('english') or sentence.get('korean'):
-                continue
-            
-            # Simple mock translation for now
-            english_text = sentence['english']
-            korean_text = f"[번역] {english_text}"
-            sentence_repo.update_korean(sentence_id, korean_text)
-        
-        logger.info(f"Completed auto translation for media {media_id}")
-        
-        # Auto-trigger vocabulary analysis
-        threading.Thread(target=auto_vocabulary_analysis, args=(media_id, sentence_ids)).start()
-        
-    except Exception as e:
-        logger.error(f"Error in auto translation: {e}")
-
-def auto_vocabulary_analysis(media_id, sentence_ids):
-    """Auto vocabulary analysis after translation"""
-    try:
-        logger.info(f"Starting auto vocabulary analysis for media {media_id}")
-        time.sleep(3)  # Wait for translation to complete
-        
-        for sentence_id in sentence_ids:
-            sentence = sentence_repo.get_by_id(sentence_id)
-            if not sentence or not sentence.get('english'):
-                continue
-            
-            # Extract words from sentence
-            words = re.findall(r'\b[a-zA-Z]+\b', sentence['english'].lower())
-            
-            for word in set(words):
-                if len(word) < 3:
-                    continue
-                    
-                if word_difficulty_repo.get_word_difficulty(word):
-                    continue
-                
-                # Simple difficulty assignment
-                if word in CEFR_WORD_LEVELS:
-                    difficulty = CEFR_WORD_LEVELS[word]
-                else:
-                    difficulty = 'normal'
-                    
-                level = 'C1/C2' if difficulty == 'hard' else 'A1-B2'
-                word_difficulty_repo.cache_word_difficulty(word, difficulty, level)
         
         logger.info(f"Completed auto vocabulary analysis for media {media_id}")
         

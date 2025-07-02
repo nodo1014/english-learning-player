@@ -1064,7 +1064,7 @@
         <button class="activity-item" onclick="showPanel('subtitle')" title="자막 생성">
             📝
         </button>
-        <button class="activity-item" onclick="showPanel('analysis')" title="분석 (번역, Spacy, 어휘)">
+        <button class="activity-item" onclick="showPanel('analysis')" title="분석 (번역, 단어 매칭)">
             🔍
         </button>
         <button class="activity-item" onclick="showPanel('mp3extract')" title="MP3 추출">
@@ -1109,17 +1109,24 @@
             
             <!-- 분석 패널 -->
             <div id="analysisPanel" style="display: none;">
-                <h3>🔍 분석 도구</h3>
+                <h3>🔍 언어 분석</h3>
                 <div style="margin: 15px 0;">
                     <button onclick="performTranslation()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #6a4c93; color: white; border: none; border-radius: 5px; cursor: pointer;">
                         🌍 번역
                     </button>
-                    <button onclick="performSpacyAnalysis()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        🧐 Spacy 분석
+                    <button id="blankModeBtn" onclick="toggleBlankMode()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #007acc; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        📝 빈칸 만들기
                     </button>
-                    <button onclick="performVocabularyAnalysis()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        📚 어휘 분석
+                    <button onclick="reloadWordsDatabase()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        🔄 단어 DB 새로고침
                     </button>
+                </div>
+                
+                <div style="margin: 15px 0; padding: 10px; background: #2d2d30; border-radius: 5px;">
+                    <h4 style="color: #cccccc; margin-bottom: 10px;">📊 단어 매칭 정보</h4>
+                    <div id="wordsStats" style="color: #858585; font-size: 0.9em;">
+                        로딩 중...
+                    </div>
                 </div>
             </div>
             
@@ -1187,13 +1194,6 @@
                     <button onclick="extractAllMP4()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #673ab7; color: white; border: none; border-radius: 5px; cursor: pointer;">
                         📦 전체문장분할 MP4 추출
                     </button>
-                </div>
-            </div>
-            <div id="mediaPanel" style="display: none;">
-                <div id="mediaList"></div>
-                <div id="chapterList" style="margin-top: 20px; display: none;">
-                    <h4>챕터/씬 구조</h4>
-                    <div id="chapterContent"></div>
                 </div>
             </div>
             
@@ -1454,7 +1454,7 @@
         </div>
         
 
-        <div class="media-player" style="display:none;">
+        <div id="mediaPlayerDiv" class="media-player" style="display:none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 id="mediaTitle" style="margin: 0;">미디어 제목</h3>
             </div>
@@ -1473,8 +1473,9 @@
                 </video>
                 
                 <!-- Video Overlay Subtitles -->
-                <div id="videoOverlaySubtitles" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; color: white; text-align: center; max-width: 50%; display: none; font-family: 'Noto Sans KR', 'Segoe UI', sans-serif; font-size: 3.5em; font-weight: 700; line-height: 1.3; text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9), 1px 1px 2px rgba(0, 0, 0, 0.8), -1px -1px 2px rgba(0, 0, 0, 0.8);">
-                    오버레이 자막이 여기에 표시됩니다
+                <div id="videoOverlaySubtitles" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 100; color: white; text-align: center; max-width: 80%; display: none; font-family: 'Noto Sans KR', 'Segoe UI', sans-serif; font-size: 3.5em; font-weight: 700; line-height: 1.3; text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9), 1px 1px 2px rgba(0, 0, 0, 0.8), -1px -1px 2px rgba(0, 0, 0, 0.8);">
+                    <div id="englishSubtitle" style="margin-bottom: 10px;">오버레이 자막이 여기에 표시됩니다</div>
+                    <div id="koreanSubtitle" style="font-size: 0.7em; color: #ffeb3b; font-weight: 500;"></div>
                 </div>
             </div>
             
@@ -3579,10 +3580,7 @@
             // ' - ' 를 줄바꿈으로 변환 (화자 구분) - 오버레이에서는 제외
             let formattedText = isOverlay ? text : text.replace(/\s*-\s*/g, '<br>');
             
-            // 문법 패턴 하이라이트 먼저 적용
-            if (grammarHighlightEnabled && sentenceId) {
-                formattedText = await applyGrammarHighlight(formattedText);
-            }
+            // 문법 패턴 하이라이트 제거됨 (words_db.txt 패턴 매칭으로 대체)
             
             // 단어를 클릭 가능하게 만들기 (sentenceId가 있을 때만)
             if (sentenceId) {
@@ -3592,96 +3590,12 @@
             return formattedText;
         }
         
-        // 문법 패턴 하이라이트 적용
-        // 전역 변수로 패턴 데이터 저장
-        let grammarPatterns = null;
         
-        // JSON 패턴 데이터 로드
-        async function loadGrammarPatterns() {
-            if (!grammarPatterns) {
-                try {
-                    const response = await fetch('/static/data/grammar_patterns.json');
-                    grammarPatterns = await response.json();
-                } catch (error) {
-                    console.error('Grammar patterns loading failed:', error);
-                    grammarPatterns = {}; // 빈 객체로 폴백
-                }
-            }
-            return grammarPatterns;
-        }
-        
-        async function applyGrammarHighlight(text) {
-            let highlightedText = text;
-            
-            // JSON 패턴 로드
-            const patterns = await loadGrammarPatterns();
-            
-            // 1. 기존 패턴들 (조건문, 시간, 원인/결과 등)
-            highlightedText = highlightedText.replace(
-                /\b(if|unless|provided that|as long as|in case)\b/gi,
-                '<span class="grammar-conditional">$1</span>'
-            );
-            
-            highlightedText = highlightedText.replace(
-                /\b(when|while|before|after|during|since|until|as soon as)\b/gi,
-                '<span class="grammar-time">$1</span>'
-            );
-            
-            highlightedText = highlightedText.replace(
-                /\b(because|since|as|so|therefore|thus|consequently|as a result)\b/gi,
-                '<span class="grammar-cause">$1</span>'
-            );
-            
-            highlightedText = highlightedText.replace(
-                /\b(but|however|although|though|despite|in spite of|nevertheless|nonetheless)\b/gi,
-                '<span class="grammar-contrast">$1</span>'
-            );
-            
-            highlightedText = highlightedText.replace(
-                /\b(am|is|are|was|were|been|being)\s+([\w]+ed|[\w]+en)\b/gi,
-                '<span class="grammar-passive">$1 $2</span>'
-            );
-            
-            highlightedText = highlightedText.replace(
-                /\b(have|has|had)\s+([\w]+ed|[\w]+en)\b/gi,
-                '<span class="grammar-perfect">$1 $2</span>'
-            );
-            
-            highlightedText = highlightedText.replace(
-                /\b(will|shall|going to)\s+(\w+)/gi,
-                '<span class="grammar-future">$1 $2</span>'
-            );
-            
-            highlightedText = highlightedText.replace(
-                /\b(can|could|should|would|might|may|must|ought to)\s+(\w+)/gi,
-                '<span class="grammar-modal">$1 $2</span>'
-            );
-            
-            // 2. JSON 기반 새로운 패턴들
-            Object.keys(patterns).forEach(category => {
-                const categoryData = patterns[category];
-                const className = categoryData.class;
-                const patternList = categoryData.patterns;
-                
-                patternList.forEach(pattern => {
-                    // 특수 문자 이스케이프 처리
-                    const escapedPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const regex = new RegExp(`\\b${escapedPattern}\\b`, 'gi');
-                    
-                    highlightedText = highlightedText.replace(regex, (match) => {
-                        return `<span class="${className}">${match}</span>`;
-                    });
-                });
-            });
-            
-            return highlightedText;
-        }
         
         // 단어 캐시 (북마크 기능용)
         let wordDefinitionCache = new Map(); // 단어 정보 캐시
         let difficultyHighlightEnabled = true; // 난이도 하이라이트 활성화
         let difficultyHighlightCache = new Map(); // 난이도 캐시
-        let grammarHighlightEnabled = true; // 문법 패턴 하이라이트 활성화
         
         // 해설 옵션 토글 함수
         function toggleCommentaryOptions() {
@@ -5995,7 +5909,7 @@
     </script>
     
     <!-- External JavaScript Files -->
-    <script src="/static/js/app.js"></script>
+    <script type="module" src="/static/js/app.js"></script>
     
     <!-- Video.js JavaScript -->
 </body>
