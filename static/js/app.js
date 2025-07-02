@@ -83,8 +83,8 @@ function initializeUI() {
 
 async function loadInitialData() {
     try {
-        // Media list loading is handled by HTML template's loadMediaList function
-        console.log('Initial data loading - media list handled by HTML template');
+        // Load media list
+        await loadMediaList();
     } catch (error) {
         console.error('Failed to load initial data:', error);
         uiManager.showMessage('초기 데이터 로드 실패', 'error');
@@ -94,8 +94,108 @@ async function loadInitialData() {
 // Essential functions that need to remain in main app for now
 // (These will be gradually moved to appropriate modules)
 
-// loadMediaList 함수는 HTML 템플릿에 더 완전한 버전이 구현되어 있음
-// async function loadMediaList() { ... }
+async function loadMediaList() {
+    console.log('Loading media list...');
+    try {
+        const response = await fetch('/api/media');
+        console.log('Media API response:', response.status);
+        const media = await response.json();
+        console.log('Media data:', media);
+        
+        const listEl = document.getElementById('mediaList');
+        if (!listEl) {
+            console.error('mediaList element not found!');
+            return;
+        }
+        
+        if (media.length === 0) {
+            listEl.innerHTML = '<div style="color: #858585; padding: 10px;">업로드된 미디어가 없습니다.</div>';
+            return;
+        }
+        
+        // 각 미디어의 상태 정보를 병렬로 가져오기
+        const mediaPromises = media.map(async (m) => {
+            try {
+                // 문장 개수 확인 (자막 상태)
+                const sentencesResponse = await fetch(`/api/media/${m.id}/sentences-grouped`);
+                const sentences = await sentencesResponse.json();
+                const hasSentences = sentences && sentences.length > 0 && 
+                    sentences.some(chapter => chapter.scenes && chapter.scenes.length > 0 && 
+                        chapter.scenes.some(scene => scene.sentences && scene.sentences.length > 0));
+                
+                // 번역 상태 확인
+                const translationResponse = await fetch(`/api/media/${m.id}/translation-status`);
+                const translationData = await translationResponse.json();
+                const hasTranslation = translationData.progress > 0;
+                
+                // 분석 상태 확인 (SpaCy, 어휘)
+                let analysisData = { spacy: { percentage: 0 }, vocabulary: { percentage: 0 } };
+                try {
+                    const analysisResponse = await fetch(`/api/media/${m.id}/analysis-status`);
+                    if (analysisResponse.ok) {
+                        analysisData = await analysisResponse.json();
+                    }
+                } catch (error) {
+                    console.warn(`Failed to get analysis status for media ${m.id}:`, error);
+                }
+                
+                return {
+                    ...m,
+                    hasSentences,
+                    hasTranslation,
+                    translationProgress: translationData.progress || 0,
+                    translationStage: translationData.stage || 'idle',
+                    spacyPercentage: analysisData.spacy.percentage || 0,
+                    vocabularyPercentage: analysisData.vocabulary.percentage || 0
+                };
+            } catch (error) {
+                console.warn(`Failed to get status for media ${m.id}:`, error);
+                return { ...m, hasSentences: false, hasTranslation: false };
+            }
+        });
+        
+        const mediaWithStatus = await Promise.all(mediaPromises);
+        
+        // 상태 배지 함수
+        function createStatusBadges(media) {
+            let badges = [];
+            if (media.hasSentences) badges.push('<span class="status-badge subtitle" title="자막 생성됨">SUB</span>');
+            if (media.hasTranslation) badges.push('<span class="status-badge translation" title="번역 완료">KOR</span>');
+            return badges.join('');
+        }
+        
+        listEl.innerHTML = mediaWithStatus.map(m => `
+            <div class="media-item" onclick="loadMediaSentences('${m.id}')" data-media-id="${m.id}">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: bold; margin-bottom: 3px; word-wrap: break-word;">
+                            ${m.originalFilename || m.filename}
+                        </div>
+                        <div style="font-size: 0.8em; color: #858585; margin-bottom: 5px;">
+                            ${m.fileType} • ${formatFileSize(m.fileSize)} • ${formatDuration(m.duration)}
+                        </div>
+                        <div class="status-badges">
+                            ${createStatusBadges(m)}
+                        </div>
+                    </div>
+                    <button onclick="deleteMedia('${m.id}', event)" 
+                            style="background: #d32f2f; color: white; border: none; padding: 4px 8px; 
+                                   border-radius: 3px; cursor: pointer; font-size: 12px; margin-left: 8px;"
+                            title="미디어 삭제">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading media list:', error);
+        const listEl = document.getElementById('mediaList');
+        if (listEl) {
+            listEl.innerHTML = '<div style="color: #ff6b6b;">미디어 목록 로딩 실패</div>';
+        }
+    }
+}
 
 function formatFileSize(bytes) {
     if (!bytes) return '0 B';
@@ -113,7 +213,7 @@ function formatDuration(seconds) {
 }
 
 // Global functions for HTML onclick handlers
-// window.loadMediaList = loadMediaList; // HTML에 더 완전한 버전이 있음
+window.loadMediaList = loadMediaList;
 window.selectMedia = selectMedia;
 window.handleFileUpload = handleFileUpload;
 window.showUploadSection = showUploadSection;
@@ -124,6 +224,96 @@ window.extractSentenceMP3 = extractSentenceMP3;
 window.toggleBlankMode = toggleBlankMode;
 window.reloadWordsDatabase = reloadWordsDatabase;
 window.loadWordsStats = loadWordsStats;
+
+// Panel management functions
+window.showPanel = function(panelType) {
+    // 모든 activity item에서 active 클래스 제거
+    document.querySelectorAll('.activity-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // 클릭된 버튼에 active 클래스 추가 (이벤트가 있는 경우만)
+    if (typeof window.event !== 'undefined' && window.event && window.event.target) {
+        window.event.target.classList.add('active');
+    } else {
+        // 프로그래밍적으로 호출된 경우 해당 패널 버튼 찾아서 활성화
+        const buttons = document.querySelectorAll('.activity-item');
+        if (panelType === 'media') buttons[0]?.classList.add('active');
+        if (panelType === 'subtitle') buttons[1]?.classList.add('active');
+        if (panelType === 'analysis') buttons[2]?.classList.add('active');
+        if (panelType === 'mp3extract') buttons[3]?.classList.add('active');
+        if (panelType === 'mp4extract') buttons[4]?.classList.add('active');
+    }
+    
+    // 모든 패널 숨기기
+    const panels = ['mediaPanel', 'subtitlePanel', 'analysisPanel', 'mp3extractPanel', 'mp4extractPanel'];
+    panels.forEach(panelId => {
+        const panel = document.getElementById(panelId);
+        if (panel) panel.style.display = 'none';
+    });
+    
+    // 선택된 패널 표시
+    const headerEl = document.getElementById('sidebarHeader');
+    switch(panelType) {
+        case 'media':
+            const mediaPanel = document.getElementById('mediaPanel');
+            if (mediaPanel) mediaPanel.style.display = 'block';
+            if (headerEl) headerEl.innerHTML = '<span>미디어 파일</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
+            loadMediaList(); // 미디어 목록 새로고침
+            break;
+        case 'subtitle':
+            const subtitlePanel = document.getElementById('subtitlePanel');
+            if (subtitlePanel) subtitlePanel.style.display = 'block';
+            if (headerEl) headerEl.innerHTML = '<span>자막 생성</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
+            break;
+        case 'analysis':
+            const analysisPanel = document.getElementById('analysisPanel');
+            if (analysisPanel) analysisPanel.style.display = 'block';
+            if (headerEl) headerEl.innerHTML = '<span>분석</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
+            break;
+        case 'mp3extract':
+            const mp3extractPanel = document.getElementById('mp3extractPanel');
+            if (mp3extractPanel) mp3extractPanel.style.display = 'block';
+            if (headerEl) headerEl.innerHTML = '<span>MP3 추출</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
+            break;
+        case 'mp4extract':
+            const mp4extractPanel = document.getElementById('mp4extractPanel');
+            if (mp4extractPanel) mp4extractPanel.style.display = 'block';
+            if (headerEl) headerEl.innerHTML = '<span>MP4 추출</span><button class="sidebar-toggle" onclick="toggleLeftSidebar()" title="사이드바 숨김/보이기">×</button>';
+            break;
+    }
+};
+
+// Media functions
+window.loadMediaSentences = function(mediaId) {
+    console.log('loadMediaSentences called with mediaId:', mediaId);
+    selectMedia(mediaId);
+};
+
+window.deleteMedia = async function(mediaId, event) {
+    if (event) event.stopPropagation();
+    
+    if (!confirm('정말로 이 미디어를 삭제하시겠습니까? 모든 관련 데이터가 함께 삭제됩니다.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/media/${mediaId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            console.log('Media deleted successfully');
+            loadMediaList(); // 목록 새로고침
+            uiManager.showMessage('미디어가 삭제되었습니다', 'success');
+        } else {
+            throw new Error('Delete failed');
+        }
+    } catch (error) {
+        console.error('Error deleting media:', error);
+        uiManager.showMessage('미디어 삭제 실패', 'error');
+    }
+};
 
 // Media selection function
 async function selectMedia(mediaId) {
